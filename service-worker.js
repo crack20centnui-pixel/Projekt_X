@@ -1,5 +1,8 @@
-const CACHE = "equans-rapport-v1";
-const APP = ["./", "./index.html", "./manifest.json"];
+const CACHE = "equans-rapport-v2";
+const APP = ["./", "./index.html", "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP)));
   self.skipWaiting();
