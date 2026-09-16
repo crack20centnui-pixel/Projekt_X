@@ -1,0 +1,10 @@
+{
+  "name": "EQUANS Rapport",
+  "short_name": "Rapport",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f4f5",
+  "theme_color": "#244656",
+  "orientation": "any"
+}
