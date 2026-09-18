@@ -18,14 +18,15 @@ h1{margin:0 0 8px;font-size:25px}.sub{color:#666;margin-bottom:24px}button{width
     <button id="emailLoginBtn" style="background:#244656;color:#fff">Mit E-Mail anmelden</button>
 <div id="info" class="info"><div class="row"><span class="label">Name:</span> <span id="name"></span></div>
 <div class="row"><span class="label">E-Mail:</span> <span id="email"></span></div>
-<div class="row"><span class="label">Firebase UID:</span> <span id="uid"></span></div>
+<div class="row"><span class="label">Firebase UID:</span> <span id="uid"></span></div><div class="row"><span class="label">Rolle:</span> <span id="role"></span></div><div class="row"><span class="label">Status:</span> <span id="active"></span></div>
 <button id="logoutBtn">Abmelden</button></div><div id="status">Noch nicht angemeldet.</div>
 </div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider();
+const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider(),db=getFirestore(app);
 const loginBtn=document.getElementById("loginBtn");
 const logoutBtn=document.getElementById("logoutBtn");
 const infoBox=document.getElementById("info");
@@ -33,10 +34,12 @@ const statusBox=document.getElementById("status");
 const nameEl=document.getElementById("name");
 const emailEl=document.getElementById("email");
 const uidEl=document.getElementById("uid");
+const roleEl=document.getElementById("role");
+const activeEl=document.getElementById("active");
 const emailInput=document.getElementById("emailInput");
 const passwordInput=document.getElementById("passwordInput");
 const emailLoginBtn=document.getElementById("emailLoginBtn");
-function showUser(user){
+async function showUser(user){
   if(!user){
     infoBox.style.display="none";
     loginBtn.style.display="block";
@@ -47,16 +50,62 @@ function showUser(user){
     statusBox.className="";
     return;
   }
+
   nameEl.textContent=user.displayName||"";
   emailEl.textContent=user.email||"";
   uidEl.textContent=user.uid||"";
+  roleEl.textContent="wird geprüft …";
+  activeEl.textContent="wird geprüft …";
   infoBox.style.display="block";
   loginBtn.style.display="none";
   emailInput.style.display="none";
   passwordInput.style.display="none";
   emailLoginBtn.style.display="none";
-  statusBox.textContent="Firebase-Anmeldung erfolgreich.";
-  statusBox.className="ok";
+  statusBox.textContent="Benutzerrechte werden geprüft …";
+  statusBox.className="";
+
+  try{
+    const userRef=doc(db,"users",user.uid);
+    const snap=await getDoc(userRef);
+
+    if(!snap.exists()){
+      roleEl.textContent="nicht vorhanden";
+      activeEl.textContent="unbekannt";
+      statusBox.textContent="Kein Benutzerprofil in Firestore gefunden.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    const data=snap.data();
+    const role=data.role||"unbekannt";
+    const active=data.active===true;
+
+    roleEl.textContent=role;
+    activeEl.textContent=active?"aktiv":"gesperrt";
+
+    if(!active){
+      statusBox.textContent="Zugang gesperrt.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    if(role!=="admin" && role!=="monteur"){
+      statusBox.textContent="Unbekannte Benutzerrolle.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    statusBox.textContent="Anmeldung erfolgreich – Rolle: "+role;
+    statusBox.className="ok";
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Firestore-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+    await signOut(auth);
+  }
 }
 loginBtn.onclick=async()=>{
   statusBox.textContent="Google-Anmeldung wird geöffnet …";
@@ -90,5 +139,5 @@ emailLoginBtn.onclick=async()=>{
   }
 };
 logoutBtn.onclick=()=>signOut(auth);
-onAuthStateChanged(auth,showUser);
+onAuthStateChanged(auth,user=>showUser(user));
 </script></body></html>
