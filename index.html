@@ -1124,6 +1124,382 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 @media(max-width:900px){#pdfToolbar .meta-strip{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
 </style>
 <!-- v62: Einheitliche 920px Arbeitsfläche auf PC/Tablet/Handy; mobile Browser passen die ganze Seite an, Pinch-Zoom bleibt erlaubt. PDF/Druck unverändert. -->
+
+<style id="v63-messprotokoll-kompakt">
+/* v63 – Messprotokoll: kompakter Kopf, Stromkreis fix, horizontal verschiebbar am Bildschirm */
+#messPage .mess-scroll{width:100%;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;position:relative}
+#messPage .mess-table{width:1180px;min-width:1180px;table-layout:fixed;border-collapse:collapse}
+#messPage .mess-table col.c-strom{width:6.2%}
+#messPage .mess-table col.c-ort{width:19.2%}
+#messPage .mess-table col.c-art{width:5.5%}
+#messPage .mess-table col.c-mm{width:5.2%}
+#messPage .mess-table col.c-char{width:6.0%}
+#messPage .mess-table col.c-in{width:5.0%}
+#messPage .mess-table col.c-ik{width:6.4%}
+#messPage .mess-table col.c-riso{width:5.8%}
+#messPage .mess-table col.c-rlow{width:5.8%}
+#messPage .mess-table col.c-fi{width:6.3%}
+#messPage .mess-table col.c-time{width:7.2%}
+#messPage .mess-table th,#messPage .mess-table td{white-space:normal}
+#messPage .mess-table thead tr.measure-sub th{height:18px;font-size:6.2px;line-height:1.05}
+#messPage .mess-table thead tr.measuretop th{height:25px;font-size:6.2px;line-height:1.05}
+#messPage .mess-table .sticky-strom{position:sticky;left:0;z-index:4;background:#f2f7fa;box-shadow:1px 0 0 #b9c6cc}
+#messPage .mess-table tbody .sticky-strom{z-index:3;background:#fffef4}
+#messPage .mess-table input{text-align:center}
+@media screen{#messPage .mess-scroll{overflow-x:scroll!important;scrollbar-gutter:stable}#messPage .mess-table{width:1180px!important;min-width:1180px!important}}
+@media print{#messPage .mess-scroll{overflow:visible!important}#messPage .mess-table{width:100%!important;min-width:0!important}#messPage .mess-table .sticky-strom{position:static!important;box-shadow:none!important}}
+</style>
+
+
+<style id="v65-mess-real-dropdowns">
+#messPage .mess-select{
+  width:100%; height:100%; min-height:26px; margin:0; padding:0 14px 0 2px;
+  border:0; border-radius:0; background-color:#fff66b; color:#111;
+  font:inherit; text-align:center; text-align-last:center;
+  appearance:auto; -webkit-appearance:menulist;
+}
+#messPage td:has(.mess-select){padding:0;background:#fff66b}
+@media print{
+  #messPage .mess-select{background:#fff66b!important;color:#111!important}
+}
+</style>
+
+
+<style id="v66-mess-other-input">
+#messPage .mess-other-wrap{
+  display:flex;width:100%;height:100%;min-height:26px;background:#fff66b;
+}
+#messPage .mess-other-input{
+  flex:1;min-width:0;width:100%;height:100%;margin:0;padding:0 2px;
+  border:0;border-radius:0;background:#fff66b;color:#111;font:inherit;text-align:center;
+}
+#messPage .mess-other-back{
+  flex:0 0 22px;width:22px;margin:0;padding:0;border:0;border-left:1px solid #d8cc00;
+  border-radius:0;background:#fff66b;color:#111;font:inherit;font-weight:700;cursor:pointer;
+}
+@media print{
+  #messPage .mess-other-back{display:none!important}
+  #messPage .mess-other-input{background:#fff66b!important}
+}
+</style>
+
+
+<style id="v67-pdf-select-fix">
+@media print{
+  #messPage .mess-select{
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    background-image:none !important;
+    padding:0 2px !important;
+    border:0 !important;
+  }
+  #messPage .mess-select::-ms-expand{display:none !important;}
+}
+</style>
+
+
+<style id="v68-legende">
+/* v68/v69: eigenstaendiges Legendenblatt; optional aus Messungen uebernehmen */
+#legendePage{display:none!important}
+body:has(#legendePage:target) #rapportPage,body:has(#legendePage:target) #regiePage,body:has(#legendePage:target) #messPage,body:has(#legendePage:target) #materialPage,body:has(#legendePage:target) #materialRegiePage,body:has(#legendePage:target) #arbeitszeitPage{display:none!important}
+body:has(#legendePage:target) #legendePage{display:block!important}
+body:has(#legendePage:target) #signatureBlock{display:none!important}
+#legendePage .legend-head{display:grid;grid-template-columns:28% 44% 28%;height:62px;align-items:center;border:1px solid #6f927d;background:#fff}
+#legendePage .legend-logo{font-size:18px;font-weight:800;line-height:.9;padding-left:12px;color:#111}
+#legendePage .legend-logo small{display:block;font-size:7px;letter-spacing:2px;margin-top:5px;font-weight:700}
+#legendePage .legend-title{font-size:18px;font-weight:800;text-align:center;letter-spacing:.8px}
+#legendePage .legend-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+#legendePage .legend-toolbar button{border:1px solid #7fa88a;background:#eaf6ed;border-radius:5px;padding:7px 10px;font-weight:700;cursor:pointer}
+#legendePage .legend-toolbar .legend-print{background:#cfead6}
+#legendePage .legend-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px}
+#legendePage .legend-table th,#legendePage .legend-table td{border:1px solid #6e9278;height:27px;padding:0}
+#legendePage .legend-table th{background:#cfe6d7;font-size:10px;text-align:center}
+#legendePage .legend-table td{background:#fff}
+#legendePage .legend-table td:first-child{background:#e5f2e9;font-weight:700}
+#legendePage .legend-table input{width:100%;height:100%;border:0;background:transparent;padding:3px 5px;font:inherit;box-sizing:border-box;text-align:center}
+#legendePage .legend-table td:nth-child(2) input{text-align:left}
+#legendePage .legend-table th:nth-child(1){width:13%}#legendePage .legend-table th:nth-child(2){width:47%}#legendePage .legend-table th:nth-child(3){width:18%}#legendePage .legend-table th:nth-child(4){width:11%}#legendePage .legend-table th:nth-child(5){width:11%}
+#legendePage .legend-note{font-size:9px;color:#53645a;margin:5px 0 8px}
+#legendPrintDialog{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center}
+#legendPrintDialog.show{display:flex}#legendPrintDialog .legend-dialog-card{width:min(390px,92vw);background:#fff;border-radius:10px;padding:18px;box-shadow:0 15px 50px rgba(0,0,0,.25)}
+#legendPrintDialog h3{margin:0 0 13px}#legendPrintDialog .legend-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}#legendPrintDialog select{width:100%;padding:8px;margin-top:4px}#legendPrintDialog .legend-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}#legendPrintDialog button{padding:8px 13px}
+@media print{
+ body.legend-special-print .pagepart{display:none!important}body.legend-special-print #legendePage{display:block!important;visibility:visible!important}
+ body.legend-special-print #signatureBlock,body.legend-special-print #pdfToolbar,body.legend-special-print .tabs,body.legend-special-print .no-print{display:none!important}
+ body.pdf-printing #legendePage.pdf-print-selected{display:block!important;visibility:visible!important;break-inside:avoid-page!important;page-break-inside:avoid!important}
+ body.pdf-printing #legendePage:not(.pdf-print-selected){display:none!important}
+ body.legend-special-print #legendePage{break-after:auto!important;page-break-after:auto!important}
+ #legendePage .legend-table th,#legendePage .legend-table td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style>
+<style id="v74-einheitlicher-firmenkopf">
+
+/* Echte integrierte Firmenköpfe – nicht mehr als lose Druckzeile darüber. */
+.beiblatt-top{
+  height:54px;
+  display:grid;
+  grid-template-columns:4fr 6fr 4fr;
+  align-items:center;
+  border-bottom:1px solid #aab5bb;
+  margin:0 0 4px 0;
+}
+.beiblatt-logo{
+  font-size:15px;
+  line-height:1.05;
+  font-weight:bold;
+  color:#235064;
+  padding-left:0;
+}
+.beiblatt-title{
+  text-align:center;
+  font-size:11px;
+  font-weight:bold;
+  color:#235064;
+  white-space:nowrap;
+}
+.beiblatt-spacer{height:100%}
+</style>
+
+<style id="v77-kunden-pdf-master">
+@media print {
+  @page { size:A4 portrait; margin:0; }
+
+  body.pdf-printing:not(.legend-special-print){
+    margin:0 !important;
+    padding:0 !important;
+    height:auto !important;
+    min-height:0 !important;
+    background:#fff !important;
+  }
+
+  body.pdf-printing:not(.legend-special-print) #pdfToolbar,
+  body.pdf-printing:not(.legend-special-print) .toolbar,
+  body.pdf-printing:not(.legend-special-print) .tabs,
+  body.pdf-printing:not(.legend-special-print) #signatureBlock,
+  body.pdf-printing:not(.legend-special-print) .no-print{
+    display:none !important;
+  }
+
+  /* Nur die Checkbox-Auswahl darf erscheinen. */
+  body.pdf-printing:not(.legend-special-print) .pagepart{
+    display:none !important;
+    visibility:hidden !important;
+    break-before:auto !important;
+    page-break-before:auto !important;
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+
+  body.pdf-printing:not(.legend-special-print) .pagepart.pdf-print-selected{
+    display:block !important;
+    visibility:visible !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  /* Nur VOR der zweiten und jeder weiteren gewählten Seite umbrechen.
+     Dadurch kann nach der letzten Seite keine leere 8. Seite entstehen. */
+  body.pdf-printing:not(.legend-special-print) .pagepart.pdf-print-next{
+    break-before:page !important;
+    page-break-before:always !important;
+  }
+
+  body.pdf-printing:not(.legend-special-print) .sheet{
+    display:block !important;
+    width:210mm !important;
+    min-width:210mm !important;
+    max-width:210mm !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:8mm 17mm !important;
+    box-sizing:border-box !important;
+    overflow:visible !important;
+    transform:none !important;
+    zoom:1 !important;
+  }
+
+  /* Keine Sonderverschiebung des Regierapports:
+     er benutzt denselben Satzspiegel wie der Rapport. */
+  body.pdf-printing:not(.legend-special-print) #rapportPage,
+  body.pdf-printing:not(.legend-special-print) #regiePage{
+    padding-top:0 !important;
+    margin-top:0 !important;
+  }
+
+  /* Eingabegelb ist nur Bedienhilfe; Kunden-Messprotokoll bleibt sauber weiss. */
+  body.pdf-printing:not(.legend-special-print) #messPage tbody td,
+  body.pdf-printing:not(.legend-special-print) #messPage tbody input,
+  body.pdf-printing:not(.legend-special-print) #messPage tbody select{
+    background:#fff !important;
+  }
+
+  /* Dropdowns bleiben funktional im HTML, im PDF aber ohne Browser-Kästchen/Pfeile. */
+  body.pdf-printing:not(.legend-special-print) select{
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    background-image:none !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    outline:0 !important;
+  }
+  body.pdf-printing:not(.legend-special-print) select::-ms-expand{
+    display:none !important;
+  }
+
+  body.pdf-printing:not(.legend-special-print) input,
+  body.pdf-printing:not(.legend-special-print) textarea{
+    box-shadow:none !important;
+    outline:0 !important;
+    border-radius:0 !important;
+  }
+
+  body.pdf-printing:not(.legend-special-print) .material-unit,
+  body.pdf-printing:not(.legend-special-print) .mess-select{
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    background-image:none !important;
+  }
+}
+</style>
+
+<style id="v81-legende-spezialdruck-final">
+@media print {
+  body.legend-special-print{
+    margin:0 !important;
+    padding:0 !important;
+    width:auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+    background:#fff !important;
+  }
+
+  body.legend-special-print #pdfToolbar,
+  body.legend-special-print .toolbar,
+  body.legend-special-print .tabs,
+  body.legend-special-print #signatureBlock,
+  body.legend-special-print .no-print,
+  body.legend-special-print #legendPrintDialog{
+    display:none !important;
+  }
+
+  body.legend-special-print .sheet{
+    display:block !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:visible !important;
+    transform:none !important;
+  }
+
+  body.legend-special-print .pagepart{
+    display:none !important;
+    visibility:hidden !important;
+  }
+
+  body.legend-special-print #legendePage{
+    display:block !important;
+    visibility:visible !important;
+    box-sizing:border-box !important;
+    width:var(--legend-print-width) !important;
+    max-width:var(--legend-print-width) !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:var(--legend-print-top) auto 0 auto !important;
+    padding:0 !important;
+    position:relative !important;
+    left:auto !important;
+    top:auto !important;
+    overflow:visible !important;
+    transform:scale(var(--legend-print-scale)) !important;
+    transform-origin:top center !important;
+    break-before:auto !important;
+    page-break-before:auto !important;
+    break-after:auto !important;
+    page-break-after:auto !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  /* Kopf MUSS sein ursprüngliches Grid behalten. */
+  body.legend-special-print #legendePage .legend-head{
+    display:grid !important;
+    visibility:visible !important;
+    grid-template-columns:28% 44% 28% !important;
+  }
+
+  body.legend-special-print #legendePage input,
+  body.legend-special-print #legendePage textarea,
+  body.legend-special-print #legendePage select{
+    box-shadow:none !important;
+    outline:0 !important;
+  }
+}
+</style>
+
+
+<style id="v79-messhilfe-row-only">
+/* v79 – NUR Messungen: aktiven Stromkreis komplett markieren + Messhilfe */
+#messPage .mess-table tbody tr.mess-active-row > td{
+  background:#fff2a8 !important;
+  border-top:2px solid #202020 !important;
+  border-bottom:2px solid #202020 !important;
+}
+#messPage .mess-table tbody tr.mess-active-row > td:first-child{border-left:2px solid #202020 !important}
+#messPage .mess-table tbody tr.mess-active-row > td:last-child{border-right:2px solid #202020 !important}
+#messPage .mess-table tbody tr.mess-active-row input,
+#messPage .mess-table tbody tr.mess-active-row select,
+#messPage .mess-table tbody tr.mess-active-row .mess-other-wrap,
+#messPage .mess-table tbody tr.mess-active-row .mess-other-input,
+#messPage .mess-table tbody tr.mess-active-row .mess-other-back{background:#fff2a8 !important}
+
+#messPage .mess-info{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:12px;height:12px;margin-left:2px;padding:0;
+  border:1px solid #25343b;border-radius:50%;background:#fff;color:#111;
+  font:700 8px/1 Arial,sans-serif;vertical-align:middle;cursor:pointer;
+}
+#messHelpOverlay{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.52);display:none;align-items:center;justify-content:center;padding:14px}
+#messHelpOverlay.show{display:flex}
+#messHelpCard{width:min(650px,94vw);max-height:92vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 15px 50px #0005;font-family:Arial,sans-serif}
+#messHelpTop{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #c8d0d4}
+#messHelpTitle{margin:0;font-size:18px}
+#messHelpClose{border:0;background:transparent;font-size:27px;line-height:1;cursor:pointer}
+#messHelpBody{padding:14px;font-size:13px}
+#messHelpBody .mh-diagram{border:1px solid #888;background:#fff;padding:8px;margin:8px 0 12px}
+#messHelpBody svg{width:100%;height:auto;display:block}
+#messHelpBody ol{padding-left:21px;line-height:1.5}
+#messHelpBody .mh-warn{border-left:4px solid #222;background:#eee;padding:9px;margin-top:10px;font-weight:700}
+@media print{
+  #messPage .mess-info,#messHelpOverlay{display:none!important}
+  #messPage .mess-table tbody tr.mess-active-row > td{border:1px solid #b9c6cc!important}
+  #messPage .mess-table tbody tr.mess-active-row > td,
+  #messPage .mess-table tbody tr.mess-active-row input,
+  #messPage .mess-table tbody tr.mess-active-row select,
+  #messPage .mess-table tbody tr.mess-active-row .mess-other-wrap,
+  #messPage .mess-table tbody tr.mess-active-row .mess-other-input{background:#fff66b!important}
+  #messPage .mess-table tbody tr.mess-active-row > td:nth-child(-n+6),
+  #messPage .mess-table tbody tr.mess-active-row > td:nth-child(-n+6) input,
+  #messPage .mess-table tbody tr.mess-active-row > td:nth-child(-n+6) select{background:#fffef4!important}
+}
+</style>
+
 </head><body spellcheck="false">
 <div class="pdf-toolbar" id="pdfToolbar">
 <div class="head-main">
@@ -1159,6 +1535,7 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 <label><input checked="" id="pdf3" type="checkbox"/> Material Rapport</label>
 <label><input id="pdf5" type="checkbox"/> Material Regie</label>
 <label><input id="pdf6" type="checkbox"/> Arbeitszeit Zusatzblatt</label>
+<label><input id="pdf7" type="checkbox"/> Legende</label>
 </div>
 <button class="pdf-main" onclick="printSelectedPages()" type="button">PDF erstellen</button>
 </div>
@@ -1168,6 +1545,7 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 <input accept=".equans,.json,application/json" id="masterImportInput" onchange="importMasterBackup(event)" style="display:none" type="file"/>
 </div>
 </div>
+<div id="legendPrintDialog" class="no-print" aria-hidden="true"><div class="legend-dialog-card"><h3>Legende drucken</h3><div class="legend-choice"><label>Papierformat<br><select id="legendPaper"><option>A4</option><option>A3</option><option>A5</option></select></label><label>Ausrichtung<br><select id="legendOrientation"><option value="portrait">Hochformat</option><option value="landscape">Querformat</option></select></label></div><div class="legend-dialog-actions"><button type="button" onclick="closeLegendPrint()">Abbrechen</button><button type="button" onclick="printLegendSpecial()">Drucken</button></div></div></div>
 <div aria-hidden="true" id="loginOverlay">
 <div class="login-card">
 <div class="login-title">Benutzername</div>
@@ -1184,6 +1562,7 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 <a href="#materialPage">Material Rapport</a>
 <a href="#materialRegiePage">Material Regie</a>
 <a href="#arbeitszeitPage">Arbeitszeit Zusatzblatt</a>
+<a href="#legendePage">Legende</a>
 </div>
 <div class="pagepart" id="rapportPage">
 <div class="top">
@@ -1309,7 +1688,11 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 <div class="signature-help no-print">1. Unterschrift gross erfassen  →  2. Aussteller oder Kunde wählen  →  3. Übertragen. Wenn die Position/Unterschrift nicht passt: übertragene Unterschrift löschen und neu übertragen.</div>
 </div>
 <div class="pagepart" id="arbeitszeitPage" style="display:none">
-<div class="section" style="font-size:11px;text-align:center;margin-top:0">ARBEITSZEIT / ARBEITSBESCHRIEB - ZUSATZBLATT</div>
+<div class="beiblatt-top">
+  <div class="beiblatt-logo">EQUANS<br/>SWITZERLAND</div>
+  <div class="beiblatt-title">ARBEITSZEIT / ARBEITSBESCHRIEB - ZUSATZBLATT</div>
+  <div class="beiblatt-spacer"></div>
+</div>
 <div class="linegrid">
 <div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="az_rapportnr" readonly=""/></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="az_auftrag" readonly=""/></div>
@@ -1333,58 +1716,55 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 <tr><td colspan="2"><input name="az_name_6"/></td><td><input name="az_p_6_0"/></td><td><input name="az_p_6_1"/></td><td><input name="az_p_6_2"/></td><td><input name="az_p_6_3"/></td><td><input name="az_p_6_4"/></td><td><input name="az_p_6_5"/></td><td><input name="az_p_6_6"/></td><td><input name="az_p_6_7"/></td><td><input name="az_p_6_8"/></td><td><input name="az_p_6_9"/></td><td><input name="az_p_6_10"/></td><td><input name="az_p_6_11"/></td></tr>
 </tbody></table>
 </div>
+<div class="pagepart" id="legendePage" style="display:none">
+<div class="legend-head"><div class="legend-logo">EQUANS<small>SWITZERLAND</small></div><div class="legend-title">LEGENDE</div><div></div></div>
+<div class="linegrid">
+<div class="lbl" style="grid-column:1/4">Verteilung:</div><div class="in" style="grid-column:4/9"><input name="leg_verteilung" placeholder="z.B. UV Wohnung / HV"/></div>
+<div class="lbl" style="grid-column:9/11">Datum:</div><div class="in" style="grid-column:11/15"><input name="leg_datum"/></div>
+<div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="leg_projekt"/></div>
+</div>
+<div class="legend-toolbar no-print"><button type="button" onclick="legendFromMeasurements()">Aus Messungen übernehmen</button><button class="legend-print" type="button" onclick="openLegendPrint()">Legende drucken</button></div>
+<div class="legend-note no-print">Kann komplett manuell ausgefüllt werden. Beim Übernehmen werden Stromkreis, Ort / Anlage, Schutzorgan, In [A] und IΔn [mA] aus dem Messprotokoll kopiert; danach bleibt die Legende unabhängig bearbeitbar.</div>
+<table class="legend-table"><thead><tr><th>Stromkreis</th><th>Ort / Anlage / Beschreibung</th><th>Schutzorgan</th><th>In [A]</th><th>IΔn [mA]</th></tr></thead><tbody><tr><td><input name="leg_strom_1"/></td><td><input name="leg_text_1"/></td><td><input name="leg_schutz_1"/></td><td><input name="leg_amp_1"/></td><td><input name="leg_ma_1"/></td></tr><tr><td><input name="leg_strom_2"/></td><td><input name="leg_text_2"/></td><td><input name="leg_schutz_2"/></td><td><input name="leg_amp_2"/></td><td><input name="leg_ma_2"/></td></tr><tr><td><input name="leg_strom_3"/></td><td><input name="leg_text_3"/></td><td><input name="leg_schutz_3"/></td><td><input name="leg_amp_3"/></td><td><input name="leg_ma_3"/></td></tr><tr><td><input name="leg_strom_4"/></td><td><input name="leg_text_4"/></td><td><input name="leg_schutz_4"/></td><td><input name="leg_amp_4"/></td><td><input name="leg_ma_4"/></td></tr><tr><td><input name="leg_strom_5"/></td><td><input name="leg_text_5"/></td><td><input name="leg_schutz_5"/></td><td><input name="leg_amp_5"/></td><td><input name="leg_ma_5"/></td></tr><tr><td><input name="leg_strom_6"/></td><td><input name="leg_text_6"/></td><td><input name="leg_schutz_6"/></td><td><input name="leg_amp_6"/></td><td><input name="leg_ma_6"/></td></tr><tr><td><input name="leg_strom_7"/></td><td><input name="leg_text_7"/></td><td><input name="leg_schutz_7"/></td><td><input name="leg_amp_7"/></td><td><input name="leg_ma_7"/></td></tr><tr><td><input name="leg_strom_8"/></td><td><input name="leg_text_8"/></td><td><input name="leg_schutz_8"/></td><td><input name="leg_amp_8"/></td><td><input name="leg_ma_8"/></td></tr><tr><td><input name="leg_strom_9"/></td><td><input name="leg_text_9"/></td><td><input name="leg_schutz_9"/></td><td><input name="leg_amp_9"/></td><td><input name="leg_ma_9"/></td></tr><tr><td><input name="leg_strom_10"/></td><td><input name="leg_text_10"/></td><td><input name="leg_schutz_10"/></td><td><input name="leg_amp_10"/></td><td><input name="leg_ma_10"/></td></tr><tr><td><input name="leg_strom_11"/></td><td><input name="leg_text_11"/></td><td><input name="leg_schutz_11"/></td><td><input name="leg_amp_11"/></td><td><input name="leg_ma_11"/></td></tr><tr><td><input name="leg_strom_12"/></td><td><input name="leg_text_12"/></td><td><input name="leg_schutz_12"/></td><td><input name="leg_amp_12"/></td><td><input name="leg_ma_12"/></td></tr><tr><td><input name="leg_strom_13"/></td><td><input name="leg_text_13"/></td><td><input name="leg_schutz_13"/></td><td><input name="leg_amp_13"/></td><td><input name="leg_ma_13"/></td></tr><tr><td><input name="leg_strom_14"/></td><td><input name="leg_text_14"/></td><td><input name="leg_schutz_14"/></td><td><input name="leg_amp_14"/></td><td><input name="leg_ma_14"/></td></tr><tr><td><input name="leg_strom_15"/></td><td><input name="leg_text_15"/></td><td><input name="leg_schutz_15"/></td><td><input name="leg_amp_15"/></td><td><input name="leg_ma_15"/></td></tr><tr><td><input name="leg_strom_16"/></td><td><input name="leg_text_16"/></td><td><input name="leg_schutz_16"/></td><td><input name="leg_amp_16"/></td><td><input name="leg_ma_16"/></td></tr><tr><td><input name="leg_strom_17"/></td><td><input name="leg_text_17"/></td><td><input name="leg_schutz_17"/></td><td><input name="leg_amp_17"/></td><td><input name="leg_ma_17"/></td></tr><tr><td><input name="leg_strom_18"/></td><td><input name="leg_text_18"/></td><td><input name="leg_schutz_18"/></td><td><input name="leg_amp_18"/></td><td><input name="leg_ma_18"/></td></tr><tr><td><input name="leg_strom_19"/></td><td><input name="leg_text_19"/></td><td><input name="leg_schutz_19"/></td><td><input name="leg_amp_19"/></td><td><input name="leg_ma_19"/></td></tr><tr><td><input name="leg_strom_20"/></td><td><input name="leg_text_20"/></td><td><input name="leg_schutz_20"/></td><td><input name="leg_amp_20"/></td><td><input name="leg_ma_20"/></td></tr><tr><td><input name="leg_strom_21"/></td><td><input name="leg_text_21"/></td><td><input name="leg_schutz_21"/></td><td><input name="leg_amp_21"/></td><td><input name="leg_ma_21"/></td></tr><tr><td><input name="leg_strom_22"/></td><td><input name="leg_text_22"/></td><td><input name="leg_schutz_22"/></td><td><input name="leg_amp_22"/></td><td><input name="leg_ma_22"/></td></tr><tr><td><input name="leg_strom_23"/></td><td><input name="leg_text_23"/></td><td><input name="leg_schutz_23"/></td><td><input name="leg_amp_23"/></td><td><input name="leg_ma_23"/></td></tr><tr><td><input name="leg_strom_24"/></td><td><input name="leg_text_24"/></td><td><input name="leg_schutz_24"/></td><td><input name="leg_amp_24"/></td><td><input name="leg_ma_24"/></td></tr><tr><td><input name="leg_strom_25"/></td><td><input name="leg_text_25"/></td><td><input name="leg_schutz_25"/></td><td><input name="leg_amp_25"/></td><td><input name="leg_ma_25"/></td></tr><tr><td><input name="leg_strom_26"/></td><td><input name="leg_text_26"/></td><td><input name="leg_schutz_26"/></td><td><input name="leg_amp_26"/></td><td><input name="leg_ma_26"/></td></tr><tr><td><input name="leg_strom_27"/></td><td><input name="leg_text_27"/></td><td><input name="leg_schutz_27"/></td><td><input name="leg_amp_27"/></td><td><input name="leg_ma_27"/></td></tr><tr><td><input name="leg_strom_28"/></td><td><input name="leg_text_28"/></td><td><input name="leg_schutz_28"/></td><td><input name="leg_amp_28"/></td><td><input name="leg_ma_28"/></td></tr><tr><td><input name="leg_strom_29"/></td><td><input name="leg_text_29"/></td><td><input name="leg_schutz_29"/></td><td><input name="leg_amp_29"/></td><td><input name="leg_ma_29"/></td></tr><tr><td><input name="leg_strom_30"/></td><td><input name="leg_text_30"/></td><td><input name="leg_schutz_30"/></td><td><input name="leg_amp_30"/></td><td><input name="leg_ma_30"/></td></tr></tbody></table>
+</div>
 <div class="pagepart" id="messPage" style="display:none">
-<div class="section" style="font-size:11px;text-align:center;margin-top:0">MESSPROTOKOLL</div>
+<div class="beiblatt-top">
+  <div class="beiblatt-logo">EQUANS<br/>SWITZERLAND</div>
+  <div class="beiblatt-title">MESSPROTOKOLL</div>
+  <div class="beiblatt-spacer"></div>
+</div>
 <div class="linegrid">
 <div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="messrapport"/></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="messauftrag"/></div>
 <div class="lbl" style="grid-column:11/13">Seite:</div><div class="in" style="grid-column:13/15"><input name="messseite" value="2"/></div>
 <div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="messprojekt"/></div>
 </div>
-<table>
-<thead><tr class="measurement-groups"><th colspan="2">Bezeichnung</th><th colspan="2">Leitung / Kabel</th><th colspan="2">OCPD</th><th colspan="7">Messungen</th><th colspan="3">Fehlerstromschutz</th></tr>
+<div class="mess-scroll">
+<table class="mess-table">
+<colgroup>
+<col class="c-strom"><col class="c-ort"><col class="c-art"><col class="c-mm"><col class="c-char"><col class="c-in">
+<col class="c-ik"><col class="c-ik"><col class="c-ik"><col class="c-ik"><col class="c-riso"><col class="c-rlow"><col class="c-fi"><col class="c-fi"><col class="c-time">
+</colgroup>
+<thead>
+<tr class="measurement-groups"><th colspan="2">Bezeichnung</th><th colspan="2">Leitung / Kabel</th><th colspan="2">OCPD</th><th colspan="6">Messungen</th><th colspan="3">Fehlerstromschutz</th></tr>
 <tr class="measuretop">
-<th>Stromkreis</th><th>Ort / Anlage</th><th>Leitung Art</th><th>mm²</th>
-<th>OCPD Art / Char.</th><th>IN [A]</th><th>IK L-PE Start</th><th>IK L-PE Ende</th>
-<th>IK L-N Start</th><th>IK L-N Ende</th><th>RISO [MΩ]</th><th>Ileck [mA]</th>
-<th>RLOW [Ω]</th><th>IN / Art</th><th>IΔN [mA]</th><th>Auslösezeit [ms]</th>
+<th class="sticky-strom" rowspan="2">Stromkreis</th><th rowspan="2">Ort / Anlage</th><th rowspan="2">Leitung<br>Art</th><th rowspan="2">mm²</th><th rowspan="2">Art / Char.</th><th rowspan="2">IN [A]</th>
+<th colspan="2">IK L-PE <button type="button" class="mess-info" data-mh="ikpe" aria-label="Hilfe IK L-PE">i</button></th><th colspan="2">IK L-N <button type="button" class="mess-info" data-mh="ikln" aria-label="Hilfe IK L-N">i</button></th><th rowspan="2">RISO <button type="button" class="mess-info" data-mh="riso" aria-label="Hilfe RISO">i</button><br>[MΩ]</th><th rowspan="2">RLOW <button type="button" class="mess-info" data-mh="rlow" aria-label="Hilfe RLOW">i</button><br>[Ω]</th><th rowspan="2">IN / A</th><th rowspan="2">IΔN<br>[mA]</th><th rowspan="2">Auslösezeit <button type="button" class="mess-info" data-mh="rcd" aria-label="Hilfe RCD Auslösezeit">i</button><br>[ms]</th>
 </tr>
+<tr class="measure-sub"><th>Anfang</th><th>Ende</th><th>Anfang</th><th>Ende</th></tr>
 </thead>
-<tbody id="messRows"><tr><td><input name="mess_0_0"/></td><td><input name="mess_0_1"/></td><td><input name="mess_0_2"/></td><td><input name="mess_0_3"/></td><td><input name="mess_0_4"/></td><td><input name="mess_0_5"/></td><td><input name="mess_0_6"/></td><td><input name="mess_0_7"/></td><td><input name="mess_0_8"/></td><td><input name="mess_0_9"/></td><td><input name="mess_0_10"/></td><td><input name="mess_0_11"/></td><td><input name="mess_0_12"/></td><td><input name="mess_0_13"/></td><td><input name="mess_0_14"/></td><td><input name="mess_0_15"/></td></tr>
-<tr><td><input name="mess_1_0"/></td><td><input name="mess_1_1"/></td><td><input name="mess_1_2"/></td><td><input name="mess_1_3"/></td><td><input name="mess_1_4"/></td><td><input name="mess_1_5"/></td><td><input name="mess_1_6"/></td><td><input name="mess_1_7"/></td><td><input name="mess_1_8"/></td><td><input name="mess_1_9"/></td><td><input name="mess_1_10"/></td><td><input name="mess_1_11"/></td><td><input name="mess_1_12"/></td><td><input name="mess_1_13"/></td><td><input name="mess_1_14"/></td><td><input name="mess_1_15"/></td></tr>
-<tr><td><input name="mess_2_0"/></td><td><input name="mess_2_1"/></td><td><input name="mess_2_2"/></td><td><input name="mess_2_3"/></td><td><input name="mess_2_4"/></td><td><input name="mess_2_5"/></td><td><input name="mess_2_6"/></td><td><input name="mess_2_7"/></td><td><input name="mess_2_8"/></td><td><input name="mess_2_9"/></td><td><input name="mess_2_10"/></td><td><input name="mess_2_11"/></td><td><input name="mess_2_12"/></td><td><input name="mess_2_13"/></td><td><input name="mess_2_14"/></td><td><input name="mess_2_15"/></td></tr>
-<tr><td><input name="mess_3_0"/></td><td><input name="mess_3_1"/></td><td><input name="mess_3_2"/></td><td><input name="mess_3_3"/></td><td><input name="mess_3_4"/></td><td><input name="mess_3_5"/></td><td><input name="mess_3_6"/></td><td><input name="mess_3_7"/></td><td><input name="mess_3_8"/></td><td><input name="mess_3_9"/></td><td><input name="mess_3_10"/></td><td><input name="mess_3_11"/></td><td><input name="mess_3_12"/></td><td><input name="mess_3_13"/></td><td><input name="mess_3_14"/></td><td><input name="mess_3_15"/></td></tr>
-<tr><td><input name="mess_4_0"/></td><td><input name="mess_4_1"/></td><td><input name="mess_4_2"/></td><td><input name="mess_4_3"/></td><td><input name="mess_4_4"/></td><td><input name="mess_4_5"/></td><td><input name="mess_4_6"/></td><td><input name="mess_4_7"/></td><td><input name="mess_4_8"/></td><td><input name="mess_4_9"/></td><td><input name="mess_4_10"/></td><td><input name="mess_4_11"/></td><td><input name="mess_4_12"/></td><td><input name="mess_4_13"/></td><td><input name="mess_4_14"/></td><td><input name="mess_4_15"/></td></tr>
-<tr><td><input name="mess_5_0"/></td><td><input name="mess_5_1"/></td><td><input name="mess_5_2"/></td><td><input name="mess_5_3"/></td><td><input name="mess_5_4"/></td><td><input name="mess_5_5"/></td><td><input name="mess_5_6"/></td><td><input name="mess_5_7"/></td><td><input name="mess_5_8"/></td><td><input name="mess_5_9"/></td><td><input name="mess_5_10"/></td><td><input name="mess_5_11"/></td><td><input name="mess_5_12"/></td><td><input name="mess_5_13"/></td><td><input name="mess_5_14"/></td><td><input name="mess_5_15"/></td></tr>
-<tr><td><input name="mess_6_0"/></td><td><input name="mess_6_1"/></td><td><input name="mess_6_2"/></td><td><input name="mess_6_3"/></td><td><input name="mess_6_4"/></td><td><input name="mess_6_5"/></td><td><input name="mess_6_6"/></td><td><input name="mess_6_7"/></td><td><input name="mess_6_8"/></td><td><input name="mess_6_9"/></td><td><input name="mess_6_10"/></td><td><input name="mess_6_11"/></td><td><input name="mess_6_12"/></td><td><input name="mess_6_13"/></td><td><input name="mess_6_14"/></td><td><input name="mess_6_15"/></td></tr>
-<tr><td><input name="mess_7_0"/></td><td><input name="mess_7_1"/></td><td><input name="mess_7_2"/></td><td><input name="mess_7_3"/></td><td><input name="mess_7_4"/></td><td><input name="mess_7_5"/></td><td><input name="mess_7_6"/></td><td><input name="mess_7_7"/></td><td><input name="mess_7_8"/></td><td><input name="mess_7_9"/></td><td><input name="mess_7_10"/></td><td><input name="mess_7_11"/></td><td><input name="mess_7_12"/></td><td><input name="mess_7_13"/></td><td><input name="mess_7_14"/></td><td><input name="mess_7_15"/></td></tr>
-<tr><td><input name="mess_8_0"/></td><td><input name="mess_8_1"/></td><td><input name="mess_8_2"/></td><td><input name="mess_8_3"/></td><td><input name="mess_8_4"/></td><td><input name="mess_8_5"/></td><td><input name="mess_8_6"/></td><td><input name="mess_8_7"/></td><td><input name="mess_8_8"/></td><td><input name="mess_8_9"/></td><td><input name="mess_8_10"/></td><td><input name="mess_8_11"/></td><td><input name="mess_8_12"/></td><td><input name="mess_8_13"/></td><td><input name="mess_8_14"/></td><td><input name="mess_8_15"/></td></tr>
-<tr><td><input name="mess_9_0"/></td><td><input name="mess_9_1"/></td><td><input name="mess_9_2"/></td><td><input name="mess_9_3"/></td><td><input name="mess_9_4"/></td><td><input name="mess_9_5"/></td><td><input name="mess_9_6"/></td><td><input name="mess_9_7"/></td><td><input name="mess_9_8"/></td><td><input name="mess_9_9"/></td><td><input name="mess_9_10"/></td><td><input name="mess_9_11"/></td><td><input name="mess_9_12"/></td><td><input name="mess_9_13"/></td><td><input name="mess_9_14"/></td><td><input name="mess_9_15"/></td></tr>
-<tr><td><input name="mess_10_0"/></td><td><input name="mess_10_1"/></td><td><input name="mess_10_2"/></td><td><input name="mess_10_3"/></td><td><input name="mess_10_4"/></td><td><input name="mess_10_5"/></td><td><input name="mess_10_6"/></td><td><input name="mess_10_7"/></td><td><input name="mess_10_8"/></td><td><input name="mess_10_9"/></td><td><input name="mess_10_10"/></td><td><input name="mess_10_11"/></td><td><input name="mess_10_12"/></td><td><input name="mess_10_13"/></td><td><input name="mess_10_14"/></td><td><input name="mess_10_15"/></td></tr>
-<tr><td><input name="mess_11_0"/></td><td><input name="mess_11_1"/></td><td><input name="mess_11_2"/></td><td><input name="mess_11_3"/></td><td><input name="mess_11_4"/></td><td><input name="mess_11_5"/></td><td><input name="mess_11_6"/></td><td><input name="mess_11_7"/></td><td><input name="mess_11_8"/></td><td><input name="mess_11_9"/></td><td><input name="mess_11_10"/></td><td><input name="mess_11_11"/></td><td><input name="mess_11_12"/></td><td><input name="mess_11_13"/></td><td><input name="mess_11_14"/></td><td><input name="mess_11_15"/></td></tr>
-<tr><td><input name="mess_12_0"/></td><td><input name="mess_12_1"/></td><td><input name="mess_12_2"/></td><td><input name="mess_12_3"/></td><td><input name="mess_12_4"/></td><td><input name="mess_12_5"/></td><td><input name="mess_12_6"/></td><td><input name="mess_12_7"/></td><td><input name="mess_12_8"/></td><td><input name="mess_12_9"/></td><td><input name="mess_12_10"/></td><td><input name="mess_12_11"/></td><td><input name="mess_12_12"/></td><td><input name="mess_12_13"/></td><td><input name="mess_12_14"/></td><td><input name="mess_12_15"/></td></tr>
-<tr><td><input name="mess_13_0"/></td><td><input name="mess_13_1"/></td><td><input name="mess_13_2"/></td><td><input name="mess_13_3"/></td><td><input name="mess_13_4"/></td><td><input name="mess_13_5"/></td><td><input name="mess_13_6"/></td><td><input name="mess_13_7"/></td><td><input name="mess_13_8"/></td><td><input name="mess_13_9"/></td><td><input name="mess_13_10"/></td><td><input name="mess_13_11"/></td><td><input name="mess_13_12"/></td><td><input name="mess_13_13"/></td><td><input name="mess_13_14"/></td><td><input name="mess_13_15"/></td></tr>
-<tr><td><input name="mess_14_0"/></td><td><input name="mess_14_1"/></td><td><input name="mess_14_2"/></td><td><input name="mess_14_3"/></td><td><input name="mess_14_4"/></td><td><input name="mess_14_5"/></td><td><input name="mess_14_6"/></td><td><input name="mess_14_7"/></td><td><input name="mess_14_8"/></td><td><input name="mess_14_9"/></td><td><input name="mess_14_10"/></td><td><input name="mess_14_11"/></td><td><input name="mess_14_12"/></td><td><input name="mess_14_13"/></td><td><input name="mess_14_14"/></td><td><input name="mess_14_15"/></td></tr>
-<tr><td><input name="mess_15_0"/></td><td><input name="mess_15_1"/></td><td><input name="mess_15_2"/></td><td><input name="mess_15_3"/></td><td><input name="mess_15_4"/></td><td><input name="mess_15_5"/></td><td><input name="mess_15_6"/></td><td><input name="mess_15_7"/></td><td><input name="mess_15_8"/></td><td><input name="mess_15_9"/></td><td><input name="mess_15_10"/></td><td><input name="mess_15_11"/></td><td><input name="mess_15_12"/></td><td><input name="mess_15_13"/></td><td><input name="mess_15_14"/></td><td><input name="mess_15_15"/></td></tr>
-<tr><td><input name="mess_16_0"/></td><td><input name="mess_16_1"/></td><td><input name="mess_16_2"/></td><td><input name="mess_16_3"/></td><td><input name="mess_16_4"/></td><td><input name="mess_16_5"/></td><td><input name="mess_16_6"/></td><td><input name="mess_16_7"/></td><td><input name="mess_16_8"/></td><td><input name="mess_16_9"/></td><td><input name="mess_16_10"/></td><td><input name="mess_16_11"/></td><td><input name="mess_16_12"/></td><td><input name="mess_16_13"/></td><td><input name="mess_16_14"/></td><td><input name="mess_16_15"/></td></tr>
-<tr><td><input name="mess_17_0"/></td><td><input name="mess_17_1"/></td><td><input name="mess_17_2"/></td><td><input name="mess_17_3"/></td><td><input name="mess_17_4"/></td><td><input name="mess_17_5"/></td><td><input name="mess_17_6"/></td><td><input name="mess_17_7"/></td><td><input name="mess_17_8"/></td><td><input name="mess_17_9"/></td><td><input name="mess_17_10"/></td><td><input name="mess_17_11"/></td><td><input name="mess_17_12"/></td><td><input name="mess_17_13"/></td><td><input name="mess_17_14"/></td><td><input name="mess_17_15"/></td></tr>
-<tr><td><input name="mess_18_0"/></td><td><input name="mess_18_1"/></td><td><input name="mess_18_2"/></td><td><input name="mess_18_3"/></td><td><input name="mess_18_4"/></td><td><input name="mess_18_5"/></td><td><input name="mess_18_6"/></td><td><input name="mess_18_7"/></td><td><input name="mess_18_8"/></td><td><input name="mess_18_9"/></td><td><input name="mess_18_10"/></td><td><input name="mess_18_11"/></td><td><input name="mess_18_12"/></td><td><input name="mess_18_13"/></td><td><input name="mess_18_14"/></td><td><input name="mess_18_15"/></td></tr>
-<tr><td><input name="mess_19_0"/></td><td><input name="mess_19_1"/></td><td><input name="mess_19_2"/></td><td><input name="mess_19_3"/></td><td><input name="mess_19_4"/></td><td><input name="mess_19_5"/></td><td><input name="mess_19_6"/></td><td><input name="mess_19_7"/></td><td><input name="mess_19_8"/></td><td><input name="mess_19_9"/></td><td><input name="mess_19_10"/></td><td><input name="mess_19_11"/></td><td><input name="mess_19_12"/></td><td><input name="mess_19_13"/></td><td><input name="mess_19_14"/></td><td><input name="mess_19_15"/></td></tr>
-<tr><td><input name="mess_20_0"/></td><td><input name="mess_20_1"/></td><td><input name="mess_20_2"/></td><td><input name="mess_20_3"/></td><td><input name="mess_20_4"/></td><td><input name="mess_20_5"/></td><td><input name="mess_20_6"/></td><td><input name="mess_20_7"/></td><td><input name="mess_20_8"/></td><td><input name="mess_20_9"/></td><td><input name="mess_20_10"/></td><td><input name="mess_20_11"/></td><td><input name="mess_20_12"/></td><td><input name="mess_20_13"/></td><td><input name="mess_20_14"/></td><td><input name="mess_20_15"/></td></tr>
-<tr><td><input name="mess_21_0"/></td><td><input name="mess_21_1"/></td><td><input name="mess_21_2"/></td><td><input name="mess_21_3"/></td><td><input name="mess_21_4"/></td><td><input name="mess_21_5"/></td><td><input name="mess_21_6"/></td><td><input name="mess_21_7"/></td><td><input name="mess_21_8"/></td><td><input name="mess_21_9"/></td><td><input name="mess_21_10"/></td><td><input name="mess_21_11"/></td><td><input name="mess_21_12"/></td><td><input name="mess_21_13"/></td><td><input name="mess_21_14"/></td><td><input name="mess_21_15"/></td></tr>
-<tr><td><input name="mess_22_0"/></td><td><input name="mess_22_1"/></td><td><input name="mess_22_2"/></td><td><input name="mess_22_3"/></td><td><input name="mess_22_4"/></td><td><input name="mess_22_5"/></td><td><input name="mess_22_6"/></td><td><input name="mess_22_7"/></td><td><input name="mess_22_8"/></td><td><input name="mess_22_9"/></td><td><input name="mess_22_10"/></td><td><input name="mess_22_11"/></td><td><input name="mess_22_12"/></td><td><input name="mess_22_13"/></td><td><input name="mess_22_14"/></td><td><input name="mess_22_15"/></td></tr>
-<tr><td><input name="mess_23_0"/></td><td><input name="mess_23_1"/></td><td><input name="mess_23_2"/></td><td><input name="mess_23_3"/></td><td><input name="mess_23_4"/></td><td><input name="mess_23_5"/></td><td><input name="mess_23_6"/></td><td><input name="mess_23_7"/></td><td><input name="mess_23_8"/></td><td><input name="mess_23_9"/></td><td><input name="mess_23_10"/></td><td><input name="mess_23_11"/></td><td><input name="mess_23_12"/></td><td><input name="mess_23_13"/></td><td><input name="mess_23_14"/></td><td><input name="mess_23_15"/></td></tr>
-<tr><td><input name="mess_24_0"/></td><td><input name="mess_24_1"/></td><td><input name="mess_24_2"/></td><td><input name="mess_24_3"/></td><td><input name="mess_24_4"/></td><td><input name="mess_24_5"/></td><td><input name="mess_24_6"/></td><td><input name="mess_24_7"/></td><td><input name="mess_24_8"/></td><td><input name="mess_24_9"/></td><td><input name="mess_24_10"/></td><td><input name="mess_24_11"/></td><td><input name="mess_24_12"/></td><td><input name="mess_24_13"/></td><td><input name="mess_24_14"/></td><td><input name="mess_24_15"/></td></tr>
-<tr><td><input name="mess_25_0"/></td><td><input name="mess_25_1"/></td><td><input name="mess_25_2"/></td><td><input name="mess_25_3"/></td><td><input name="mess_25_4"/></td><td><input name="mess_25_5"/></td><td><input name="mess_25_6"/></td><td><input name="mess_25_7"/></td><td><input name="mess_25_8"/></td><td><input name="mess_25_9"/></td><td><input name="mess_25_10"/></td><td><input name="mess_25_11"/></td><td><input name="mess_25_12"/></td><td><input name="mess_25_13"/></td><td><input name="mess_25_14"/></td><td><input name="mess_25_15"/></td></tr>
-<tr><td><input name="mess_26_0"/></td><td><input name="mess_26_1"/></td><td><input name="mess_26_2"/></td><td><input name="mess_26_3"/></td><td><input name="mess_26_4"/></td><td><input name="mess_26_5"/></td><td><input name="mess_26_6"/></td><td><input name="mess_26_7"/></td><td><input name="mess_26_8"/></td><td><input name="mess_26_9"/></td><td><input name="mess_26_10"/></td><td><input name="mess_26_11"/></td><td><input name="mess_26_12"/></td><td><input name="mess_26_13"/></td><td><input name="mess_26_14"/></td><td><input name="mess_26_15"/></td></tr>
-<tr><td><input name="mess_27_0"/></td><td><input name="mess_27_1"/></td><td><input name="mess_27_2"/></td><td><input name="mess_27_3"/></td><td><input name="mess_27_4"/></td><td><input name="mess_27_5"/></td><td><input name="mess_27_6"/></td><td><input name="mess_27_7"/></td><td><input name="mess_27_8"/></td><td><input name="mess_27_9"/></td><td><input name="mess_27_10"/></td><td><input name="mess_27_11"/></td><td><input name="mess_27_12"/></td><td><input name="mess_27_13"/></td><td><input name="mess_27_14"/></td><td><input name="mess_27_15"/></td></tr>
-<tr><td><input name="mess_28_0"/></td><td><input name="mess_28_1"/></td><td><input name="mess_28_2"/></td><td><input name="mess_28_3"/></td><td><input name="mess_28_4"/></td><td><input name="mess_28_5"/></td><td><input name="mess_28_6"/></td><td><input name="mess_28_7"/></td><td><input name="mess_28_8"/></td><td><input name="mess_28_9"/></td><td><input name="mess_28_10"/></td><td><input name="mess_28_11"/></td><td><input name="mess_28_12"/></td><td><input name="mess_28_13"/></td><td><input name="mess_28_14"/></td><td><input name="mess_28_15"/></td></tr>
-<tr><td><input name="mess_29_0"/></td><td><input name="mess_29_1"/></td><td><input name="mess_29_2"/></td><td><input name="mess_29_3"/></td><td><input name="mess_29_4"/></td><td><input name="mess_29_5"/></td><td><input name="mess_29_6"/></td><td><input name="mess_29_7"/></td><td><input name="mess_29_8"/></td><td><input name="mess_29_9"/></td><td><input name="mess_29_10"/></td><td><input name="mess_29_11"/></td><td><input name="mess_29_12"/></td><td><input name="mess_29_13"/></td><td><input name="mess_29_14"/></td><td><input name="mess_29_15"/></td></tr></tbody>
+
+<tbody id="messRows"><tr><td class="sticky-strom"><input name="mess_0_0"/></td><td><input name="mess_0_1"/></td><td><select name="mess_0_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_0_3"/></td><td><select name="mess_0_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_0_5"/></td><td><input name="mess_0_6"/></td><td><input name="mess_0_7"/></td><td><input name="mess_0_8"/></td><td><input name="mess_0_9"/></td><td><input name="mess_0_10"/></td><td><input name="mess_0_12"/></td><td><input name="mess_0_13"/></td><td><input name="mess_0_14"/></td><td><input name="mess_0_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_1_0"/></td><td><input name="mess_1_1"/></td><td><select name="mess_1_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_1_3"/></td><td><select name="mess_1_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_1_5"/></td><td><input name="mess_1_6"/></td><td><input name="mess_1_7"/></td><td><input name="mess_1_8"/></td><td><input name="mess_1_9"/></td><td><input name="mess_1_10"/></td><td><input name="mess_1_12"/></td><td><input name="mess_1_13"/></td><td><input name="mess_1_14"/></td><td><input name="mess_1_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_2_0"/></td><td><input name="mess_2_1"/></td><td><select name="mess_2_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_2_3"/></td><td><select name="mess_2_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_2_5"/></td><td><input name="mess_2_6"/></td><td><input name="mess_2_7"/></td><td><input name="mess_2_8"/></td><td><input name="mess_2_9"/></td><td><input name="mess_2_10"/></td><td><input name="mess_2_12"/></td><td><input name="mess_2_13"/></td><td><input name="mess_2_14"/></td><td><input name="mess_2_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_3_0"/></td><td><input name="mess_3_1"/></td><td><select name="mess_3_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_3_3"/></td><td><select name="mess_3_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_3_5"/></td><td><input name="mess_3_6"/></td><td><input name="mess_3_7"/></td><td><input name="mess_3_8"/></td><td><input name="mess_3_9"/></td><td><input name="mess_3_10"/></td><td><input name="mess_3_12"/></td><td><input name="mess_3_13"/></td><td><input name="mess_3_14"/></td><td><input name="mess_3_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_4_0"/></td><td><input name="mess_4_1"/></td><td><select name="mess_4_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_4_3"/></td><td><select name="mess_4_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_4_5"/></td><td><input name="mess_4_6"/></td><td><input name="mess_4_7"/></td><td><input name="mess_4_8"/></td><td><input name="mess_4_9"/></td><td><input name="mess_4_10"/></td><td><input name="mess_4_12"/></td><td><input name="mess_4_13"/></td><td><input name="mess_4_14"/></td><td><input name="mess_4_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_5_0"/></td><td><input name="mess_5_1"/></td><td><select name="mess_5_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_5_3"/></td><td><select name="mess_5_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_5_5"/></td><td><input name="mess_5_6"/></td><td><input name="mess_5_7"/></td><td><input name="mess_5_8"/></td><td><input name="mess_5_9"/></td><td><input name="mess_5_10"/></td><td><input name="mess_5_12"/></td><td><input name="mess_5_13"/></td><td><input name="mess_5_14"/></td><td><input name="mess_5_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_6_0"/></td><td><input name="mess_6_1"/></td><td><select name="mess_6_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_6_3"/></td><td><select name="mess_6_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_6_5"/></td><td><input name="mess_6_6"/></td><td><input name="mess_6_7"/></td><td><input name="mess_6_8"/></td><td><input name="mess_6_9"/></td><td><input name="mess_6_10"/></td><td><input name="mess_6_12"/></td><td><input name="mess_6_13"/></td><td><input name="mess_6_14"/></td><td><input name="mess_6_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_7_0"/></td><td><input name="mess_7_1"/></td><td><select name="mess_7_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_7_3"/></td><td><select name="mess_7_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_7_5"/></td><td><input name="mess_7_6"/></td><td><input name="mess_7_7"/></td><td><input name="mess_7_8"/></td><td><input name="mess_7_9"/></td><td><input name="mess_7_10"/></td><td><input name="mess_7_12"/></td><td><input name="mess_7_13"/></td><td><input name="mess_7_14"/></td><td><input name="mess_7_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_8_0"/></td><td><input name="mess_8_1"/></td><td><select name="mess_8_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_8_3"/></td><td><select name="mess_8_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_8_5"/></td><td><input name="mess_8_6"/></td><td><input name="mess_8_7"/></td><td><input name="mess_8_8"/></td><td><input name="mess_8_9"/></td><td><input name="mess_8_10"/></td><td><input name="mess_8_12"/></td><td><input name="mess_8_13"/></td><td><input name="mess_8_14"/></td><td><input name="mess_8_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_9_0"/></td><td><input name="mess_9_1"/></td><td><select name="mess_9_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_9_3"/></td><td><select name="mess_9_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_9_5"/></td><td><input name="mess_9_6"/></td><td><input name="mess_9_7"/></td><td><input name="mess_9_8"/></td><td><input name="mess_9_9"/></td><td><input name="mess_9_10"/></td><td><input name="mess_9_12"/></td><td><input name="mess_9_13"/></td><td><input name="mess_9_14"/></td><td><input name="mess_9_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_10_0"/></td><td><input name="mess_10_1"/></td><td><select name="mess_10_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_10_3"/></td><td><select name="mess_10_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_10_5"/></td><td><input name="mess_10_6"/></td><td><input name="mess_10_7"/></td><td><input name="mess_10_8"/></td><td><input name="mess_10_9"/></td><td><input name="mess_10_10"/></td><td><input name="mess_10_12"/></td><td><input name="mess_10_13"/></td><td><input name="mess_10_14"/></td><td><input name="mess_10_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_11_0"/></td><td><input name="mess_11_1"/></td><td><select name="mess_11_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_11_3"/></td><td><select name="mess_11_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_11_5"/></td><td><input name="mess_11_6"/></td><td><input name="mess_11_7"/></td><td><input name="mess_11_8"/></td><td><input name="mess_11_9"/></td><td><input name="mess_11_10"/></td><td><input name="mess_11_12"/></td><td><input name="mess_11_13"/></td><td><input name="mess_11_14"/></td><td><input name="mess_11_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_12_0"/></td><td><input name="mess_12_1"/></td><td><select name="mess_12_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_12_3"/></td><td><select name="mess_12_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_12_5"/></td><td><input name="mess_12_6"/></td><td><input name="mess_12_7"/></td><td><input name="mess_12_8"/></td><td><input name="mess_12_9"/></td><td><input name="mess_12_10"/></td><td><input name="mess_12_12"/></td><td><input name="mess_12_13"/></td><td><input name="mess_12_14"/></td><td><input name="mess_12_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_13_0"/></td><td><input name="mess_13_1"/></td><td><select name="mess_13_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_13_3"/></td><td><select name="mess_13_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_13_5"/></td><td><input name="mess_13_6"/></td><td><input name="mess_13_7"/></td><td><input name="mess_13_8"/></td><td><input name="mess_13_9"/></td><td><input name="mess_13_10"/></td><td><input name="mess_13_12"/></td><td><input name="mess_13_13"/></td><td><input name="mess_13_14"/></td><td><input name="mess_13_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_14_0"/></td><td><input name="mess_14_1"/></td><td><select name="mess_14_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_14_3"/></td><td><select name="mess_14_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_14_5"/></td><td><input name="mess_14_6"/></td><td><input name="mess_14_7"/></td><td><input name="mess_14_8"/></td><td><input name="mess_14_9"/></td><td><input name="mess_14_10"/></td><td><input name="mess_14_12"/></td><td><input name="mess_14_13"/></td><td><input name="mess_14_14"/></td><td><input name="mess_14_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_15_0"/></td><td><input name="mess_15_1"/></td><td><select name="mess_15_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_15_3"/></td><td><select name="mess_15_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_15_5"/></td><td><input name="mess_15_6"/></td><td><input name="mess_15_7"/></td><td><input name="mess_15_8"/></td><td><input name="mess_15_9"/></td><td><input name="mess_15_10"/></td><td><input name="mess_15_12"/></td><td><input name="mess_15_13"/></td><td><input name="mess_15_14"/></td><td><input name="mess_15_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_16_0"/></td><td><input name="mess_16_1"/></td><td><select name="mess_16_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_16_3"/></td><td><select name="mess_16_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_16_5"/></td><td><input name="mess_16_6"/></td><td><input name="mess_16_7"/></td><td><input name="mess_16_8"/></td><td><input name="mess_16_9"/></td><td><input name="mess_16_10"/></td><td><input name="mess_16_12"/></td><td><input name="mess_16_13"/></td><td><input name="mess_16_14"/></td><td><input name="mess_16_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_17_0"/></td><td><input name="mess_17_1"/></td><td><select name="mess_17_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_17_3"/></td><td><select name="mess_17_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_17_5"/></td><td><input name="mess_17_6"/></td><td><input name="mess_17_7"/></td><td><input name="mess_17_8"/></td><td><input name="mess_17_9"/></td><td><input name="mess_17_10"/></td><td><input name="mess_17_12"/></td><td><input name="mess_17_13"/></td><td><input name="mess_17_14"/></td><td><input name="mess_17_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_18_0"/></td><td><input name="mess_18_1"/></td><td><select name="mess_18_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_18_3"/></td><td><select name="mess_18_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_18_5"/></td><td><input name="mess_18_6"/></td><td><input name="mess_18_7"/></td><td><input name="mess_18_8"/></td><td><input name="mess_18_9"/></td><td><input name="mess_18_10"/></td><td><input name="mess_18_12"/></td><td><input name="mess_18_13"/></td><td><input name="mess_18_14"/></td><td><input name="mess_18_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_19_0"/></td><td><input name="mess_19_1"/></td><td><select name="mess_19_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_19_3"/></td><td><select name="mess_19_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_19_5"/></td><td><input name="mess_19_6"/></td><td><input name="mess_19_7"/></td><td><input name="mess_19_8"/></td><td><input name="mess_19_9"/></td><td><input name="mess_19_10"/></td><td><input name="mess_19_12"/></td><td><input name="mess_19_13"/></td><td><input name="mess_19_14"/></td><td><input name="mess_19_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_20_0"/></td><td><input name="mess_20_1"/></td><td><select name="mess_20_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_20_3"/></td><td><select name="mess_20_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_20_5"/></td><td><input name="mess_20_6"/></td><td><input name="mess_20_7"/></td><td><input name="mess_20_8"/></td><td><input name="mess_20_9"/></td><td><input name="mess_20_10"/></td><td><input name="mess_20_12"/></td><td><input name="mess_20_13"/></td><td><input name="mess_20_14"/></td><td><input name="mess_20_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_21_0"/></td><td><input name="mess_21_1"/></td><td><select name="mess_21_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_21_3"/></td><td><select name="mess_21_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_21_5"/></td><td><input name="mess_21_6"/></td><td><input name="mess_21_7"/></td><td><input name="mess_21_8"/></td><td><input name="mess_21_9"/></td><td><input name="mess_21_10"/></td><td><input name="mess_21_12"/></td><td><input name="mess_21_13"/></td><td><input name="mess_21_14"/></td><td><input name="mess_21_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_22_0"/></td><td><input name="mess_22_1"/></td><td><select name="mess_22_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_22_3"/></td><td><select name="mess_22_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_22_5"/></td><td><input name="mess_22_6"/></td><td><input name="mess_22_7"/></td><td><input name="mess_22_8"/></td><td><input name="mess_22_9"/></td><td><input name="mess_22_10"/></td><td><input name="mess_22_12"/></td><td><input name="mess_22_13"/></td><td><input name="mess_22_14"/></td><td><input name="mess_22_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_23_0"/></td><td><input name="mess_23_1"/></td><td><select name="mess_23_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_23_3"/></td><td><select name="mess_23_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_23_5"/></td><td><input name="mess_23_6"/></td><td><input name="mess_23_7"/></td><td><input name="mess_23_8"/></td><td><input name="mess_23_9"/></td><td><input name="mess_23_10"/></td><td><input name="mess_23_12"/></td><td><input name="mess_23_13"/></td><td><input name="mess_23_14"/></td><td><input name="mess_23_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_24_0"/></td><td><input name="mess_24_1"/></td><td><select name="mess_24_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_24_3"/></td><td><select name="mess_24_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_24_5"/></td><td><input name="mess_24_6"/></td><td><input name="mess_24_7"/></td><td><input name="mess_24_8"/></td><td><input name="mess_24_9"/></td><td><input name="mess_24_10"/></td><td><input name="mess_24_12"/></td><td><input name="mess_24_13"/></td><td><input name="mess_24_14"/></td><td><input name="mess_24_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_25_0"/></td><td><input name="mess_25_1"/></td><td><select name="mess_25_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_25_3"/></td><td><select name="mess_25_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_25_5"/></td><td><input name="mess_25_6"/></td><td><input name="mess_25_7"/></td><td><input name="mess_25_8"/></td><td><input name="mess_25_9"/></td><td><input name="mess_25_10"/></td><td><input name="mess_25_12"/></td><td><input name="mess_25_13"/></td><td><input name="mess_25_14"/></td><td><input name="mess_25_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_26_0"/></td><td><input name="mess_26_1"/></td><td><select name="mess_26_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_26_3"/></td><td><select name="mess_26_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_26_5"/></td><td><input name="mess_26_6"/></td><td><input name="mess_26_7"/></td><td><input name="mess_26_8"/></td><td><input name="mess_26_9"/></td><td><input name="mess_26_10"/></td><td><input name="mess_26_12"/></td><td><input name="mess_26_13"/></td><td><input name="mess_26_14"/></td><td><input name="mess_26_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_27_0"/></td><td><input name="mess_27_1"/></td><td><select name="mess_27_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_27_3"/></td><td><select name="mess_27_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_27_5"/></td><td><input name="mess_27_6"/></td><td><input name="mess_27_7"/></td><td><input name="mess_27_8"/></td><td><input name="mess_27_9"/></td><td><input name="mess_27_10"/></td><td><input name="mess_27_12"/></td><td><input name="mess_27_13"/></td><td><input name="mess_27_14"/></td><td><input name="mess_27_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_28_0"/></td><td><input name="mess_28_1"/></td><td><select name="mess_28_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_28_3"/></td><td><select name="mess_28_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_28_5"/></td><td><input name="mess_28_6"/></td><td><input name="mess_28_7"/></td><td><input name="mess_28_8"/></td><td><input name="mess_28_9"/></td><td><input name="mess_28_10"/></td><td><input name="mess_28_12"/></td><td><input name="mess_28_13"/></td><td><input name="mess_28_14"/></td><td><input name="mess_28_15"/></td></tr><tr><td class="sticky-strom"><input name="mess_29_0"/></td><td><input name="mess_29_1"/></td><td><select name="mess_29_2" class="mess-select mess-leitung"><option value=""></option><option value="T-Draht">T-Draht</option><option value="T-Seil">T-Seil</option><option value="T-Litze">T-Litze</option><option value="Draht">Draht</option><option value="Seil">Seil</option><option value="Litze">Litze</option><option value="Tdc">Tdc</option><option value="Tdc-Seil">Tdc-Seil</option><option value="TT">TT</option><option value="FE 0">FE 0</option><option value="FE 0 Seil">FE 0 Seil</option><option value="FE 05">FE 05</option><option value="FE 05 Seil">FE 05 Seil</option><option value="FE 180">FE 180</option><option value="FE 180 Seil">FE 180 Seil</option><option value="TW-Draht">TW-Draht</option><option value="TW-Seil">TW-Seil</option><option value="TW-Litze">TW-Litze</option><option value="GKT">GKT</option><option value="GKN">GKN</option><option value="XT">XT</option><option value="XN">XN</option><option value="XKT">XKT</option><option value="XKN">XKN</option><option value="TT-CLT">TT-CLT</option><option value="Td">Td</option><option value="Tdlr">Tdlr</option><option value="PUR-PUR">PUR-PUR</option><option value="Tdv">Tdv</option><option value="Gdv">Gdv</option><option value="Gd">Gd</option><option value="GrB">GrB</option><option value="Tdlf">Tdlf</option><option value="EPR-PUR">EPR-PUR</option><option value="Tlf">Tlf</option><option value="Andere">Andere</option></select></td><td><input name="mess_29_3"/></td><td><select name="mess_29_4" class="mess-select mess-ocpd"><option value=""></option><option value="LSB">LSB</option><option value="LSC">LSC</option><option value="LSD">LSD</option><option value="LSK">LSK</option><option value="LSZ">LSZ</option><option value="FI-LSB">FI-LSB</option><option value="FI-LSC">FI-LSC</option><option value="FI-LSD">FI-LSD</option><option value="FI-LSK">FI-LSK</option><option value="FI-LSZ">FI-LSZ</option><option value="gG">gG</option><option value="NH-gG">NH-gG</option><option value="NH-aM">NH-aM</option><option value="Andere">Andere</option></select></td><td><input name="mess_29_5"/></td><td><input name="mess_29_6"/></td><td><input name="mess_29_7"/></td><td><input name="mess_29_8"/></td><td><input name="mess_29_9"/></td><td><input name="mess_29_10"/></td><td><input name="mess_29_12"/></td><td><input name="mess_29_13"/></td><td><input name="mess_29_14"/></td><td><input name="mess_29_15"/></td></tr></tbody>
 </table>
+</div>
 <div style="margin-top:8px;font-weight:bold">OCPD = Überstromschutzeinrichtung</div>
 </div>
 <div class="pagepart" id="materialPage" style="display:none">
-<div class="section" style="font-size:11px;text-align:center;margin-top:0">MATERIAL - BEIBLATT</div>
+<div class="beiblatt-top">
+  <div class="beiblatt-logo">EQUANS<br/>SWITZERLAND</div>
+  <div class="beiblatt-title">MATERIAL - BEIBLATT</div>
+  <div class="beiblatt-spacer"></div>
+</div>
 <div class="linegrid">
 <div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="mrapport"/></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="mauftrag"/></div>
@@ -1434,7 +1814,11 @@ body.pdf-printing #arbeitszeitPage:not(.pdf-print-selected){display:none!importa
 </div>
 </div>
 <div class="pagepart" id="materialRegiePage" style="display:none">
-<div class="section" style="font-size:11px;text-align:center;margin-top:0">MATERIAL REGIE - BEIBLATT</div>
+<div class="beiblatt-top">
+  <div class="beiblatt-logo">EQUANS<br/>SWITZERLAND</div>
+  <div class="beiblatt-title">MATERIAL REGIE - BEIBLATT</div>
+  <div class="beiblatt-spacer"></div>
+</div>
 <div class="linegrid">
 <div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="regiemat_mrapport"/></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="regiemat_mauftrag"/></div>
@@ -1718,14 +2102,17 @@ function syncBeiblattHeaders(){
   put('messrapport', rapportNr);
   put('mrapport', rapportNr);
   put('az_rapportnr', rapportNr);
+  put('leg_rapportnr', rapportNr);
 
   put('messauftrag', auftragNr);
   put('mauftrag', auftragNr);
   put('az_auftrag', auftragNr);
+  put('leg_auftrag', auftragNr);
 
   put('messprojekt', referenz);
   put('mprojekt', referenz);
   put('az_ref', referenz);
+  put('leg_projekt', referenz);
 }
 
 document.addEventListener('input', function(e){
@@ -1829,77 +2216,78 @@ window.addEventListener('beforeprint', cleanEmptySignatureImages);
 })();
 
 function printSelectedPages(){
-  const pm=document.getElementById("pdfMenu"); if(pm) pm.open=false;
-  const want1 = !!document.getElementById("pdf1")?.checked;
-  const want2 = !!document.getElementById("pdf2")?.checked;
-  const want3 = !!document.getElementById("pdf3")?.checked;
-  const want4 = !!document.getElementById("pdf4")?.checked;
-  const want5 = !!document.getElementById("pdf5")?.checked;
-  const want6 = !!document.getElementById("pdf6")?.checked;
+  const pm=document.getElementById("pdfMenu");
+  if(pm) pm.open=false;
 
-  if (!want1 && !want2 && !want3 && !want4 && !want5 && !want6) {
+  const selected = {
+    rapport: !!document.getElementById("pdf1")?.checked,
+    mess: !!document.getElementById("pdf2")?.checked,
+    material: !!document.getElementById("pdf3")?.checked,
+    regie: !!document.getElementById("pdf4")?.checked,
+    materialRegie: !!document.getElementById("pdf5")?.checked,
+    arbeitszeit: !!document.getElementById("pdf6")?.checked,
+    legende: !!document.getElementById("pdf7")?.checked
+  };
+
+  if(!Object.values(selected).some(Boolean)){
     alert("Bitte mindestens eine PDF-Seite auswählen.");
     return;
   }
 
-  // Daten vor dem Drucken nochmals synchronisieren.
-  try { if (typeof syncBeiblattHeaders === "function") syncBeiblattHeaders(); } catch(e) {}
+  try{
+    if(typeof syncBeiblattHeaders==="function") syncBeiblattHeaders();
+    if(typeof recalcAllWorkHours==="function") recalcAllWorkHours();
+    if(typeof syncLegendMeta==="function") syncLegendMeta();
+  }catch(e){}
 
-  const pages = [
-    { el: document.getElementById("rapportPage"),       print: want1 },
-    { el: document.getElementById("regiePage"),         print: want4 },
-    { el: document.getElementById("messPage"),          print: want2 },
-    { el: document.getElementById("materialPage"),      print: want3 },
-    { el: document.getElementById("materialRegiePage"), print: want5 },
-    { el: document.getElementById("arbeitszeitPage"),  print: want6 }
+  const pages=[
+    {el:document.getElementById("rapportPage"),       print:selected.rapport},
+    {el:document.getElementById("regiePage"),         print:selected.regie},
+    {el:document.getElementById("arbeitszeitPage"),  print:selected.arbeitszeit},
+    {el:document.getElementById("legendePage"),       print:selected.legende},
+    {el:document.getElementById("messPage"),          print:selected.mess},
+    {el:document.getElementById("materialPage"),      print:selected.material},
+    {el:document.getElementById("materialRegiePage"), print:selected.materialRegie}
   ];
 
-  // Aktuellen Zustand sichern.
-  const saved = pages.map(p => ({
-    el: p.el,
-    display: p.el ? p.el.style.display : "",
-    hidden: p.el ? p.el.hidden : false
+  const saved=pages.map(p=>({
+    el:p.el,
+    display:p.el ? p.el.style.getPropertyValue("display") : "",
+    priority:p.el ? p.el.style.getPropertyPriority("display") : "",
+    hidden:p.el ? p.el.hidden : false
   }));
 
-  // Beim Drucken nur nach Checkboxen entscheiden – aktiver Tab ist egal.
-  pages.forEach(p => {
-    if (!p.el) return;
-    p.el.hidden = false;
-    p.el.style.display = p.print ? "block" : "none";
-    p.el.classList.toggle("pdf-print-selected", p.print);
+  pages.forEach(p=>{
+    if(!p.el) return;
+    p.el.hidden=false;
+    p.el.classList.remove("pdf-print-selected","pdf-print-first","pdf-print-next","pdf-print-last");
+    p.el.style.setProperty("display",p.print ? "block" : "none","important");
+  });
+
+  const chosen=pages.filter(p=>p.print && p.el);
+  chosen.forEach((p,index)=>{
+    p.el.classList.add("pdf-print-selected");
+    if(index===0) p.el.classList.add("pdf-print-first");
+    else p.el.classList.add("pdf-print-next");
+    if(index===chosen.length-1) p.el.classList.add("pdf-print-last");
   });
 
   document.body.classList.add("pdf-printing");
-  pages.forEach(p => {
-    if (p.el) {
-      p.el.classList.toggle("pdf-print-selected", !!p.print);
-      p.el.classList.remove("pdf-print-last");
-    }
-  });
-  const selectedPages = pages.filter(p => p.print && p.el);
-  if (selectedPages.length) {
-    selectedPages[selectedPages.length - 1].el.classList.add("pdf-print-last");
-  }
 
-  const restore = () => {
-    pages.forEach(p => {
-    if (p.el) {
-      p.el.classList.remove("pdf-print-selected");
-      p.el.classList.remove("pdf-print-last");
-    }
-  });
-  document.body.classList.remove("pdf-printing");
-    saved.forEach(x => {
-      if (!x.el) return;
-      x.el.style.display = x.display;
-      x.el.hidden = x.hidden;
-      x.el.classList.remove("pdf-print-selected");
+  const restore=()=>{
+    document.body.classList.remove("pdf-printing");
+    saved.forEach(x=>{
+      if(!x.el) return;
+      x.el.classList.remove("pdf-print-selected","pdf-print-first","pdf-print-next","pdf-print-last");
+      x.el.style.removeProperty("display");
+      if(x.display) x.el.style.setProperty("display",x.display,x.priority||"");
+      x.el.hidden=x.hidden;
     });
-    window.removeEventListener("afterprint", restore);
+    window.removeEventListener("afterprint",restore);
   };
 
-  window.addEventListener("afterprint", restore);
-  setTimeout(() => window.print(), 60);
+  window.addEventListener("afterprint",restore);
+  setTimeout(()=>window.print(),80);
 }
 window.addEventListener('afterprint',()=>{
   document.querySelectorAll('.pagepart').forEach(p=>p.classList.remove('print-me'));
@@ -1982,9 +2370,271 @@ window.addEventListener('afterprint',()=>{
 })();
 </script>
 </div>
+
+<script id="v68-legende-js">
+function legendFromMeasurements(){
+  const src=[...document.querySelectorAll('#messRows tr')].map(r=>{
+    const c=r.querySelectorAll('input,select');
+    return {strom:(c[0]?.value||'').trim(),text:(c[1]?.value||'').trim(),schutz:(c[4]?.value||'').trim(),amp:(c[5]?.value||'').trim(),ma:(c[13]?.value||'').trim()};
+  }).filter(x=>x.strom||x.text||x.schutz||x.amp||x.ma);
+  if(!src.length){alert('Im Messprotokoll sind keine passenden Angaben eingetragen. Die Legende kann trotzdem manuell ausgefüllt werden.');return;}
+  const existing=[...document.querySelectorAll('#legendePage tbody tr')].some(r=>[...r.querySelectorAll('input')].some(x=>x.value.trim()));
+  if(existing&&!confirm('Bestehende Legenden-Einträge durch die Daten aus Messungen ersetzen?'))return;
+  const rows=[...document.querySelectorAll('#legendePage tbody tr')]; rows.forEach(r=>r.querySelectorAll('input').forEach(x=>x.value=''));
+  src.slice(0,rows.length).forEach((x,i)=>{const inp=rows[i].querySelectorAll('input');inp[0].value=x.strom;inp[1].value=x.text;inp[2].value=x.schutz;inp[3].value=x.amp;inp[4].value=x.ma;});
+}
+function openLegendPrint(){document.getElementById('legendPrintDialog')?.classList.add('show');}
+function closeLegendPrint(){document.getElementById('legendPrintDialog')?.classList.remove('show');}
+function printLegendSpecial(){
+  const paper=document.getElementById('legendPaper')?.value||'A4';
+  const ori=document.getElementById('legendOrientation')?.value||'portrait';
+
+  /* Papiermasse in mm. 12 mm Sicherheitsrand rundum.
+     Die Legende selbst basiert auf dem normalen A4-Layout und wird für kleinere
+     Druckflächen proportional verkleinert, niemals oben abgeschnitten. */
+  const sizes={A3:[297,420],A4:[210,297],A5:[148,210]};
+  let wh=sizes[paper]||sizes.A4;
+  let pw=wh[0], ph=wh[1];
+  if(ori==='landscape'){ const t=pw; pw=ph; ph=t; }
+
+  const margin=12;
+  const safeW=pw-(margin*2);
+  const safeH=ph-(margin*2);
+
+  /* Ursprünglicher Legendenblock ungefähr A4-Innenbreite.
+     Skalierung nach Breite UND Höhe; der kleinere Faktor gewinnt. */
+  const baseW=186;
+  const baseH=255;
+  const scale=Math.min(1, safeW/baseW, safeH/baseH);
+
+  const root=document.documentElement;
+  root.style.setProperty('--legend-print-width', baseW+'mm');
+  root.style.setProperty('--legend-print-scale', String(scale));
+
+  /* Nach Skalierung verbleibenden freien Raum oben/unten gleich verteilen.
+     Mindestens 12 mm, damit der Kopf garantiert vollständig sichtbar bleibt. */
+  const usedH=baseH*scale;
+  const top=Math.max(margin, (ph-usedH)/2);
+  root.style.setProperty('--legend-print-top', top+'mm');
+
+  let st=document.getElementById('legendDynamicPage');
+  if(!st){
+    st=document.createElement('style');
+    st.id='legendDynamicPage';
+    document.head.appendChild(st);
+  }
+  st.textContent='@media print{@page{size:'+paper+' '+ori+';margin:0;}}';
+
+  closeLegendPrint();
+  document.body.classList.add('legend-special-print');
+
+  const done=()=>{
+    document.body.classList.remove('legend-special-print');
+    root.style.removeProperty('--legend-print-width');
+    root.style.removeProperty('--legend-print-scale');
+    root.style.removeProperty('--legend-print-top');
+    window.removeEventListener('afterprint',done);
+  };
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>window.print(),80);
+}
+</script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
 }
 </script>
+
+<script id="v66-mess-other-js">
+(function(){
+  function activateOther(sel){
+    if(!sel || sel.value !== 'Andere') return;
+    var name = sel.name;
+    var wrap = document.createElement('div');
+    wrap.className = 'mess-other-wrap';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'mess-other-input';
+    input.name = name;
+    input.placeholder = 'Andere';
+    input.autocomplete = 'off';
+
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'mess-other-back';
+    back.textContent = '↩';
+    back.title = 'Zurück zur Auswahl';
+
+    sel.name = '';
+    sel.style.display = 'none';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(input);
+    wrap.appendChild(back);
+
+    back.addEventListener('click', function(){
+      var typed = input.value;
+      wrap.remove();
+      sel.style.display = '';
+      sel.name = name;
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', {bubbles:true}));
+      sel.focus();
+    });
+
+    input.focus();
+  }
+
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.matches('#messPage .mess-select') && e.target.value === 'Andere'){
+      activateOther(e.target);
+    }
+  });
+})();
+</script>
+
+
+<script id="v69-legende-sync">
+(function(){
+ function syncLegendMeta(){
+   const gp=n=>document.querySelector('[name="'+n+'"]');
+   const proj=gp('leg_projekt'), dat=gp('leg_datum');
+   if(proj && !proj.value) proj.value=(gp('messprojekt')?.value||gp('ref')?.value||'');
+   if(dat && !dat.value) dat.value=(gp('datum')?.value||'');
+ }
+ window.addEventListener('beforeprint',syncLegendMeta);
+ window.addEventListener('load',()=>setTimeout(syncLegendMeta,0));
+})();
+</script>
+
+<script id="v73-print-cleanup">
+(function(){
+  let cleaned=[];
+  function cleanMaterialPlaceholders(){
+    cleaned=[];
+    ['materialPage','materialRegiePage'].forEach(function(id){
+      const page=document.getElementById(id); if(!page)return;
+      page.querySelectorAll('.material-unit').forEach(function(sel){
+        if((sel.value||'')==='' && sel.options && sel.selectedIndex>=0){
+          const opt=sel.options[sel.selectedIndex];
+          if(opt && (opt.textContent||'').trim()==='Einheit'){
+            cleaned.push({sel:sel, text:opt.textContent});
+            opt.textContent='';
+          }
+        }
+      });
+    });
+  }
+  function restoreMaterialPlaceholders(){
+    cleaned.forEach(function(x){if(x.sel && x.sel.options && x.sel.selectedIndex>=0)x.sel.options[x.sel.selectedIndex].textContent=x.text;});
+    cleaned=[];
+  }
+  window.addEventListener('beforeprint',cleanMaterialPlaceholders);
+  window.addEventListener('afterprint',restoreMaterialPlaceholders);
+})();
+</script>
+
+
+<script id="v78-rapport-regie-empty-unit-print">
+(function(){
+  let restoreUnits=[];
+
+  function hideEmptyUnitsForPrint(){
+    if(!document.body.classList.contains("pdf-printing")) return;
+    restoreUnits=[];
+
+    ["rapportPage","regiePage"].forEach(function(id){
+      const page=document.getElementById(id);
+      if(!page) return;
+
+      page.querySelectorAll("select").forEach(function(sel){
+        if((sel.value||"")==="" && sel.options && sel.selectedIndex>=0){
+          const opt=sel.options[sel.selectedIndex];
+          if(opt && (opt.textContent||"").trim()==="Einheit"){
+            restoreUnits.push({opt:opt,text:opt.textContent});
+            opt.textContent="";
+          }
+        }
+      });
+    });
+  }
+
+  function restoreEmptyUnits(){
+    restoreUnits.forEach(function(x){
+      if(x.opt) x.opt.textContent=x.text;
+    });
+    restoreUnits=[];
+  }
+
+  window.addEventListener("beforeprint",hideEmptyUnitsForPrint);
+  window.addEventListener("afterprint",restoreEmptyUnits);
+})();
+</script>
+
+
+<div id="messHelpOverlay" aria-hidden="true">
+  <div id="messHelpCard" role="dialog" aria-modal="true">
+    <div id="messHelpTop"><h2 id="messHelpTitle">Messhilfe</h2><button type="button" id="messHelpClose">×</button></div>
+    <div id="messHelpBody"></div>
+  </div>
+</div>
+
+
+<script id="v79-messhilfe-row-js">
+(function(){
+  const page=document.getElementById("messPage");
+  if(!page) return;
+
+  function markRow(target){
+    const tr=target.closest("#messPage .mess-table tbody tr");
+    if(!tr) return;
+    page.querySelectorAll(".mess-table tbody tr.mess-active-row").forEach(r=>r.classList.remove("mess-active-row"));
+    tr.classList.add("mess-active-row");
+  }
+  page.addEventListener("focusin",e=>{
+    if(e.target.matches(".mess-table tbody input,.mess-table tbody select,.mess-table tbody button")) markRow(e.target);
+  });
+  page.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".mess-table tbody td")) markRow(e.target);
+  });
+
+  const overlay=document.getElementById("messHelpOverlay");
+  const title=document.getElementById("messHelpTitle");
+  const body=document.getElementById("messHelpBody");
+  const close=document.getElementById("messHelpClose");
+
+  const diagrams={
+    riso:`<svg viewBox="0 0 700 300"><g fill="none" stroke="#111" stroke-width="3"><line x1="75" y1="45" x2="620" y2="45"/><line x1="75" y1="90" x2="620" y2="90"/><line x1="75" y1="135" x2="620" y2="135"/><line x1="75" y1="180" x2="620" y2="180"/><line x1="75" y1="235" x2="620" y2="235"/><line x1="170" y1="45" x2="170" y2="180"/><circle cx="170" cy="45" r="4" fill="#111"/><circle cx="170" cy="90" r="4" fill="#111"/><circle cx="170" cy="135" r="4" fill="#111"/><circle cx="170" cy="180" r="4" fill="#111"/><line x1="170" y1="180" x2="280" y2="265"/><line x1="170" y1="235" x2="400" y2="265"/><rect x="280" y="245" width="120" height="48"/></g><g font-family="Arial" font-size="19"><text x="20" y="51">L1</text><text x="20" y="96">L2</text><text x="20" y="141">L3</text><text x="20" y="186">N</text><text x="20" y="241">PE</text><text x="315" y="276" font-size="22">MΩ</text></g></svg>`,
+    rlow:`<svg viewBox="0 0 700 270"><g fill="none" stroke="#111" stroke-width="3"><line x1="80" y1="90" x2="620" y2="90"/><circle cx="150" cy="90" r="5" fill="#111"/><circle cx="580" cy="90" r="5" fill="#111"/><line x1="150" y1="90" x2="270" y2="205"/><line x1="580" y1="90" x2="430" y2="205"/><rect x="270" y="180" width="160" height="55"/></g><g font-family="Arial"><text x="25" y="97" font-size="21">PE</text><text x="310" y="215" font-size="22">Ω / RLOW</text></g></svg>`,
+    ikpe:`<svg viewBox="0 0 700 260"><g fill="none" stroke="#111" stroke-width="3"><line x1="70" y1="65" x2="625" y2="65"/><line x1="70" y1="190" x2="625" y2="190"/><line x1="280" y1="65" x2="340" y2="115"/><line x1="280" y1="190" x2="340" y2="145"/><rect x="340" y="105" width="150" height="55"/></g><g font-family="Arial"><text x="25" y="72" font-size="21">L</text><text x="20" y="197" font-size="21">PE</text><text x="395" y="140" font-size="21">Ik</text></g></svg>`,
+    ikln:`<svg viewBox="0 0 700 260"><g fill="none" stroke="#111" stroke-width="3"><line x1="70" y1="65" x2="625" y2="65"/><line x1="70" y1="190" x2="625" y2="190"/><line x1="280" y1="65" x2="340" y2="115"/><line x1="280" y1="190" x2="340" y2="145"/><rect x="340" y="105" width="150" height="55"/></g><g font-family="Arial"><text x="25" y="72" font-size="21">L</text><text x="20" y="197" font-size="21">N</text><text x="395" y="140" font-size="21">Ik</text></g></svg>`,
+    rcd:`<svg viewBox="0 0 700 280"><g fill="none" stroke="#111" stroke-width="3"><line x1="60" y1="60" x2="640" y2="60"/><line x1="60" y1="120" x2="640" y2="120"/><line x1="60" y1="210" x2="640" y2="210"/><rect x="190" y="35" width="105" height="115"/><line x1="430" y1="60" x2="475" y2="145"/><line x1="430" y1="210" x2="475" y2="175"/><rect x="475" y="135" width="125" height="55"/></g><g font-family="Arial"><text x="20" y="67" font-size="20">L</text><text x="20" y="127" font-size="20">N</text><text x="20" y="217" font-size="20">PE</text><text x="220" y="100" font-size="20">RCD</text><text x="500" y="169" font-size="18">TEST</text></g></svg>`
+  };
+
+  const help={
+    ikpe:{t:"IK L-PE",s:"Kurzschlussstrom L gegen PE",steps:["Messgerät an L und PE anschließen.","Je nach Feld am Anfang oder Ende des Stromkreises messen.","Gemessenen IK-Wert in das passende Feld eintragen."],w:"Messung unter Spannung. Sicherheits- und NIN-Vorgaben beachten."},
+    ikln:{t:"IK L-N",s:"Kurzschlussstrom L gegen N",steps:["Messgerät an L und N anschließen.","Je nach Feld am Anfang oder Ende des Stromkreises messen.","Gemessenen IK-Wert eintragen."],w:"Messung unter Spannung. Sicherheits- und NIN-Vorgaben beachten."},
+    riso:{t:"RISO – Isolationswiderstand",s:"Aktive Leiter gegen Schutzleiter",steps:["Anlage spannungsfrei schalten und Spannungsfreiheit feststellen.","Empfindliche Elektronik und Überspannungsschutz berücksichtigen.","Aktive Leiter entsprechend der Prüfung zusammenfassen.","Zwischen aktiven Leitern und PE messen und Wert eintragen."],w:"Prüfspannung und Grenzwert werden erst nach verifizierter NIN-2025-Grundlage fest in die Hilfe übernommen."},
+    rlow:{t:"RLOW – Schutzleiter",s:"Niederohmigkeit / Durchgängigkeit",steps:["Spannungsfreiheit sicherstellen.","Messleitung am PE-Bezugspunkt und am zu prüfenden Schutzleiter anschließen.","Durchgängigkeit messen und Wert eintragen."],w:"Messstrom und Beurteilungswert werden erst nach verifizierter NIN-2025-Grundlage fest eingetragen."},
+    rcd:{t:"RCD – Auslösezeit",s:"Fehlerstromschutz prüfen",steps:["Passenden RCD und IΔN beachten.","Prüfgerät am zugehörigen Stromkreis anschließen.","RCD-Prüfung durchführen.","Gemessene Auslösezeit in das Feld eintragen."],w:"Prüffaktor und Grenzwerte werden erst nach verifizierter NIN-2025-Grundlage fest eingetragen."}
+  };
+
+  function openHelp(k){
+    const h=help[k]; if(!h) return;
+    title.textContent=h.t;
+    body.innerHTML=`<b>${h.s}</b><div class="mh-diagram">${diagrams[k]}</div><ol>${h.steps.map(x=>`<li>${x}</li>`).join("")}</ol><div class="mh-warn">⚠ ${h.w}</div>`;
+    overlay.classList.add("show"); overlay.setAttribute("aria-hidden","false");
+  }
+  function closeHelp(){overlay.classList.remove("show");overlay.setAttribute("aria-hidden","true")}
+
+  page.addEventListener("click",e=>{
+    const b=e.target.closest(".mess-info");
+    if(b){e.preventDefault();e.stopPropagation();openHelp(b.dataset.mh)}
+  });
+  close.addEventListener("click",closeHelp);
+  overlay.addEventListener("click",e=>{if(e.target===overlay)closeHelp()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHelp()});
+})();
+</script>
+
 </body></html>
