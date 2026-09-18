@@ -1512,8 +1512,8 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="meta-strip">
 <div class="meta-item"><div class="meta-label">Rapport-Nr.</div><div class="meta-value" id="headerRapportId">–</div></div>
 <div class="meta-item"><div class="meta-label">Datum</div><div class="meta-value" id="headerDate">–</div></div>
-<div class="meta-item"><div class="meta-label">Status</div><div class="meta-value">Lokal gespeichert</div></div>
-<div class="meta-item user-meta"><div class="meta-label">Benutzer</div><div class="meta-value">👤 <button id="headerUserName" onclick="changeLocalUser()" title="Benutzername ändern" type="button">–</button></div></div>
+<div class="meta-item"><div class="meta-label">Status</div><div class="meta-value" id="cloudHeaderStatus">Cloud</div></div>
+<div class="meta-item user-meta"><div class="meta-label">Benutzer</div><div class="meta-value">👤 <button id="headerUserName" onclick="changeLocalUser()" title="Benutzer / Abmelden" type="button">–</button></div></div>
 </div>
 <button class="header-delete delete-order" onclick="deleteSelectedOrder()" type="button">Auftrag löschen</button>
 </div>
@@ -1549,10 +1549,15 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div id="legendPrintDialog" class="no-print" aria-hidden="true"><div class="legend-dialog-card"><h3>Legende drucken</h3><div class="legend-choice"><label>Papierformat<br><select id="legendPaper"><option>A4</option><option>A3</option><option>A5</option></select></label><label>Ausrichtung<br><select id="legendOrientation"><option value="portrait">Hochformat</option><option value="landscape">Querformat</option></select></label></div><div class="legend-dialog-actions"><button type="button" onclick="closeLegendPrint()">Abbrechen</button><button type="button" onclick="printLegendSpecial()">Drucken</button></div></div></div>
 <div aria-hidden="true" id="loginOverlay">
 <div class="login-card">
-<div class="login-title">Benutzername</div>
-<div class="login-sub">Einmal auf diesem Gerät eingeben. Kein Passwort.</div>
-<input autocomplete="name" id="localUserInput" placeholder="Vorname Nachname" type="text"/>
-<div class="login-actions"><button class="login-save" onclick="saveLocalUser()" type="button">Speichern</button></div>
+<div class="login-title">EQUANS Rapport – Anmeldung</div>
+<div class="login-sub">Mit Firmen-Benutzer oder als Admin mit Google anmelden.</div>
+<input autocomplete="username" id="cloudUserInput" placeholder="Benutzername / E-Mail" type="text" style="margin-bottom:8px"/>
+<input autocomplete="current-password" id="cloudPasswordInput" placeholder="Passwort" type="password"/>
+<div id="cloudLoginStatus" style="font-size:11px;color:#68766f;margin-top:9px"></div>
+<div class="login-actions" style="gap:7px;flex-wrap:wrap">
+<button class="login-save" id="cloudEmailLoginBtn" type="button">Anmelden</button>
+<button class="login-save" id="cloudGoogleLoginBtn" type="button" style="background:#244656">Google Admin</button>
+</div>
 </div>
 </div>
 <div class="sheet">
@@ -1874,6 +1879,13 @@ let initialTemplate=null;
 let currentOrderKey='';
 let currentCreatedAt='';
 const LOCAL_USER_KEY='equansRapportLocalUserV1';
+// Cloud bridge: only exposes the existing order context; Rapport fields/layout stay unchanged.
+window.__setRapportOrderContext=function(key,createdAt){
+  currentOrderKey=key||'';
+  currentCreatedAt=createdAt||new Date().toISOString();
+};
+window.__getInitialRapportTemplate=function(){return initialTemplate;};
+
 function localUserName(){return (localStorage.getItem(LOCAL_USER_KEY)||'').trim()}
 function updateLocalUserHeader(){const e=document.getElementById('headerUserName');if(e)e.textContent=localUserName()||'–'}
 function openLocalUserDialog(force=false){
@@ -2684,6 +2696,282 @@ if ('serviceWorker' in navigator) {
    });
  });
 })();
+</script>
+
+
+<script type="module" id="equans-firebase-cloud-v1">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, getDocs, collection,
+  serverTimestamp, deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",
+  authDomain:"equans-rapport-test.firebaseapp.com",
+  projectId:"equans-rapport-test",
+  storageBucket:"equans-rapport-test.firebasestorage.app",
+  messagingSenderId:"916807708145",
+  appId:"1:916807708145:web:3c6d75cd06468684682850",
+  measurementId:"G-VPHGE42TWN"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const provider=new GoogleAuthProvider();
+
+let cloudUser=null;
+let cloudProfile=null;
+let cloudReady=false;
+
+const overlay=document.getElementById("loginOverlay");
+const userInput=document.getElementById("cloudUserInput");
+const passwordInput=document.getElementById("cloudPasswordInput");
+const emailBtn=document.getElementById("cloudEmailLoginBtn");
+const googleBtn=document.getElementById("cloudGoogleLoginBtn");
+const loginStatus=document.getElementById("cloudLoginStatus");
+const headerUser=document.getElementById("headerUserName");
+const headerStatus=document.getElementById("cloudHeaderStatus");
+
+function showLogin(msg=""){
+  if(loginStatus) loginStatus.textContent=msg;
+  overlay?.classList.add("show");
+  overlay?.setAttribute("aria-hidden","false");
+}
+function hideLogin(){
+  overlay?.classList.remove("show");
+  overlay?.setAttribute("aria-hidden","true");
+}
+function loginEmailValue(v){
+  const x=String(v||"").trim().toLowerCase();
+  if(!x) return "";
+  return x.includes("@") ? x : x+"@rapport.internal";
+}
+function displayName(){
+  return cloudProfile?.displayName || cloudProfile?.username || cloudUser?.displayName || cloudUser?.email || "";
+}
+function setCloudHeader(text){
+  if(headerStatus) headerStatus.textContent=text;
+}
+function cloudStateForSave(){
+  const state=window.captureForm();
+  // Signatures stay local for now. This prevents large base64 images from
+  // making a Firestore order document too large during the first cloud integration.
+  delete state.__signatures;
+  return state;
+}
+function orderNumber(){
+  return (document.querySelector('#rapportPage [name="auftrag"]')?.value||"").trim();
+}
+function referenceText(){
+  return (document.querySelector('#rapportPage [name="ref"]')?.value||"").trim();
+}
+function workText(){
+  return (document.querySelector('#rapportPage [name="arbeiten"]')?.value||"").trim();
+}
+
+async function verifyProfile(user){
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) throw new Error("Kein Benutzerprofil in Firestore.");
+  const p=snap.data();
+  if(p.active!==true) throw new Error("Zugang gesperrt.");
+  if(p.role!=="admin" && p.role!=="monteur") throw new Error("Ungültige Benutzerrolle.");
+  return p;
+}
+
+async function cloudRefreshOrderSelect(prefer=""){
+  const sel=document.getElementById("orderSelect");
+  if(!sel || !cloudUser) return;
+  const chosen=prefer||sel.value;
+  sel.innerHTML='<option value="">Auftrag auswählen …</option>';
+  const snap=await getDocs(collection(db,"orders"));
+  const rows=[];
+  snap.forEach(d=>{
+    const x=d.data();
+    if(x.rapportStateJson) rows.push({id:d.id,data:x});
+  });
+  rows.sort((a,b)=>{
+    const av=a.data.updatedAt?.seconds||0, bv=b.data.updatedAt?.seconds||0;
+    return bv-av;
+  });
+  for(const row of rows){
+    const o=document.createElement("option");
+    o.value=row.id;
+    const nr=String(row.data.orderNumber||"").trim();
+    const ref=String(row.data.reference||"").trim();
+    o.textContent=ref || "Ohne Referenz";
+    sel.appendChild(o);
+  }
+  if(chosen && rows.some(r=>r.id===chosen)) sel.value=chosen;
+}
+
+async function cloudSaveOrder(){
+  if(!cloudUser){showLogin("Bitte zuerst anmelden.");return;}
+  const id=window.ensureRapportId();
+  const ref=referenceText();
+  const nr=orderNumber();
+  const existing=await getDoc(doc(db,"orders",id));
+  const state=cloudStateForSave();
+  state.__rapportId=id;
+  state.__reference=ref;
+  state.__version=(existing.exists()?Number(existing.data().version||0):0)+1;
+
+  const payload={
+    rapportId:id,
+    orderNumber:nr,
+    reference:ref,
+    workPreview:workText().slice(0,300),
+    status:"offen",
+    rapportStateJson:JSON.stringify(state),
+    version:state.__version,
+    updatedBy:cloudUser.uid,
+    updatedByName:displayName(),
+    updatedAt:serverTimestamp()
+  };
+  if(!existing.exists()){
+    payload.createdBy=cloudUser.uid;
+    payload.createdByName=displayName();
+    payload.createdAt=serverTimestamp();
+  }
+
+  await setDoc(doc(db,"orders",id),payload,{merge:true});
+
+  // This is what moves the same shared order into "mine" for this user.
+  await setDoc(doc(db,"orders",id,"participants",cloudUser.uid),{
+    uid:cloudUser.uid,
+    displayName:displayName(),
+    joinedAt:serverTimestamp()
+  },{merge:true});
+
+  window.__setRapportOrderContext(id,state.__createdAt||new Date().toISOString());
+  await cloudRefreshOrderSelect(id);
+  window.updateHeaderInfo();
+  window.setStatus("Cloud gespeichert ✓");
+  setCloudHeader("Cloud gespeichert");
+}
+
+async function cloudLoadSelectedOrder(silent=false){
+  if(!cloudUser){showLogin("Bitte zuerst anmelden.");return;}
+  const sel=document.getElementById("orderSelect");
+  const key=sel?.value;
+  if(!key){if(!silent)alert("Bitte zuerst einen Auftrag auswählen.");return;}
+  const snap=await getDoc(doc(db,"orders",key));
+  if(!snap.exists()){alert("Auftrag nicht gefunden.");await cloudRefreshOrderSelect();return;}
+  const x=snap.data();
+  if(!x.rapportStateJson){alert("Dieser Auftrag enthält noch keinen Rapport.");return;}
+  const state=JSON.parse(x.rapportStateJson);
+  window.applyForm(state);
+  window.__setRapportOrderContext(key,state.__createdAt||new Date().toISOString());
+  window.location.hash="#rapportPage";
+  window.syncBeiblattHeaders?.();
+  window.updateHeaderInfo();
+  window.cleanEmptySignatureImages?.();
+  window.setStatus("Cloud geladen ✓");
+  setCloudHeader("Cloud geladen");
+}
+
+async function cloudNewOrder(){
+  if(!cloudUser){showLogin("Bitte zuerst anmelden.");return;}
+  if(!confirm("Neuen Auftrag erstellen? Die aktuell eingegebenen, noch nicht gespeicherten Änderungen werden geleert."))return;
+  const template=window.__getInitialRapportTemplate?.();
+  if(template) window.applyForm(template);
+  window.__setRapportOrderContext("",new Date().toISOString());
+  const sel=document.getElementById("orderSelect"); if(sel) sel.value="";
+  window.clearSignature?.();
+  window.ensureRapportId();
+  window.syncBeiblattHeaders?.();
+  window.updateHeaderInfo();
+  window.location.hash="#rapportPage";
+  window.setStatus("Neuer Auftrag ✓");
+}
+
+async function cloudDeleteSelectedOrder(){
+  if(!cloudUser) return;
+  if(cloudProfile?.role!=="admin"){
+    alert("Auftrag löschen ist nur für den Admin erlaubt.");
+    return;
+  }
+  const sel=document.getElementById("orderSelect");
+  const key=sel?.value||window.currentOrderKey;
+  if(!key){alert("Bitte zuerst einen Auftrag auswählen.");return;}
+  const label=sel?.value ? sel.options[sel.selectedIndex].text : key;
+  if(!confirm("ACHTUNG – Auftrag wirklich löschen?\n\n"+label+"\n\nDieser Cloud-Auftrag wird endgültig gelöscht."))return;
+  await deleteDoc(doc(db,"orders",key));
+  window.__setRapportOrderContext("",new Date().toISOString());
+  await cloudRefreshOrderSelect();
+  window.setStatus("Cloud-Auftrag gelöscht");
+}
+
+emailBtn?.addEventListener("click",async()=>{
+  try{
+    if(loginStatus) loginStatus.textContent="Anmeldung wird geprüft …";
+    const email=loginEmailValue(userInput?.value);
+    const password=passwordInput?.value||"";
+    if(!email||!password) throw new Error("Benutzername und Passwort eingeben.");
+    await signInWithEmailAndPassword(auth,email,password);
+  }catch(e){
+    if(loginStatus) loginStatus.textContent="Login-Fehler: "+(e.code||e.message);
+  }
+});
+googleBtn?.addEventListener("click",async()=>{
+  try{
+    if(loginStatus) loginStatus.textContent="Google-Anmeldung wird geöffnet …";
+    await signInWithPopup(auth,provider);
+  }catch(e){
+    if(loginStatus) loginStatus.textContent="Login-Fehler: "+(e.code||e.message);
+  }
+});
+passwordInput?.addEventListener("keydown",e=>{if(e.key==="Enter")emailBtn?.click();});
+
+window.changeLocalUser=async function(){
+  if(cloudUser){
+    if(confirm("Benutzer "+displayName()+" abmelden?")) await signOut(auth);
+  }else showLogin();
+};
+
+onAuthStateChanged(auth,async user=>{
+  cloudReady=false;
+  cloudUser=null;
+  cloudProfile=null;
+  if(!user){
+    if(headerUser) headerUser.textContent="–";
+    setCloudHeader("Nicht angemeldet");
+    showLogin("Bitte anmelden.");
+    return;
+  }
+  try{
+    const p=await verifyProfile(user);
+    cloudUser=user;
+    cloudProfile=p;
+    cloudReady=true;
+    if(headerUser) headerUser.textContent=displayName();
+    setCloudHeader("Cloud verbunden");
+    hideLogin();
+
+    // Existing Rapport functions are kept; only storage/login are switched to cloud.
+    window.saveOrder=cloudSaveOrder;
+    window.loadSelectedOrder=cloudLoadSelectedOrder;
+    window.newOrder=cloudNewOrder;
+    window.deleteSelectedOrder=cloudDeleteSelectedOrder;
+    window.refreshOrderSelect=cloudRefreshOrderSelect;
+    window.save=cloudSaveOrder;
+    window.load=cloudLoadSelectedOrder;
+
+    await cloudRefreshOrderSelect("");
+  }catch(e){
+    if(loginStatus) loginStatus.textContent=e.message||String(e);
+    await signOut(auth);
+  }
+});
+
+// Prevent the old local-name dialog from taking over on startup.
+window.openLocalUserDialog=function(){showLogin();};
+window.saveLocalUser=function(){};
 </script>
 
 </body></html>
