@@ -3015,6 +3015,8 @@ registerSaveBtn?.addEventListener("click",async()=>{
     const p1=document.getElementById("regPassword")?.value||"", p2=document.getElementById("regPassword2")?.value||"";
     if(!display||!username||!p1) throw new Error("Bitte alle Felder ausfüllen.");
     if(username.includes("@")) throw new Error("Beim Benutzernamen keine E-Mail eingeben.");
+    if(/\s/.test(username)) throw new Error("Benutzername darf keine Leerzeichen enthalten, z. B. mustermax.");
+    if(!/^[a-z0-9._-]+$/.test(username)) throw new Error("Benutzername: nur Buchstaben, Zahlen, Punkt, _ oder - verwenden.");
     if(p1!==p2) throw new Error("Passwörter stimmen nicht überein.");
     if(p1.length<6) throw new Error("Passwort muss mindestens 6 Zeichen haben.");
     registrationInProgress=true; if(st) st.textContent="Registrierung läuft …";
