@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EQUANS – Firebase Login Test</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f7;color:#222}.wrap{max-width:520px;margin:70px auto;padding:20px}
+.card{background:#fff;border:1px solid #d8dde0;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(0,0,0,.08)}
+h1{margin:0 0 8px;font-size:25px}.sub{color:#666;margin-bottom:24px}button{width:100%;padding:13px 16px;border:0;border-radius:9px;font-size:16px;cursor:pointer}
+#loginBtn{background:#244656;color:#fff}#logoutBtn{background:#e9edef;color:#222;margin-top:12px}.info{margin-top:22px;padding:16px;background:#f7f8f8;border-radius:10px;display:none}
+.row{margin:8px 0;word-break:break-all}.label{font-weight:bold}#status{margin-top:16px;font-size:14px;color:#555}.ok{color:#16733b!important}.err{color:#b3261e!important}
+</style></head><body><div class="wrap"><div class="card">
+<h1>EQUANS Rapport</h1><div class="sub">Firebase Google-Login – separater Test</div>
+<button id="loginBtn">Mit Google anmelden</button>
+    <div style="margin:18px 0 10px;text-align:center;color:#777;font-size:14px">oder</div>
+    <input id="emailInput" type="email" placeholder="E-Mail-Adresse"
+      style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #ccd3d7;border-radius:9px;font-size:16px;margin-bottom:10px">
+    <input id="passwordInput" type="password" placeholder="Passwort"
+      style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #ccd3d7;border-radius:9px;font-size:16px;margin-bottom:10px">
+    <button id="emailLoginBtn" style="background:#244656;color:#fff">Mit E-Mail anmelden</button>
+<div id="info" class="info"><div class="row"><span class="label">Name:</span> <span id="name"></span></div>
+<div class="row"><span class="label">E-Mail:</span> <span id="email"></span></div>
+<div class="row"><span class="label">Firebase UID:</span> <span id="uid"></span></div><div class="row"><span class="label">Rolle:</span> <span id="role"></span></div><div class="row"><span class="label">Status:</span> <span id="active"></span></div>
+<button id="logoutBtn">Abmelden</button></div><div id="roleArea" style="display:none;margin-top:14px">
+  <div id="dashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+    <button id="newRapportBtn" style="background:#244656;color:#fff">+ Neuer Rapport</button>
+    <button id="myRapportsBtn" style="background:#eef3f5;color:#244656">Meine Aufträge</button><button id="allOrdersBtn" style="background:#eef3f5;color:#244656">Gesamtaufträge</button>
+    <button id="materialBtn" style="background:#eef3f5;color:#244656">Material</button>
+    <button id="measureBtn" style="background:#eef3f5;color:#244656">Messungen</button>
+    <button id="usersBtn" style="display:none;background:#eef3f5;color:#244656">Benutzer</button>
+    <button id="settingsBtn" style="display:none;background:#eef3f5;color:#244656">Einstellungen</button>
+  </div>
+  <div id="pageBox" style="margin-top:12px;padding:16px;border-radius:10px;background:#f6f7f8;min-height:55px">
+    <strong id="pageTitle">Dashboard</strong>
+    <div id="pageText" style="margin-top:6px">Bereit.</div>
+  </div>
+</div><div id="status">Noch nicht angemeldet.</div>
+</div></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,getDocs,collection,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider(),db=getFirestore(app);
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const infoBox=document.getElementById("info");
+const statusBox=document.getElementById("status");
+const nameEl=document.getElementById("name");
+const emailEl=document.getElementById("email");
+const uidEl=document.getElementById("uid");
+const roleEl=document.getElementById("role");
+const activeEl=document.getElementById("active");
+const roleArea=document.getElementById("roleArea");
+const newRapportBtn=document.getElementById("newRapportBtn");
+const myRapportsBtn=document.getElementById("myRapportsBtn");
+const allOrdersBtn=document.getElementById("allOrdersBtn");
+const materialBtn=document.getElementById("materialBtn");
+const measureBtn=document.getElementById("measureBtn");
+const usersBtn=document.getElementById("usersBtn");
+const settingsBtn=document.getElementById("settingsBtn");
+const pageTitle=document.getElementById("pageTitle");
+const pageText=document.getElementById("pageText");
+const emailInput=document.getElementById("emailInput");
+const passwordInput=document.getElementById("passwordInput");
+const emailLoginBtn=document.getElementById("emailLoginBtn");
+async function showUser(user){
+  if(!user){
+    infoBox.style.display="none";
+    roleArea.style.display="none";
+    usersBtn.style.display="none";
+    settingsBtn.style.display="none";
+    loginBtn.style.display="block";
+    emailInput.style.display="block";
+    passwordInput.style.display="block";
+    emailLoginBtn.style.display="block";
+    statusBox.textContent="Noch nicht angemeldet.";
+    statusBox.className="";
+    return;
+  }
+
+  nameEl.textContent=user.displayName||"";
+  emailEl.textContent=user.email||"";
+  uidEl.textContent=user.uid||"";
+  roleEl.textContent="wird geprüft …";
+  activeEl.textContent="wird geprüft …";
+  infoBox.style.display="block";
+  loginBtn.style.display="none";
+  emailInput.style.display="none";
+  passwordInput.style.display="none";
+  emailLoginBtn.style.display="none";
+  statusBox.textContent="Benutzerrechte werden geprüft …";
+  statusBox.className="";
+
+  try{
+    const userRef=doc(db,"users",user.uid);
+    const snap=await getDoc(userRef);
+
+    if(!snap.exists()){
+      roleEl.textContent="nicht vorhanden";
+      activeEl.textContent="unbekannt";
+      statusBox.textContent="Kein Benutzerprofil in Firestore gefunden.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    const data=snap.data();
+    const role=data.role||"unbekannt";
+    const active=data.active===true;
+
+    roleEl.textContent=role;
+    activeEl.textContent=active?"aktiv":"gesperrt";
+
+    if(!active){
+      statusBox.textContent="Zugang gesperrt.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    if(role!=="admin" && role!=="monteur"){
+      statusBox.textContent="Unbekannte Benutzerrolle.";
+      statusBox.className="err";
+      await signOut(auth);
+      return;
+    }
+
+    statusBox.textContent="Anmeldung erfolgreich – Rolle: "+role;
+    statusBox.className="ok";
+    roleArea.style.display="block";
+    usersBtn.style.display=role==="admin"?"block":"none";
+    settingsBtn.style.display=role==="admin"?"block":"none";
+    pageTitle.textContent=role==="admin"?"Admin-Dashboard":"Monteur-Dashboard";
+    pageText.textContent=role==="admin"
+      ?"Benutzerverwaltung und Systemverwaltung."
+      :"Rapport, Material und Messungen.";
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Firestore-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+    await signOut(auth);
+  }
+}
+loginBtn.onclick=async()=>{
+  statusBox.textContent="Google-Anmeldung wird geöffnet …";
+  statusBox.className="";
+  try{
+    const result=await signInWithPopup(auth,provider);
+    showUser(result.user);
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Login-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
+emailLoginBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  const password=passwordInput.value;
+  if(!email || !password){
+    statusBox.textContent="Bitte E-Mail und Passwort eingeben.";
+    statusBox.className="err";
+    return;
+  }
+  statusBox.textContent="E-Mail-Anmeldung wird geprüft …";
+  statusBox.className="";
+  try{
+    const result=await signInWithEmailAndPassword(auth,email,password);
+    showUser(result.user);
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Login-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
+logoutBtn.onclick=()=>signOut(auth);
+
+function openPage(title,html){pageTitle.textContent=title;pageText.innerHTML=html;}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+async function createOrder(){
+ if(!auth.currentUser)return;
+ const nr=prompt("Auftragsnummer eingeben, z. B. 12345:");
+ if(!nr)return;
+ const id=nr.trim();
+ if(!/^[A-Za-z0-9._-]{1,50}$/.test(id)){openPage("Neuer Auftrag","Ungültige Auftragsnummer.");return;}
+ try{
+  const ref=doc(db,"orders",id),old=await getDoc(ref);
+  if(old.exists()){openPage("Neuer Auftrag","Auftrag <strong>"+esc(id)+"</strong> existiert bereits – keine Kopie erstellt.");return;}
+  await setDoc(ref,{orderNumber:id,status:"offen",createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),updatedBy:auth.currentUser.uid,updatedAt:serverTimestamp()});
+  openPage("Neuer Auftrag","Auftrag <strong>"+esc(id)+"</strong> wurde in Firestore erstellt.");
+ }catch(e){openPage("Neuer Auftrag","<span style='color:#b3261e'>Firestore-Fehler: "+esc(e.code||e.message)+"</span>");}
+}
+async function mine(id){return (await getDoc(doc(db,"orders",id,"participants",auth.currentUser.uid))).exists();}
+async function loadOrders(){
+ const snap=await getDocs(collection(db,"orders")),a=[];
+ for(const d of snap.docs)a.push({id:d.id,data:d.data(),mine:await mine(d.id)});
+ return a;
+}
+function card(o,button){
+ const nr=esc(o.data.orderNumber||o.id),st=esc(o.data.status||"offen");
+ return "<div style='padding:10px;margin:8px 0;border:1px solid #d8dde0;border-radius:8px;background:white'><strong>Auftrag "+nr+"</strong><div>Status: "+st+"</div>"+(button?"<button data-work='"+esc(o.id)+"' style='margin-top:8px;background:#244656;color:white'>An Auftrag arbeiten</button>":"")+"</div>";
+}
+async function markWorked(id){
+ try{
+  await setDoc(doc(db,"orders",id,"participants",auth.currentUser.uid),{uid:auth.currentUser.uid,joinedAt:serverTimestamp()},{merge:true});
+  await setDoc(doc(db,"orders",id),{updatedBy:auth.currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
+  await showMyOrders();
+ }catch(e){openPage("Auftrag","<span style='color:#b3261e'>Firestore-Fehler: "+esc(e.code||e.message)+"</span>");}
+}
+async function showAllOrders(){
+ try{
+  const a=(await loadOrders()).filter(o=>!o.mine);
+  openPage("Gesamtaufträge",a.length?a.map(o=>card(o,true)).join(""):"Keine Gesamtaufträge für diesen Benutzer.");
+  document.querySelectorAll("[data-work]").forEach(b=>b.onclick=()=>markWorked(b.dataset.work));
+ }catch(e){openPage("Gesamtaufträge","<span style='color:#b3261e'>Firestore-Fehler: "+esc(e.code||e.message)+"</span>");}
+}
+async function showMyOrders(){
+ try{
+  const a=(await loadOrders()).filter(o=>o.mine);
+  openPage("Meine Aufträge",a.length?a.map(o=>card(o,false)).join(""):"Du hast noch an keinem Auftrag gearbeitet.");
+ }catch(e){openPage("Meine Aufträge","<span style='color:#b3261e'>Firestore-Fehler: "+esc(e.code||e.message)+"</span>");}
+}
+newRapportBtn.onclick=createOrder;
+myRapportsBtn.onclick=showMyOrders;
+allOrdersBtn.onclick=showAllOrders;
+materialBtn.onclick=()=>openPage("Material","Hier kommt später die Materialerfassung.");
+measureBtn.onclick=()=>openPage("Messungen","Hier kommt später die Messungsseite mit Legende.");
+usersBtn.onclick=()=>openPage("Benutzer","Admin: Benutzerverwaltung kommt später.");
+settingsBtn.onclick=()=>openPage("Einstellungen","Admin: Systemeinstellungen.");
+onAuthStateChanged(auth,user=>showUser(user));
+</script></body></html>
