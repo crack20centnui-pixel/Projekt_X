@@ -1500,6 +1500,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 }
 </style>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body spellcheck="false">
 <div class="pdf-toolbar" id="pdfToolbar">
 <div class="head-main">
@@ -2634,6 +2635,54 @@ if ('serviceWorker' in navigator) {
   close.addEventListener("click",closeHelp);
   overlay.addEventListener("click",e=>{if(e.target===overlay)closeHelp()});
   document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHelp()});
+})();
+</script>
+
+
+<!-- GOOGLE LOGIN TEST ONLY -->
+<style id="google-login-test-style">
+#googleLoginTest{position:fixed;right:14px;bottom:14px;z-index:99998;background:#fff;border:1px solid #cbd5df;border-radius:10px;padding:10px;box-shadow:0 4px 18px #0002;font:12px Arial,sans-serif}
+#googleLoginUser{margin-top:6px;font-weight:700}
+#googleLoginLogout{display:none;margin-top:6px}
+@media print{#googleLoginTest{display:none!important}}
+</style>
+<div id="googleLoginTest" class="no-print">
+  <div id="googleSignIn"></div>
+  <div id="googleLoginUser"></div>
+  <button id="googleLoginLogout" type="button">Abmelden</button>
+</div>
+<script id="google-login-test-js">
+(function(){
+ const CLIENT_ID='916807708145-svmug44l4usafautgf70vfoapisuno33.apps.googleusercontent.com';
+ function decodeJwt(t){
+   try{
+     let p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+     p += '='.repeat((4-p.length%4)%4);
+     return JSON.parse(decodeURIComponent(atob(p).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+   }catch(e){ return null; }
+ }
+ function setUser(p){
+   const b=document.getElementById('googleSignIn'), u=document.getElementById('googleLoginUser'), o=document.getElementById('googleLoginLogout');
+   if(p){ b.style.display='none'; u.textContent='Angemeldet: '+(p.name||p.email||'Google Benutzer'); o.style.display='inline-block'; }
+   else{ b.style.display='block'; u.textContent=''; o.style.display='none'; }
+ }
+ window.addEventListener('load', function(){
+   if(!(window.google && google.accounts && google.accounts.id)){
+     document.getElementById('googleLoginUser').textContent='Google Login konnte nicht geladen werden.';
+     return;
+   }
+   google.accounts.id.initialize({
+     client_id: CLIENT_ID,
+     callback: function(r){ const p=decodeJwt(r.credential); if(p) setUser(p); }
+   });
+   google.accounts.id.renderButton(document.getElementById('googleSignIn'), {
+     type:'standard', theme:'outline', size:'large', text:'signin_with'
+   });
+   document.getElementById('googleLoginLogout').addEventListener('click', function(){
+     google.accounts.id.disableAutoSelect();
+     setUser(null);
+   });
+ });
 })();
 </script>
 
