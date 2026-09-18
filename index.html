@@ -1524,6 +1524,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <button onclick="exportRapportFile()" type="button">▧ Rapport-Datei</button>
 <button onclick="exportMasterBackup()" title="Alle lokalen Aufträge und Benutzer sichern" type="button">▣ Master</button>
 <button onclick="document.getElementById('masterImportInput').click()" title="Master-Backup auf diesem Gerät einlesen" type="button">▱ Master laden</button>
+<button id="adminAreaBtn" type="button" style="display:none">⚙ Admin</button>
 <select aria-label="Gespeicherter Auftrag" id="orderSelect" onchange="loadSelectedOrder(true)"><option value="">Auftrag auswählen …</option></select>
 <details class="pdf-menu" id="pdfMenu">
 <summary>▧ PDF erstellen</summary>
@@ -1556,10 +1557,57 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div id="cloudLoginStatus" style="font-size:11px;color:#68766f;margin-top:9px"></div>
 <div class="login-actions" style="gap:7px;flex-wrap:wrap">
 <button class="login-save" id="cloudEmailLoginBtn" type="button">Anmelden</button>
+<button class="login-save" id="cloudRegisterOpenBtn" type="button" style="background:#fff;color:#2f6f55;border:1px solid #2f6f55">Registrieren</button>
 <button class="login-save" id="cloudGoogleLoginBtn" type="button" style="background:#244656">Google Admin</button>
 </div>
 </div>
 </div>
+<style id="v82-admin-registration-printfix">
+#adminOverlay,#registerOverlay{position:fixed;inset:0;z-index:100000;background:rgba(20,30,26,.52);display:none;align-items:center;justify-content:center;padding:18px;font-family:Arial,sans-serif}
+#adminOverlay.show,#registerOverlay.show{display:flex}
+.admin-card,.register-card{width:min(760px,94vw);max-height:90vh;overflow:auto;background:#fff;border:1px solid #cfded7;border-radius:12px;box-shadow:0 18px 55px rgba(0,0,0,.24);padding:20px;color:#17251f}
+.register-card{width:min(420px,94vw)}
+.admin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.admin-top h2{margin:0;font-size:20px}.admin-close{border:0;background:transparent;font-size:26px;cursor:pointer}
+.admin-section{border:1px solid #d6e1dc;border-radius:9px;padding:14px;margin-top:12px}.admin-section h3{margin:0 0 11px;font-size:14px;color:#315d4a}
+.admin-grid{display:grid;grid-template-columns:1fr 1.4fr auto;gap:8px;align-items:end}.admin-field label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;color:#5a6d64}.admin-field input{width:100%;height:36px;border:1px solid #b9c8c1;border-radius:6px;padding:0 9px;box-sizing:border-box}.admin-primary{height:36px;border:0;border-radius:6px;background:#2f6f55;color:#fff;font-weight:700;padding:0 14px;cursor:pointer}
+#adminUsersTable{width:100%;border-collapse:collapse;font-size:12px}#adminUsersTable th,#adminUsersTable td{border-bottom:1px solid #e0e7e3;padding:8px 6px;text-align:left;background:#fff}#adminUsersTable th{background:#f3f7f5}.admin-user-btn{border:1px solid #9fb2a8;border-radius:5px;background:#fff;padding:5px 8px;cursor:pointer;font-weight:700}.admin-user-btn.approve{background:#e8f6ed;color:#1d6b3f}.admin-user-btn.disable{background:#fff1f1;color:#a52a2a}
+.register-card h2{margin:0 0 4px}.register-card p{font-size:11px;color:#65756d;margin:0 0 13px}.register-card input{width:100%;height:39px;border:1px solid #b8c7c0;border-radius:6px;padding:0 10px;box-sizing:border-box;margin-bottom:8px}.register-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:5px}.register-actions button{height:36px;border:1px solid #aebdb6;border-radius:6px;background:#fff;padding:0 13px;font-weight:700;cursor:pointer}.register-actions .register-save{background:#2f6f55;color:#fff;border-color:#2f6f55}.register-status{font-size:11px;min-height:15px;color:#5c6d65}
+@media(max-width:650px){.admin-grid{grid-template-columns:1fr}.admin-card{padding:14px}}
+@media print{#adminOverlay,#registerOverlay,#adminAreaBtn{display:none!important}
+  /* NUR Messprotokoll: Bildschirm-gelb und aktive Markierung werden im PDF weiss. */
+  body.pdf-printing #messPage tbody td,
+  body.pdf-printing #messPage tbody input,
+  body.pdf-printing #messPage tbody select,
+  body.pdf-printing #messPage tbody .mess-other-wrap,
+  body.pdf-printing #messPage tbody .mess-other-input,
+  body.pdf-printing #messPage tbody .mess-other-back,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row > td,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row input,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row select,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row .mess-other-wrap,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row .mess-other-input,
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row .mess-other-back{background:#fff!important}
+  body.pdf-printing #messPage .mess-table tbody tr.mess-active-row > td{border:1px solid #b9c6cc!important}
+}
+</style>
+<div id="registerOverlay" aria-hidden="true"><div class="register-card">
+<h2>Monteur registrieren</h2><p>Nach der Registrierung muss der Administrator den Zugang freigeben.</p>
+<input id="regDisplayName" placeholder="Vorname / Name" autocomplete="name">
+<input id="regUsername" placeholder="Benutzername" autocomplete="username">
+<input id="regPassword" placeholder="Passwort" type="password" autocomplete="new-password">
+<input id="regPassword2" placeholder="Passwort wiederholen" type="password" autocomplete="new-password">
+<div id="registerStatus" class="register-status"></div>
+<div class="register-actions"><button id="registerCancelBtn" type="button">Abbrechen</button><button id="registerSaveBtn" class="register-save" type="button">Registrieren</button></div>
+</div></div>
+<div id="adminOverlay" aria-hidden="true"><div class="admin-card">
+<div class="admin-top"><div><h2>Administration</h2><div style="font-size:11px;color:#65756d">Nur für Administratoren</div></div><button id="adminCloseBtn" class="admin-close" type="button">×</button></div>
+<div class="admin-section"><h3>Rapport suchen</h3><div class="admin-grid">
+<div class="admin-field"><label>MONTEUR</label><input id="adminMonteurSearch" list="adminMonteurList" placeholder="Name suchen …"><datalist id="adminMonteurList"></datalist></div>
+<div class="admin-field"><label>REFERENZ</label><input id="adminReferenceSearch" list="adminReferenceList" placeholder="Referenz oder Teil davon …"><datalist id="adminReferenceList"></datalist></div>
+<button id="adminOpenRapportBtn" class="admin-primary" type="button">Rapport öffnen</button>
+</div><div id="adminRapportStatus" style="font-size:11px;color:#65756d;margin-top:7px"></div></div>
+<div class="admin-section"><h3>Benutzer</h3><table id="adminUsersTable"><thead><tr><th>Mitarbeiter</th><th>Benutzername</th><th>Status</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
+</div></div>
 <div class="sheet">
 <div class="tabs">
 <a href="#rapportPage">Rapport</a>
@@ -2703,7 +2751,7 @@ if ('serviceWorker' in navigator) {
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged
+  createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, getDocs, collection,
@@ -2728,6 +2776,8 @@ const provider=new GoogleAuthProvider();
 let cloudUser=null;
 let cloudProfile=null;
 let cloudReady=false;
+let registrationInProgress=false;
+let adminOrderRows=[];
 
 const overlay=document.getElementById("loginOverlay");
 const userInput=document.getElementById("cloudUserInput");
@@ -2737,6 +2787,13 @@ const googleBtn=document.getElementById("cloudGoogleLoginBtn");
 const loginStatus=document.getElementById("cloudLoginStatus");
 const headerUser=document.getElementById("headerUserName");
 const headerStatus=document.getElementById("cloudHeaderStatus");
+const registerOpenBtn=document.getElementById("cloudRegisterOpenBtn");
+const registerOverlay=document.getElementById("registerOverlay");
+const registerCancelBtn=document.getElementById("registerCancelBtn");
+const registerSaveBtn=document.getElementById("registerSaveBtn");
+const adminBtn=document.getElementById("adminAreaBtn");
+const adminOverlay=document.getElementById("adminOverlay");
+
 
 function showLogin(msg=""){
   if(loginStatus) loginStatus.textContent=msg;
@@ -2907,6 +2964,89 @@ async function cloudDeleteSelectedOrder(){
   window.setStatus("Cloud-Auftrag gelöscht");
 }
 
+
+function showRegister(){
+  hideLogin();
+  registerOverlay?.classList.add("show"); registerOverlay?.setAttribute("aria-hidden","false");
+  const st=document.getElementById("registerStatus"); if(st) st.textContent="";
+}
+function hideRegister(){registerOverlay?.classList.remove("show");registerOverlay?.setAttribute("aria-hidden","true");}
+registerOpenBtn?.addEventListener("click",showRegister);
+registerCancelBtn?.addEventListener("click",()=>{hideRegister();showLogin();});
+registerSaveBtn?.addEventListener("click",async()=>{
+  const st=document.getElementById("registerStatus");
+  try{
+    const display=(document.getElementById("regDisplayName")?.value||"").trim();
+    const username=(document.getElementById("regUsername")?.value||"").trim().toLowerCase();
+    const p1=document.getElementById("regPassword")?.value||"", p2=document.getElementById("regPassword2")?.value||"";
+    if(!display||!username||!p1) throw new Error("Bitte alle Felder ausfüllen.");
+    if(username.includes("@")) throw new Error("Beim Benutzernamen keine E-Mail eingeben.");
+    if(p1!==p2) throw new Error("Passwörter stimmen nicht überein.");
+    if(p1.length<6) throw new Error("Passwort muss mindestens 6 Zeichen haben.");
+    registrationInProgress=true; if(st) st.textContent="Registrierung läuft …";
+    const cred=await createUserWithEmailAndPassword(auth,username+"@rapport.internal",p1);
+    await setDoc(doc(db,"users",cred.user.uid),{displayName:display,username:username,role:"monteur",active:false,createdAt:serverTimestamp()});
+    await signOut(auth); registrationInProgress=false;
+    if(st) st.textContent="Registriert ✓ Wartet auf Freigabe durch Administrator.";
+    setTimeout(()=>{hideRegister();showLogin("Registriert – bitte auf Admin-Freigabe warten.");},1200);
+  }catch(e){registrationInProgress=false;if(st) st.textContent="Fehler: "+(e.code||e.message);try{if(auth.currentUser)await signOut(auth)}catch(_){} }
+});
+
+function adminOnly(){return !!cloudUser && cloudProfile?.role==="admin";}
+async function loadAdminUsers(){
+  if(!adminOnly()) return;
+  const body=document.querySelector("#adminUsersTable tbody"); if(!body)return; body.innerHTML="";
+  const snap=await getDocs(collection(db,"users"));
+  const users=[]; snap.forEach(d=>users.push({uid:d.id,...d.data()}));
+  users.sort((a,b)=>String(a.displayName||a.username||"").localeCompare(String(b.displayName||b.username||""),"de"));
+  const dl=document.getElementById("adminMonteurList"); if(dl) dl.innerHTML="";
+  users.filter(u=>u.role==="monteur").forEach(u=>{if(dl){const o=document.createElement("option");o.value=u.displayName||u.username||u.uid;o.dataset.uid=u.uid;dl.appendChild(o)}});
+  for(const u of users){
+    const tr=document.createElement("tr");
+    const status=u.active===true?"🟢 Aktiv":"🟡 Wartet / Inaktiv";
+    const action=u.active===true?"Deaktivieren":"Freigeben / Aktivieren";
+    tr.innerHTML=`<td>${escapeHtml(u.displayName||"–")}</td><td>${escapeHtml(u.username||"–")}</td><td>${status}</td><td><button class="admin-user-btn ${u.active===true?"disable":"approve"}" data-uid="${u.uid}" data-active="${u.active===true}">${action}</button></td>`;
+    body.appendChild(tr);
+  }
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+async function loadAdminOrders(){
+  if(!adminOnly()) return;
+  const snap=await getDocs(collection(db,"orders")); adminOrderRows=[];
+  snap.forEach(d=>{const x=d.data();if(x.rapportStateJson)adminOrderRows.push({id:d.id,...x})});
+  adminOrderRows.sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
+  refreshAdminReferences();
+}
+function selectedAdminMonteur(){return (document.getElementById("adminMonteurSearch")?.value||"").trim().toLowerCase();}
+function refreshAdminReferences(){
+  const q=selectedAdminMonteur(); const dl=document.getElementById("adminReferenceList"); if(!dl)return; dl.innerHTML="";
+  const seen=new Set();
+  adminOrderRows.filter(r=>!q || String(r.createdByName||r.updatedByName||"").toLowerCase().includes(q)).forEach(r=>{
+    const ref=String(r.reference||"").trim()||"Ohne Referenz"; if(seen.has(ref))return; seen.add(ref); const o=document.createElement("option");o.value=ref;dl.appendChild(o);
+  });
+}
+async function openAdmin(){if(!adminOnly())return;adminOverlay?.classList.add("show");adminOverlay?.setAttribute("aria-hidden","false");await Promise.all([loadAdminUsers(),loadAdminOrders()]);}
+adminBtn?.addEventListener("click",openAdmin);
+document.getElementById("adminCloseBtn")?.addEventListener("click",()=>{adminOverlay?.classList.remove("show");adminOverlay?.setAttribute("aria-hidden","true")});
+document.getElementById("adminMonteurSearch")?.addEventListener("input",refreshAdminReferences);
+document.querySelector("#adminUsersTable tbody")?.addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-uid]"); if(!b||!adminOnly())return;
+  const uid=b.dataset.uid, isActive=b.dataset.active==="true";
+  if(uid===cloudUser.uid && isActive){alert("Den aktuell angemeldeten Admin hier nicht deaktivieren.");return;}
+  await setDoc(doc(db,"users",uid),{active:!isActive},{merge:true}); await loadAdminUsers();
+});
+document.getElementById("adminOpenRapportBtn")?.addEventListener("click",async()=>{
+  if(!adminOnly())return;
+  const mon=selectedAdminMonteur(); const ref=(document.getElementById("adminReferenceSearch")?.value||"").trim().toLowerCase();
+  const matches=adminOrderRows.filter(r=>(!mon||String(r.createdByName||r.updatedByName||"").toLowerCase().includes(mon)) && (!ref||String(r.reference||"").toLowerCase().includes(ref)));
+  const st=document.getElementById("adminRapportStatus");
+  if(matches.length===0){if(st)st.textContent="Kein passender Rapport gefunden.";return;}
+  if(matches.length>1 && ref && !matches.some(r=>String(r.reference||"").trim().toLowerCase()===ref)){if(st)st.textContent="Mehrere Treffer – Referenz bitte genauer auswählen.";return;}
+  const exact=matches.find(r=>String(r.reference||"").trim().toLowerCase()===ref)||matches[0];
+  const sel=document.getElementById("orderSelect"); if(sel){if(![...sel.options].some(o=>o.value===exact.id)){const o=document.createElement("option");o.value=exact.id;o.textContent=exact.reference||"Ohne Referenz";sel.appendChild(o)}sel.value=exact.id;}
+  adminOverlay?.classList.remove("show"); await cloudLoadSelectedOrder(true);
+});
+
 emailBtn?.addEventListener("click",async()=>{
   try{
     if(loginStatus) loginStatus.textContent="Anmeldung wird geprüft …";
@@ -2935,11 +3075,13 @@ window.changeLocalUser=async function(){
 };
 
 onAuthStateChanged(auth,async user=>{
+  if(registrationInProgress) return;
   cloudReady=false;
   cloudUser=null;
   cloudProfile=null;
   if(!user){
     if(headerUser) headerUser.textContent="–";
+    if(adminBtn) adminBtn.style.display="none";
     setCloudHeader("Nicht angemeldet");
     showLogin("Bitte anmelden.");
     return;
@@ -2950,6 +3092,7 @@ onAuthStateChanged(auth,async user=>{
     cloudProfile=p;
     cloudReady=true;
     if(headerUser) headerUser.textContent=displayName();
+    if(adminBtn) adminBtn.style.display=(p.role==="admin")?"inline-block":"none";
     setCloudHeader("Cloud verbunden");
     hideLogin();
 
