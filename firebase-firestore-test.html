@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EQUANS – Firebase Login Test</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f7;color:#222}.wrap{max-width:520px;margin:70px auto;padding:20px}
+.card{background:#fff;border:1px solid #d8dde0;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(0,0,0,.08)}
+h1{margin:0 0 8px;font-size:25px}.sub{color:#666;margin-bottom:24px}button{width:100%;padding:13px 16px;border:0;border-radius:9px;font-size:16px;cursor:pointer}
+#loginBtn{background:#244656;color:#fff}#logoutBtn{background:#e9edef;color:#222;margin-top:12px}.info{margin-top:22px;padding:16px;background:#f7f8f8;border-radius:10px;display:none}
+.row{margin:8px 0;word-break:break-all}.label{font-weight:bold}#status{margin-top:16px;font-size:14px;color:#555}.ok{color:#16733b!important}.err{color:#b3261e!important}
+</style></head><body><div class="wrap"><div class="card">
+<h1>EQUANS Rapport</h1><div class="sub">Firebase Google-Login – separater Test</div>
+<button id="loginBtn">Mit Google anmelden</button>
+<div id="info" class="info"><div class="row"><span class="label">Name:</span> <span id="name"></span></div>
+<div class="row"><span class="label">E-Mail:</span> <span id="email"></span></div>
+<div class="row"><span class="label">Firebase UID:</span> <span id="uid"></span></div>
+<button id="firestoreBtn" style="background:#244656;color:white;margin-top:12px">Firestore testen</button><button id="logoutBtn">Abmelden</button></div><div id="status">Noch nicht angemeldet.</div>
+</div></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider(),db=getFirestore(app);
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const firestoreBtn=document.getElementById("firestoreBtn");
+const infoBox=document.getElementById("info");
+const statusBox=document.getElementById("status");
+const nameEl=document.getElementById("name");
+const emailEl=document.getElementById("email");
+const uidEl=document.getElementById("uid");
+function showUser(user){
+  if(!user){
+    infoBox.style.display="none";
+    loginBtn.style.display="block";
+    statusBox.textContent="Noch nicht angemeldet.";
+    statusBox.className="";
+    return;
+  }
+  nameEl.textContent=user.displayName||"";
+  emailEl.textContent=user.email||"";
+  uidEl.textContent=user.uid||"";
+  infoBox.style.display="block";
+  loginBtn.style.display="none";
+  statusBox.textContent="Firebase-Anmeldung erfolgreich.";
+  statusBox.className="ok";
+}
+loginBtn.onclick=async()=>{
+  statusBox.textContent="Google-Anmeldung wird geöffnet …";
+  statusBox.className="";
+  try{
+    const result=await signInWithPopup(auth,provider);
+    showUser(result.user);
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Login-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
+firestoreBtn.onclick=async()=>{
+  const user=auth.currentUser;
+  if(!user){
+    statusBox.textContent="Nicht angemeldet.";
+    statusBox.className="err";
+    return;
+  }
+  statusBox.textContent="Firestore wird getestet …";
+  statusBox.className="";
+  try{
+    const ref=doc(db,"systemTest","admin");
+    await setDoc(ref,{
+      uid:user.uid,
+      email:user.email||"",
+      message:"EQUANS Firestore Test OK",
+      updatedAt:serverTimestamp()
+    });
+    const snap=await getDoc(ref);
+    if(snap.exists() && snap.data().uid===user.uid){
+      statusBox.textContent="Firestore: Schreiben + Lesen erfolgreich.";
+      statusBox.className="ok";
+    }else{
+      throw new Error("Testdokument konnte nicht korrekt gelesen werden.");
+    }
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Firestore-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
+logoutBtn.onclick=()=>signOut(auth);
+onAuthStateChanged(auth,showUser);
+</script></body></html>
