@@ -10,6 +10,12 @@ h1{margin:0 0 8px;font-size:25px}.sub{color:#666;margin-bottom:24px}button{width
 </style></head><body><div class="wrap"><div class="card">
 <h1>EQUANS Rapport</h1><div class="sub">Firebase Google-Login – separater Test</div>
 <button id="loginBtn">Mit Google anmelden</button>
+    <div style="margin:18px 0 10px;text-align:center;color:#777;font-size:14px">oder</div>
+    <input id="emailInput" type="email" placeholder="E-Mail-Adresse"
+      style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #ccd3d7;border-radius:9px;font-size:16px;margin-bottom:10px">
+    <input id="passwordInput" type="password" placeholder="Passwort"
+      style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #ccd3d7;border-radius:9px;font-size:16px;margin-bottom:10px">
+    <button id="emailLoginBtn" style="background:#244656;color:#fff">Mit E-Mail anmelden</button>
 <div id="info" class="info"><div class="row"><span class="label">Name:</span> <span id="name"></span></div>
 <div class="row"><span class="label">E-Mail:</span> <span id="email"></span></div>
 <div class="row"><span class="label">Firebase UID:</span> <span id="uid"></span></div>
@@ -17,7 +23,7 @@ h1{margin:0 0 8px;font-size:25px}.sub{color:#666;margin-bottom:24px}button{width
 </div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider();
 const loginBtn=document.getElementById("loginBtn");
@@ -27,10 +33,16 @@ const statusBox=document.getElementById("status");
 const nameEl=document.getElementById("name");
 const emailEl=document.getElementById("email");
 const uidEl=document.getElementById("uid");
+const emailInput=document.getElementById("emailInput");
+const passwordInput=document.getElementById("passwordInput");
+const emailLoginBtn=document.getElementById("emailLoginBtn");
 function showUser(user){
   if(!user){
     infoBox.style.display="none";
     loginBtn.style.display="block";
+    emailInput.style.display="block";
+    passwordInput.style.display="block";
+    emailLoginBtn.style.display="block";
     statusBox.textContent="Noch nicht angemeldet.";
     statusBox.className="";
     return;
@@ -40,6 +52,9 @@ function showUser(user){
   uidEl.textContent=user.uid||"";
   infoBox.style.display="block";
   loginBtn.style.display="none";
+  emailInput.style.display="none";
+  passwordInput.style.display="none";
+  emailLoginBtn.style.display="none";
   statusBox.textContent="Firebase-Anmeldung erfolgreich.";
   statusBox.className="ok";
 }
@@ -55,5 +70,25 @@ loginBtn.onclick=async()=>{
     statusBox.className="err";
   }
 };
-logoutBtn.onclick=()=>signOut(auth);onAuthStateChanged(auth,showUser);
+emailLoginBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  const password=passwordInput.value;
+  if(!email || !password){
+    statusBox.textContent="Bitte E-Mail und Passwort eingeben.";
+    statusBox.className="err";
+    return;
+  }
+  statusBox.textContent="E-Mail-Anmeldung wird geprüft …";
+  statusBox.className="";
+  try{
+    const result=await signInWithEmailAndPassword(auth,email,password);
+    showUser(result.user);
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Login-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
+logoutBtn.onclick=()=>signOut(auth);
+onAuthStateChanged(auth,showUser);
 </script></body></html>
