@@ -20,9 +20,40 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider();
-const loginBtn=document.getElementById("loginBtn"),logoutBtn=document.getElementById("logoutBtn"),info=document.getElementById("info"),status=document.getElementById("status");
-function showUser(user){if(!user){info.style.display="none";loginBtn.style.display="block";status.textContent="Noch nicht angemeldet.";status.className="";return}
-name.textContent=user.displayName||"";email.textContent=user.email||"";uid.textContent=user.uid;info.style.display="block";loginBtn.style.display="none";status.textContent="Firebase-Anmeldung erfolgreich.";status.className="ok"}
-loginBtn.onclick=async()=>{status.textContent="Google-Anmeldung wird geöffnet …";try{await signInWithPopup(auth,provider)}catch(e){console.error(e);status.textContent="Login-Fehler: "+(e.code||e.message);status.className="err"}};
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const infoBox=document.getElementById("info");
+const statusBox=document.getElementById("status");
+const nameEl=document.getElementById("name");
+const emailEl=document.getElementById("email");
+const uidEl=document.getElementById("uid");
+function showUser(user){
+  if(!user){
+    infoBox.style.display="none";
+    loginBtn.style.display="block";
+    statusBox.textContent="Noch nicht angemeldet.";
+    statusBox.className="";
+    return;
+  }
+  nameEl.textContent=user.displayName||"";
+  emailEl.textContent=user.email||"";
+  uidEl.textContent=user.uid||"";
+  infoBox.style.display="block";
+  loginBtn.style.display="none";
+  statusBox.textContent="Firebase-Anmeldung erfolgreich.";
+  statusBox.className="ok";
+}
+loginBtn.onclick=async()=>{
+  statusBox.textContent="Google-Anmeldung wird geöffnet …";
+  statusBox.className="";
+  try{
+    const result=await signInWithPopup(auth,provider);
+    showUser(result.user);
+  }catch(e){
+    console.error(e);
+    statusBox.textContent="Login-Fehler: "+(e.code||e.message);
+    statusBox.className="err";
+  }
+};
 logoutBtn.onclick=()=>signOut(auth);onAuthStateChanged(auth,showUser);
 </script></body></html>
