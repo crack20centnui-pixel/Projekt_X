@@ -1582,6 +1582,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 .admin-backup-actions button{height:34px;border:1px solid #aebdb6;border-radius:6px;background:#fff;font-weight:700;cursor:pointer;padding:0 9px}
 .admin-backup-note{font-size:10px;color:#65756d;margin-top:7px}
 @media(max-width:650px){.admin-card{width:calc(100vw - 18px)!important;padding:11px!important}.admin-grid{grid-template-columns:1fr!important}.admin-backup-actions{grid-template-columns:1fr!important}}
+.admin-assign-grid{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end;margin-top:10px}.admin-assign-grid label{display:block;font-size:10px;font-weight:700;color:#65756d;margin-bottom:4px}.admin-assign-grid select{width:100%;box-sizing:border-box;padding:9px;border:1px solid #c7d6cf;border-radius:7px;background:#fff}.admin-assign-grid button{padding:9px 12px;border-radius:7px;border:1px solid #2d7b5f;font-weight:700;cursor:pointer}.admin-assign-add{background:#fff;color:#21664f}.admin-assign-transfer{background:#2d7b5f;color:#fff}@media(max-width:720px){.admin-assign-grid{grid-template-columns:1fr 1fr}.admin-assign-grid button{width:100%}}
 @media print{#adminOverlay,#registerOverlay,#adminAreaBtn{display:none!important}
   /* NUR Messprotokoll: Bildschirm-gelb und aktive Markierung werden im PDF weiss. */
   body.pdf-printing #messPage tbody td,
@@ -1614,7 +1615,13 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="admin-field"><label>MONTEUR</label><input id="adminMonteurSearch" list="adminMonteurList" placeholder="Name suchen …"><datalist id="adminMonteurList"></datalist></div>
 <div class="admin-field"><label>REFERENZ</label><input id="adminReferenceSearch" list="adminReferenceList" placeholder="Referenz oder Teil davon …"><datalist id="adminReferenceList"></datalist></div>
 <button id="adminOpenRapportBtn" class="admin-primary" type="button">Rapport öffnen</button>
-</div><div id="adminRapportStatus" style="font-size:11px;color:#65756d;margin-top:7px"></div></div>
+</div><div id="adminRapportStatus" style="font-size:11px;color:#65756d;margin-top:7px"></div>
+<div class="admin-assign-grid">
+<div><label>ZUWEISEN AN</label><select id="adminAssignTarget"><option value="">Monteur auswählen …</option></select></div>
+<div><label>AKTUELLER MONTEUR</label><div id="adminAssignSource" style="padding:9px 0;font-size:12px">–</div></div>
+<button id="adminAssignAddBtn" class="admin-assign-add" type="button">Zusätzlich zuweisen</button>
+<button id="adminAssignTransferBtn" class="admin-assign-transfer" type="button">Übergeben</button>
+</div></div>
 <div class="admin-section"><h3>Benutzer</h3><table id="adminUsersTable"><thead><tr><th>Mitarbeiter</th><th>Benutzername</th><th>Status</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
 <div class="admin-section admin-backup-section"><h3>Backup / Dateien</h3><div class="admin-backup-actions">
 <button type="button" onclick="exportRapportFile()">▧ Rapport exportieren</button>
@@ -2793,6 +2800,7 @@ let cloudProfile=null;
 let cloudReady=false;
 let registrationInProgress=false;
 let adminOrderRows=[];
+let adminUsersRows=[];
 
 const overlay=document.getElementById("loginOverlay");
 const userInput=document.getElementById("cloudUserInput");
@@ -3034,9 +3042,12 @@ async function loadAdminUsers(){
   const body=document.querySelector("#adminUsersTable tbody"); if(!body)return; body.innerHTML="";
   const snap=await getDocs(collection(db,"users"));
   const users=[]; snap.forEach(d=>users.push({uid:d.id,...d.data()}));
+  adminUsersRows=users;
   users.sort((a,b)=>String(a.displayName||a.username||"").localeCompare(String(b.displayName||b.username||""),"de"));
   const dl=document.getElementById("adminMonteurList"); if(dl) dl.innerHTML="";
   users.filter(u=>u.role==="monteur").forEach(u=>{if(dl){const o=document.createElement("option");o.value=u.displayName||u.username||u.uid;o.dataset.uid=u.uid;dl.appendChild(o)}});
+  const target=document.getElementById("adminAssignTarget");
+  if(target){target.innerHTML='<option value="">Monteur auswählen …</option>';users.filter(u=>u.role==="monteur"&&u.active===true).forEach(u=>{const o=document.createElement("option");o.value=u.uid;o.textContent=u.displayName||u.username||u.uid;target.appendChild(o)});}
   for(const u of users){
     const tr=document.createElement("tr");
     const status=u.active===true?"🟢 Aktiv":"🟡 Wartet / Inaktiv";
@@ -3054,10 +3065,16 @@ async function loadAdminOrders(){
   refreshAdminReferences();
 }
 function selectedAdminMonteur(){return (document.getElementById("adminMonteurSearch")?.value||"").trim().toLowerCase();}
+function selectedAdminMonteurUid(){
+  const q=selectedAdminMonteur(); if(!q)return "";
+  const u=adminUsersRows.find(x=>String(x.displayName||"").trim().toLowerCase()===q || String(x.username||"").trim().toLowerCase()===q);
+  return u?.uid||"";
+}
 function refreshAdminReferences(){
-  const q=selectedAdminMonteur(); const dl=document.getElementById("adminReferenceList"); if(!dl)return; dl.innerHTML="";
+  const uid=selectedAdminMonteurUid(); const dl=document.getElementById("adminReferenceList"); if(!dl)return; dl.innerHTML="";
+  const source=document.getElementById("adminAssignSource"); if(source)source.textContent=(document.getElementById("adminMonteurSearch")?.value||"–");
   const seen=new Set();
-  adminOrderRows.filter(r=>!q || String(r.createdByName||r.updatedByName||"").toLowerCase().includes(q)).forEach(r=>{
+  adminOrderRows.filter(r=>!uid || (Array.isArray(r.accessUids)&&r.accessUids.includes(uid))).forEach(r=>{
     const ref=String(r.reference||"").trim()||"Ohne Referenz"; if(seen.has(ref))return; seen.add(ref); const o=document.createElement("option");o.value=ref;dl.appendChild(o);
   });
 }
@@ -3073,8 +3090,8 @@ document.querySelector("#adminUsersTable tbody")?.addEventListener("click",async
 });
 document.getElementById("adminOpenRapportBtn")?.addEventListener("click",async()=>{
   if(!adminOnly())return;
-  const mon=selectedAdminMonteur(); const ref=(document.getElementById("adminReferenceSearch")?.value||"").trim().toLowerCase();
-  const matches=adminOrderRows.filter(r=>(!mon||String(r.createdByName||r.updatedByName||"").toLowerCase().includes(mon)) && (!ref||String(r.reference||"").toLowerCase().includes(ref)));
+  const monUid=selectedAdminMonteurUid(); const ref=(document.getElementById("adminReferenceSearch")?.value||"").trim().toLowerCase();
+  const matches=adminOrderRows.filter(r=>(!monUid||(Array.isArray(r.accessUids)&&r.accessUids.includes(monUid))) && (!ref||String(r.reference||"").toLowerCase().includes(ref)));
   const st=document.getElementById("adminRapportStatus");
   if(matches.length===0){if(st)st.textContent="Kein passender Rapport gefunden.";return;}
   if(matches.length>1 && ref && !matches.some(r=>String(r.reference||"").trim().toLowerCase()===ref)){if(st)st.textContent="Mehrere Treffer – Referenz bitte genauer auswählen.";return;}
@@ -3082,6 +3099,30 @@ document.getElementById("adminOpenRapportBtn")?.addEventListener("click",async()
   const sel=document.getElementById("orderSelect"); if(sel){if(![...sel.options].some(o=>o.value===exact.id)){const o=document.createElement("option");o.value=exact.id;o.textContent=exact.reference||"Ohne Referenz";sel.appendChild(o)}sel.value=exact.id;}
   adminOverlay?.classList.remove("show"); await cloudLoadSelectedOrder(true);
 });
+
+async function adminAssignOrder(transfer){
+  if(!adminOnly())return;
+  const sourceUid=selectedAdminMonteurUid();
+  const targetUid=document.getElementById("adminAssignTarget")?.value||"";
+  const ref=(document.getElementById("adminReferenceSearch")?.value||"").trim().toLowerCase();
+  const st=document.getElementById("adminRapportStatus");
+  if(!sourceUid){if(st)st.textContent="Bitte zuerst den aktuellen Monteur auswählen.";return;}
+  if(!ref){if(st)st.textContent="Bitte zuerst eine Referenz auswählen.";return;}
+  if(!targetUid){if(st)st.textContent="Bitte Ziel-Monteur auswählen.";return;}
+  if(sourceUid===targetUid){if(st)st.textContent="Quell- und Ziel-Monteur sind gleich.";return;}
+  const matches=adminOrderRows.filter(r=>Array.isArray(r.accessUids)&&r.accessUids.includes(sourceUid)&&String(r.reference||"").trim().toLowerCase()===ref);
+  if(matches.length!==1){if(st)st.textContent=matches.length?"Referenz ist nicht eindeutig – bitte Rapport öffnen und genauer wählen.":"Rapport nicht gefunden.";return;}
+  const row=matches[0];
+  const access=new Set(Array.isArray(row.accessUids)?row.accessUids:[]);
+  access.add(targetUid); if(transfer)access.delete(sourceUid);
+  await setDoc(doc(db,"orders",row.id),{accessUids:[...access],updatedAt:serverTimestamp(),updatedBy:cloudUser.uid,updatedByName:displayName()},{merge:true});
+  await setDoc(doc(db,"orders",row.id,"participants",targetUid),{uid:targetUid,displayName:adminUsersRows.find(u=>u.uid===targetUid)?.displayName||"",joinedAt:serverTimestamp()},{merge:true});
+  if(transfer){try{await deleteDoc(doc(db,"orders",row.id,"participants",sourceUid));}catch(_){}}
+  if(st)st.textContent=transfer?"Rapport erfolgreich übergeben ✓":"Monteur zusätzlich zugewiesen ✓";
+  await loadAdminOrders(); await cloudRefreshOrderSelect();
+}
+document.getElementById("adminAssignAddBtn")?.addEventListener("click",()=>adminAssignOrder(false));
+document.getElementById("adminAssignTransferBtn")?.addEventListener("click",()=>adminAssignOrder(true));
 
 emailBtn?.addEventListener("click",async()=>{
   try{
