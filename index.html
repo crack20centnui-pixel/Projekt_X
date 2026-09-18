@@ -2769,7 +2769,7 @@ import {
   createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, getDocs, collection,
+  getFirestore, doc, getDoc, setDoc, getDocs, collection, query, where, arrayUnion,
   serverTimestamp, deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
@@ -2856,12 +2856,30 @@ async function verifyProfile(user){
   return p;
 }
 
+async function adminEnsureOrderAccessUids(){
+  if(cloudProfile?.role!=="admin") return;
+  const ordersSnap=await getDocs(collection(db,"orders"));
+  for(const orderDoc of ordersSnap.docs){
+    const data=orderDoc.data();
+    if(Array.isArray(data.accessUids) && data.accessUids.length) continue;
+    const ids=new Set();
+    if(data.createdBy) ids.add(data.createdBy);
+    if(data.updatedBy) ids.add(data.updatedBy);
+    const partSnap=await getDocs(collection(db,"orders",orderDoc.id,"participants"));
+    partSnap.forEach(p=>ids.add(p.id));
+    if(ids.size) await setDoc(doc(db,"orders",orderDoc.id),{accessUids:[...ids]},{merge:true});
+  }
+}
+
 async function cloudRefreshOrderSelect(prefer=""){
   const sel=document.getElementById("orderSelect");
   if(!sel || !cloudUser) return;
   const chosen=prefer||sel.value;
   sel.innerHTML='<option value="">Auftrag auswählen …</option>';
-  const snap=await getDocs(collection(db,"orders"));
+  const ordersRef=collection(db,"orders");
+  const snap=cloudProfile?.role==="admin"
+    ? await getDocs(ordersRef)
+    : await getDocs(query(ordersRef,where("accessUids","array-contains",cloudUser.uid)));
   const rows=[];
   snap.forEach(d=>{
     const x=d.data();
@@ -2903,6 +2921,7 @@ async function cloudSaveOrder(){
     version:state.__version,
     updatedBy:cloudUser.uid,
     updatedByName:displayName(),
+    accessUids:arrayUnion(cloudUser.uid),
     updatedAt:serverTimestamp()
   };
   if(!existing.exists()){
@@ -3120,6 +3139,7 @@ onAuthStateChanged(auth,async user=>{
     window.save=cloudSaveOrder;
     window.load=cloudLoadSelectedOrder;
 
+    if(p.role==="admin") await adminEnsureOrderAccessUids();
     await cloudRefreshOrderSelect("");
   }catch(e){
     if(loginStatus) loginStatus.textContent=e.message||String(e);
