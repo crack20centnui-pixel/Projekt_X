@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebase Auftrag Test</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f6f7;margin:0;padding:20px}
+.box{max-width:760px;margin:auto;background:#fff;padding:22px;border-radius:14px;box-shadow:0 2px 12px #0002}
+input,button{font-size:16px;padding:10px;border:1px solid #bbb;border-radius:8px;margin:4px 0}
+input{width:calc(100% - 22px)} button{cursor:pointer}
+.row{padding:9px;border-bottom:1px solid #eee}
+#status{margin:12px 0;padding:10px;background:#eee;border-radius:8px;font-weight:bold}
+#monitor{background:#111;color:#eee;padding:12px;border-radius:8px;max-height:300px;overflow:auto;white-space:pre-wrap;font-size:12px}
+.small{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>Firebase – Auftrag Admin/Monteur Test</h2>
+<p>Komplett separat vom Rapport. Nur Login + Auftrag schreiben/lesen.</p>
+
+<h3>1. Firmen-Login</h3>
+<input id="email" type="email" placeholder="E-Mail">
+<input id="password" type="password" placeholder="Passwort">
+<button id="login">Anmelden</button>
+<button id="logout" disabled>Abmelden</button>
+<div id="who" class="small">Nicht angemeldet</div>
+
+<h3>2. Auftrag</h3>
+<input id="nr" placeholder="Auftragsnummer, z.B. 12345">
+<input id="monteur" placeholder="Monteur UID oder E-Mail (Test)">
+<button id="save" disabled>Auftrag in Firebase speichern</button>
+<button id="load" disabled>Meine Aufträge laden</button>
+
+<div id="status">Bereit.</div>
+<div id="list"></div>
+
+<hr>
+<h3>🔎 Monitor</h3>
+<button id="clear">Monitor löschen</button>
+<pre id="monitor"></pre>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import {
+  getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import {
+  getFirestore,doc,getDoc,setDoc,collection,getDocs,query,where,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",
+  authDomain:"equans-rapport-test.firebaseapp.com",
+  projectId:"equans-rapport-test",
+  storageBucket:"equans-rapport-test.firebasestorage.app",
+  messagingSenderId:"916807708145",
+  appId:"1:916807708145:web:3c6d75cd06468684682850",
+  measurementId:"G-VPHGE42TWN"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let user=null, profile=null;
+const $=id=>document.getElementById(id);
+function log(t,m,d){
+  let x=""; try{x=d===undefined?"":" | "+JSON.stringify(d)}catch{}
+  $("monitor").textContent+="["+new Date().toLocaleTimeString()+"] "+t+": "+m+x+"\n";
+  $("monitor").scrollTop=$("monitor").scrollHeight;
+}
+function status(s){$("status").textContent=s;log("STATUS",s)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+async function readProfile(u){
+  const s=await getDoc(doc(db,"users",u.uid));
+  if(!s.exists()) throw new Error("Benutzerprofil users/"+u.uid+" nicht gefunden");
+  return s.data();
+}
+
+onAuthStateChanged(auth,async u=>{
+  user=u; profile=null;
+  if(!u){
+    $("who").textContent="Nicht angemeldet";
+    $("save").disabled=$("load").disabled=$("logout").disabled=true;
+    return;
+  }
+  try{
+    profile=await readProfile(u);
+    $("who").textContent=(profile.displayName||profile.name||u.email)+" | Rolle: "+(profile.role||"?")+" | UID: "+u.uid;
+    $("logout").disabled=false;
+    $("load").disabled=false;
+    $("save").disabled=profile.role!=="admin";
+    status("Login ✓");
+    log("PROFIL","geladen",profile);
+  }catch(e){status("Profil-Fehler: "+e.message)}
+});
+
+$("login").onclick=async()=>{
+  try{
+    status("Anmeldung …");
+    await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);
+  }catch(e){status("Login-Fehler: "+e.code+" / "+e.message)}
+};
+$("logout").onclick=()=>signOut(auth);
+
+$("save").onclick=async()=>{
+  if(!user || profile?.role!=="admin"){status("Nur Admin darf im Test Aufträge anlegen.");return}
+  const nr=$("nr").value.trim(), target=$("monteur").value.trim();
+  if(!nr || !target){status("Auftragsnummer und Monteur eintragen.");return}
+  try{
+    status("Speichere Auftrag …");
+    await setDoc(doc(db,"auftragTest",nr),{
+      orderNumber:nr,
+      assignedTo:target,
+      createdBy:user.uid,
+      createdAt:serverTimestamp(),
+      active:true
+    },{merge:true});
+    status("Auftrag "+nr+" gespeichert ✓");
+  }catch(e){status("SCHREIB-FEHLER: "+e.code+" / "+e.message)}
+};
+
+$("load").onclick=async()=>{
+  if(!user)return;
+  try{
+    status("Lese Aufträge …");
+    let snap;
+    if(profile?.role==="admin"){
+      snap=await getDocs(collection(db,"auftragTest"));
+    }else{
+      // For this isolated test, assignment may be either employee UID or their login email.
+      const q1=query(collection(db,"auftragTest"),where("assignedTo","in",[user.uid,user.email]));
+      snap=await getDocs(q1);
+    }
+    const arr=[];
+    snap.forEach(d=>arr.push(d.data()));
+    $("list").innerHTML=arr.length
+      ?arr.map(a=>'<div class="row"><b>'+esc(a.orderNumber||"")+'</b> → '+esc(a.assignedTo||"")+'</div>').join("")
+      :'<div class="row">Keine Aufträge gefunden.</div>';
+    status(arr.length+" Auftrag/Aufträge geladen ✓");
+    log("FIRESTORE","Ergebnis",arr);
+  }catch(e){status("LESE-FEHLER: "+e.code+" / "+e.message)}
+};
+
+$("clear").onclick=()=>{$("monitor").textContent=""};
+window.addEventListener("error",e=>log("JS-FEHLER",e.message));
+window.addEventListener("unhandledrejection",e=>log("PROMISE-FEHLER",String(e.reason)));
+log("START","Firebase Auftrag-Test gestartet");
+</script>
+</body>
+</html>
