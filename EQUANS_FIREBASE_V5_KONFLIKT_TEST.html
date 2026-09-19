@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EQUANS Firebase V1 Test</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f5;margin:0;color:#18211d}
+main{max-width:900px;margin:25px auto;padding:16px}.card{background:#fff;border:1px solid #d8dfdb;border-radius:14px;padding:17px;margin:12px 0}
+h1,h2{margin-top:0}.row{display:flex;gap:9px;flex-wrap:wrap}button{padding:10px 13px;border:1px solid #aeb8b2;border-radius:9px;background:#fff;font-weight:650;cursor:pointer}
+.primary{background:#176b40;color:#fff;border-color:#176b40}.danger{background:#fff0f0}.ok{background:#edf8f0}.mut{font-size:13px;color:#68736d}
+pre{white-space:pre-wrap;background:#f7f9f8;border-radius:9px;padding:13px;min-height:120px;max-height:400px;overflow:auto}
+</style></head><body><main>
+<div class="card ok"><h1>Firebase V1 Funktionstest</h1><div class="mut">Nur Testdatei. Ändert nicht deine Rapport-App.</div></div>
+<div class="card"><h2>1. Anmeldung</h2><div class="row"><button id="google" class="primary">Google Admin Login</button><button id="worker">Monteur Login</button><button id="logout">Abmelden</button></div>
+<p id="who" class="mut">Nicht angemeldet.</p></div>
+<div class="card"><h2>2. Rechte / Struktur testen</h2><div class="row">
+<button id="own">Eigenes sync/data lesen</button>
+<button id="master">MasterData lesen</button>
+<button id="users">Users lesen</button>
+<button id="admin">Admin-Bereich lesen</button>
+<button id="foreign">Fremdes sync/data testen</button>
+</div></div>
+<div class="card"><h2>3. Versions-Test</h2>
+<p class="mut">Schreibt keine neue Versionsdatei. Es wird dasselbe <b>sync/data</b>-Dokument aktualisiert. Der Test merkt sich die alte Version und kann sie wiederherstellen.</p>
+<div class="row"><button id="ver" class="primary">Eigene Version +1 TEST</button><button id="restore">Test-Version zurücksetzen</button></div></div>
+<div class="card"><h2>4. Local → Change-Log → SYNC</h2>
+<p class="mut">Simuliert eine lokale Rapport-Änderung. Vor dem SYNC wird nichts in Firebase geschrieben. Beim SYNC wird nur der Test-Change verarbeitet und danach die feste sync/data-Version erhöht.</p>
+<div class="row">
+<button id="localChange">Lokale Änderung erzeugen</button>
+<button id="showLocal">Lokalen Stand anzeigen</button>
+<button id="syncChange" class="primary">↻ SYNC TEST</button>
+<button id="clearLocal" class="danger">Lokalen Test löschen</button>
+<button id="prepareConflict">Konflikt vorbereiten</button>
+<button id="serverAdvance">Server +1 simulieren</button>
+</div></div>
+<div class="card"><h2>5. Protokoll</h2><pre id="log">Bereit.</pre></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import{getFirestore,doc,getDoc,getDocs,collection,updateDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyDlGkAcBdJbBj-WlCoPrMya9ICzySJ7RVE",authDomain:"equans-rapport-test.firebaseapp.com",projectId:"equans-rapport-test",storageBucket:"equans-rapport-test.firebasestorage.app",messagingSenderId:"916807708145",appId:"1:916807708145:web:3c6d75cd06468684682850",measurementId:"G-VPHGE42TWN"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=x=>document.getElementById(x),L=$("log");
+let originalVersion=null;
+function log(s){L.textContent+="\n"+s;L.scrollTop=L.scrollHeight}
+function need(){if(!auth.currentUser)throw Error("Bitte zuerst anmelden.");return auth.currentUser}
+$("google").onclick=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){log("LOGIN ✗ "+e.message)}};
+$("worker").onclick=async()=>{const u=prompt("Monteur Benutzername (z.B. peter):");if(!u)return;const pw=prompt("Passwort:");if(!pw)return;try{await signInWithEmailAndPassword(auth,u.includes("@")?u:u+"@rapport.internal",pw)}catch(e){log("MONTEUR LOGIN ✗ "+e.message)}};
+$("logout").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async u=>{originalVersion=null;if(!u){$("who").textContent="Nicht angemeldet.";return}let role="?";try{const s=await getDoc(doc(db,"users",u.uid));role=s.exists()?(s.data().role||"?"):"kein users-Dokument"}catch(e){}$("who").textContent=(u.displayName||u.email||u.uid)+" | UID: "+u.uid+" | Rolle: "+role;log("LOGIN ✓ "+role)});
+
+$("own").onclick=async()=>{try{const u=need(),s=await getDoc(doc(db,"monteure",u.uid,"sync","data"));log("EIGENES SYNC "+(s.exists()?"✓ version="+s.data().version:"✗ fehlt"))}catch(e){log("EIGENES SYNC ✗ "+e.message)}};
+$("master").onclick=async()=>{try{need();const s=await getDoc(doc(db,"admin","system","masterData","data"));log("MASTERDATA "+(s.exists()?"✓ version="+s.data().version+", Aufträge="+((s.data().auftraege||[]).length):"✗ fehlt"))}catch(e){log("MASTERDATA ✗ "+e.message)}};
+$("users").onclick=async()=>{try{need();const s=await getDocs(collection(db,"users"));log("USERS ✓ gelesen: "+s.size)}catch(e){log("USERS ✗ Zugriff verweigert/Fehler: "+e.message)}};
+$("admin").onclick=async()=>{try{need();const s=await getDoc(doc(db,"admin","system"));log("ADMIN ✓ Zugriff erlaubt"+(s.exists()?"":" (Dokument leer/nicht vorhanden)"))}catch(e){log("ADMIN ✗ Zugriff verweigert/Fehler: "+e.message)}};
+
+$("foreign").onclick=async()=>{
+  try{
+    const u=need();
+    const foreignUid = prompt("Fremde Monteur-UID eingeben:");
+    if(!foreignUid)return;
+    if(foreignUid.trim()===u.uid)throw Error("Das ist deine eigene UID. Bitte eine andere UID eingeben.");
+    const r=doc(db,"monteure",foreignUid.trim(),"sync","data");
+    try{
+      const snap=await getDoc(r);
+      log("FREMDZUGRIFF ⚠ ERLAUBT auf "+foreignUid+(snap.exists()?" | version="+snap.data().version:" | Dokument nicht vorhanden"));
+    }catch(e){
+      log("FREMDZUGRIFF ✓ VERWEIGERT auf "+foreignUid+" | "+e.message);
+    }
+  }catch(e){log("FREMDTEST ✗ "+e.message)}
+};
+
+
+function localKey(){
+  const u=need();
+  return "equans_v4_sync_test_"+u.uid;
+}
+function readLocal(){
+  try{return JSON.parse(localStorage.getItem(localKey())||"null")}catch(e){return null}
+}
+$("localChange").onclick=()=>{
+  try{
+    const u=need();
+    const old=readLocal();
+    const base=old?.localVersion ?? null;
+    const test={
+      localVersion: base,
+      changeLog:[{
+        id:"TEST-"+Date.now(),
+        type:"test_change",
+        field:"testText",
+        value:"Lokale Änderung "+new Date().toLocaleString("de-CH")
+      }],
+      createdAt:new Date().toISOString()
+    };
+    localStorage.setItem(localKey(),JSON.stringify(test));
+    log("LOCAL ✓ Änderung gespeichert. Firebase wurde NICHT beschrieben.");
+  }catch(e){log("LOCAL ✗ "+e.message)}
+};
+$("showLocal").onclick=async()=>{
+  try{
+    const u=need();
+    const local=readLocal();
+    const server=await getDoc(doc(db,"monteure",u.uid,"sync","data"));
+    log("LOCAL STAND: "+JSON.stringify(local));
+    log("FIREBASE SYNC VERSION: "+(server.exists()?server.data().version:"fehlt"));
+  }catch(e){log("ANZEIGE ✗ "+e.message)}
+};
+$("clearLocal").onclick=()=>{
+  try{localStorage.removeItem(localKey());log("LOCAL TEST ✓ gelöscht.")}catch(e){log("LOCAL LÖSCHEN ✗ "+e.message)}
+};
+
+$("prepareConflict").onclick=async()=>{
+  try{
+    const u=need();
+    const syncRef=doc(db,"monteure",u.uid,"sync","data");
+    const snap=await getDoc(syncRef);
+    if(!snap.exists())throw Error("sync/data fehlt.");
+    const v=Number(snap.data().version||0);
+    const local={
+      localVersion:v,
+      changeLog:[{
+        id:"CONFLICT-"+Date.now(),
+        type:"test_change",
+        field:"testText",
+        value:"Konflikt-Test "+new Date().toLocaleString("de-CH")
+      }],
+      createdAt:new Date().toISOString()
+    };
+    localStorage.setItem(localKey(),JSON.stringify(local));
+    log("KONFLIKT VORBEREITET ✓ Lokal basiert auf Firebase-Version "+v+" und hat 1 ungesyncte Änderung.");
+  }catch(e){log("KONFLIKT VORBEREITEN ✗ "+e.message)}
+};
+
+$("serverAdvance").onclick=async()=>{
+  try{
+    const u=need();
+    const r=doc(db,"monteure",u.uid,"sync","data");
+    const snap=await getDoc(r);
+    if(!snap.exists())throw Error("sync/data fehlt.");
+    const v=Number(snap.data().version||0);
+    await updateDoc(r,{version:v+1,updatedAt:serverTimestamp()});
+    log("SERVER-ÄNDERUNG ✓ Firebase sync/data "+v+" → "+(v+1)+". Lokale Basis bleibt "+(readLocal()?.localVersion ?? "leer")+".");
+  }catch(e){log("SERVER-ÄNDERUNG ✗ "+e.message)}
+};
+
+$("syncChange").onclick=async()=>{
+  try{
+    const u=need();
+    const local=readLocal();
+    if(!local || !local.changeLog || !local.changeLog.length) throw Error("Keine lokale Test-Änderung vorhanden.");
+
+    const syncRef=doc(db,"monteure",u.uid,"sync","data");
+    const before=await getDoc(syncRef);
+    if(!before.exists())throw Error("sync/data fehlt.");
+    const serverVersion=Number(before.data().version||0);
+
+    // First local edit adopts the current server version as its base.
+    const baseVersion=(local.localVersion===null || local.localVersion===undefined)
+      ? serverVersion : Number(local.localVersion);
+
+    if(baseVersion!==serverVersion){
+      log("SYNC KONFLIKT ⚠ lokal basiert auf Version "+baseVersion+", Firebase ist "+serverVersion+". NICHT überschrieben.");
+      return;
+    }
+
+    // Dedicated harmless test document. This is NOT a real Rapport.
+    const testRef=doc(db,"monteure",u.uid,"syncTests","changeLogTest");
+    await setDoc(testRef,{
+      lastChange:local.changeLog[local.changeLog.length-1],
+      changeCount:local.changeLog.length,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+
+    // Only after the change write succeeded do we advance the fixed sync/data document.
+    await updateDoc(syncRef,{
+      version:serverVersion+1,
+      updatedAt:serverTimestamp()
+    });
+
+    const verify=await getDoc(syncRef);
+    if(Number(verify.data().version)!==serverVersion+1)
+      throw Error("Versionsbestätigung fehlgeschlagen. Change-Log bleibt lokal.");
+
+    local.localVersion=serverVersion+1;
+    local.changeLog=[];
+    local.syncedAt=new Date().toISOString();
+    localStorage.setItem(localKey(),JSON.stringify(local));
+    log("SYNC ✓ Change geschrieben → sync/data "+serverVersion+" → "+(serverVersion+1)+" → lokaler Change-Log geleert.");
+  }catch(e){
+    log("SYNC ✗ "+e.message+" | Lokaler Change-Log bleibt erhalten.");
+  }
+};
+
+$("ver").onclick=async()=>{try{const u=need(),r=doc(db,"monteure",u.uid,"sync","data"),s=await getDoc(r);if(!s.exists())throw Error("sync/data fehlt");const v=Number(s.data().version||0);if(originalVersion===null)originalVersion=v;await updateDoc(r,{version:v+1,updatedAt:serverTimestamp()});const c=await getDoc(r);log("VERSION TEST ✓ dasselbe Dokument: "+v+" → "+c.data().version)}catch(e){log("VERSION TEST ✗ "+e.message)}};
+$("restore").onclick=async()=>{try{const u=need();if(originalVersion===null)throw Error("In dieser Sitzung wurde noch keine Test-Version geändert.");const r=doc(db,"monteure",u.uid,"sync","data");await updateDoc(r,{version:originalVersion,updatedAt:serverTimestamp()});log("VERSION ZURÜCK ✓ → "+originalVersion);originalVersion=null}catch(e){log("ZURÜCKSETZEN ✗ "+e.message)}};
+</script></main></body></html>
