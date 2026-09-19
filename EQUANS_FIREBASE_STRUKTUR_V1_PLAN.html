@@ -1,0 +1,100 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EQUANS Firebase Struktur V1</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f5;color:#18211d;margin:0}main{max-width:950px;margin:30px auto;padding:16px}.card{background:white;border:1px solid #d9dfdc;border-radius:14px;padding:18px;margin:14px 0}pre{white-space:pre-wrap;background:#f7f9f8;padding:14px;border-radius:10px;line-height:1.5}h1,h2{margin-top:0}.ok{background:#edf7ef}</style></head><body><main>
+<div class="card ok"><h1>Firebase Struktur V1</h1><p>Planungsdatei. Noch keine Änderung an der eigentlichen Rapport-HTML.</p></div>
+<div class="card"><h2>Ordner</h2><pre>FIREBASE
+├── users/{uid}
+│   ├── username, displayName, role, active
+├── admin/system
+│   ├── masterData       ← gleiches Dokument wird aktualisiert
+│   │   ├── version
+│   │   ├── updatedAt
+│   │   └── auftraege[]
+│   ├── conflicts/{conflictId}
+│   └── audit/{eventId}
+├── monteure/{uid}
+│   ├── sync/data        ← gleiches Dokument wird aktualisiert
+│   │   ├── version
+│   │   └── updatedAt
+│   └── rapporte/{RPT-ID}
+└── config/system
+    ├── schemaVersion
+    └── updatedAt</pre></div>
+<div class="card"><h2>RPT</h2><pre>rptId
+ownerUid
+accessUids[]
+orderNumber       ← darf leer sein
+orderSource       ← master | external | none
+reference
+status            ← in_bearbeitung | fertig | zusammengefuehrt
+revision
+rapportStateJson
+createdAt / createdBy
+updatedAt / updatedBy
+deleted / deletedAt / deletedBy
+mergedFrom[]</pre><p>RPT-ID bleibt immer gleich, auch bei Auftrag-, Besitzer-, Status- oder Freigabeänderung.</p></div>
+<div class="card"><h2>Auftragsnummer</h2><pre>leer → orderSource: none
+unbekannte Nummer → external
+Admin bestätigt → master
+
+Auftragsnummer kann jederzeit nachgetragen oder korrigiert werden.
+RPT bleibt gleich.</pre></div>
+<div class="card"><h2>Local + SYNC</h2><pre>LOCAL
+├── syncVersion
+├── masterVersion
+├── aktive Rapporte / Cache
+└── changeLog[]
+
+SYNC:
+Version prüfen
+→ nur Änderungen übertragen
+→ Firebase-Bestätigung
+→ Version aktualisieren
+→ ERST DANACH Log leeren
+
+Bei Fehler/Internetabbruch bleibt das Log erhalten.</pre></div>
+<div class="card"><h2>Versionen</h2><pre>syncVersion   = Benutzer-Sync
+masterVersion = Master-Aufträge
+revision      = einzelner RPT
+
+KEINE neuen Versionsdokumente.
+sync/data bleibt dasselbe Dokument:
+1 → 2 → 3 → 4</pre></div>
+<div class="card"><h2>Konflikt</h2><pre>Peter baseRevision 5
+Max baseRevision 5
+Peter SYNC → Firebase revision 6
+Max SYNC → 5 ≠ 6
+→ NICHT überschreiben
+→ beide Änderungen sichern
+→ Admin prüft Konflikt</pre></div>
+<div class="card"><h2>Freigabe / Übergabe</h2><pre>Freigabe:
+ownerUid: Peter
+accessUids: [Peter, Max]
+→ gleicher RPT, keine Kopie
+
+Übergabe:
+ownerUid wird Max
+→ RPT-ID bleibt gleich
+
+Admin hat Zugriff auf alle Rapporte.</pre></div>
+<div class="card"><h2>Fertig / Cache</h2><pre>Arbeit fertig X
+→ SYNC
+→ Firebase bestätigt
+→ fertiger RPT zentral gespeichert
+→ lokale Kopie darf entfernt werden
+
+Browser-Cache löschen ≠ Firebase löschen.
+Nicht synchronisierte Arbeit darf nie automatisch entfernt werden.</pre></div>
+<div class="card"><h2>Zusammenführen / Löschen</h2><pre>RPT-A + RPT-B → neuer RPT-C
+mergedFrom: [RPT-A, RPT-B]
+Originale bleiben erhalten.
+
+Löschen zuerst nur:
+deleted: true
+→ Wiederherstellung möglich.</pre></div>
+<div class="card"><h2>Betrieb</h2><pre>Tagsüber hauptsächlich LOCAL.
+Empfehlung ca. 16:00 → einmal SYNC.
+Zusätzlicher SYNC jederzeit möglich.
+
+Keine Firebase-Abfrage bei jedem Klick,
+Tippen, Seitenwechsel, Material suchen
+oder lokalen Öffnen eines Rapports.</pre></div>
+</main></body></html>
