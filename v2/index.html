@@ -1911,7 +1911,78 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 </style>
 
 <style>@media print{#draftRecovery,#rapportStorageStatus{display:none!important}}</style>
-<style>@media print{.v2-test-banner{display:none!important}}</style></head><body spellcheck="false"><aside style="padding:8px;background:#fff4cf;text-align:center" class="v2-test-banner">V2-Testversion · Die bisherige Startseite bleibt bestehen. Firebase-Daten werden gemeinsam verwendet.</aside>
+<style>@media print{.v2-test-banner{display:none!important}}</style><style id="v2-screen-refresh">
+/* Screen-only refresh. Existing Alpine background and all form fields stay intact. */
+@media screen {
+ body{background:#f3f6f7!important;color:#173343;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 40px)!important;max-width:1280px!important;margin:22px auto 16px!important;border:1px solid #dfe7eb!important;border-radius:14px!important;box-shadow:0 8px 30px #17334308!important;overflow:visible!important}
+ #pdfToolbar .head-main{grid-template-columns:1fr!important;gap:34px!important;padding:30px!important;min-height:240px!important;border:0!important;border-radius:14px 14px 0 0!important;background-position:center 44%!important}
+ #pdfToolbar .head-main:after{right:30px!important;top:30px!important}
+ #pdfToolbar .brand-mark{font-size:26px!important;letter-spacing:.8px!important}
+ #pdfToolbar .brand-title{font-size:28px!important;font-weight:750!important}
+ #pdfToolbar .brand-sub{color:#59707e!important;font-size:11px!important}
+ #pdfToolbar .meta-strip{display:grid!important;width:100%!important;grid-template-columns:2fr .85fr 1.5fr 1.2fr!important;gap:12px!important}
+ #pdfToolbar .meta-item{border:1px solid #ffffffbb!important;box-shadow:none!important;min-height:66px!important;background:#ffffffdc!important;border-radius:9px!important;padding:12px 15px!important}
+ #pdfToolbar .meta-label{color:#6d7f89!important;letter-spacing:1px!important;text-transform:uppercase!important;font-size:9px!important}
+ #pdfToolbar .meta-value,#pdfToolbar #headerUserName{font-size:13px!important;font-weight:600!important;color:#173343!important}
+ #pdfToolbar .head-actions{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;padding:18px 24px!important;gap:10px!important;background:white!important;border:0!important}
+ #pdfToolbar .head-actions>button,#pdfToolbar select,#pdfToolbar .pdf-menu summary{width:auto!important;flex:0 0 auto!important;height:42px!important;border-radius:8px!important;font-size:12px!important;padding:0 15px!important;border:1px solid #dbe4e8!important;background:#fff!important;color:#173343!important;box-shadow:none!important;text-shadow:none!important;min-width:0!important}
+ #pdfToolbar .head-actions .primary-new{padding-left:15px!important;font-weight:600!important;background:#f5f8f9!important;color:#173343!important}
+ #pdfToolbar .primary-new:before,#pdfToolbar .primary-new:after{display:none!important}
+ #pdfToolbar button[onclick="saveOrder()"]{background:#123447!important;color:white!important;border-color:#123447!important}
+ #pdfToolbar #manualSyncBtn{background:#e8f3ed!important;color:#247656!important;border-color:#d6eadd!important}
+ #pdfToolbar .head-actions .action-delete{background:#fff!important;color:#9c5555!important;border-color:#eadfdf!important;font-weight:500!important}
+ #pdfToolbar #orderSelect{flex:1 1 240px!important;width:auto!important;max-width:none!important}
+ #pdfToolbar #pdfMenu.pdf-menu{height:42px!important;width:150px!important;max-width:150px!important;flex:0 0 auto!important}
+ #pdfToolbar .save-status{flex-basis:100%!important;font-size:11px!important;padding-top:2px!important;color:#247656!important}
+ #pdfToolbar>.tabs{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin:0!important;display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding:0 18px!important;gap:4px!important;min-height:56px!important;background:#123447!important;border-radius:0 0 13px 13px!important}
+ #pdfToolbar>.tabs a{display:flex!important;align-items:center!important;flex:0 0 auto!important;border:0!important;border-radius:0!important;background:transparent!important;color:#bcd0d9!important;padding:18px 15px!important;font-size:12px!important;font-weight:550!important;white-space:nowrap!important;text-decoration:none!important}
+ #pdfToolbar>.tabs a.active,#pdfToolbar>.tabs a[aria-current="page"]{color:white!important;background:#ffffff12!important;box-shadow:inset 0 -3px #72d4b1!important}
+ #rapportStorageStatus,#draftRecovery{max-width:1280px!important;width:calc(100% - 40px)!important;margin:12px auto!important;border-radius:8px!important;padding:12px 18px!important;line-height:1.55!important;font-size:12px!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 40px)!important;max-width:1280px!important;min-width:0!important;padding:28px!important;height:auto!important;min-height:0!important;margin:18px auto!important;border-radius:12px!important;box-shadow:0 4px 20px #17334305!important;border:1px solid #e1e8eb!important;transform:none!important}
+ #materialPage,#materialRegiePage{width:100%!important;max-width:none!important;height:auto!important;min-height:0!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{padding:4px 0 20px!important;border-bottom:1px solid #e1e8eb!important;margin-bottom:18px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:20px!important;color:#173343!important;font-weight:700!important}
+ #materialPage .section,#materialRegiePage .section{background:none!important;color:#173343!important;font-size:17px!important;border:0!important;padding:20px 0 14px!important}
+ #materialPage table,#materialRegiePage table{border-collapse:separate!important;border-spacing:0!important;width:100%!important;table-layout:fixed!important;border:1px solid #e1e8eb!important;border-radius:9px!important;overflow:hidden!important}
+ #materialPage th,#materialRegiePage th{font-size:10px!important;letter-spacing:.6px!important;color:#6d7f89!important;text-transform:uppercase!important;background:#f6f9fa!important;text-align:left!important;padding:14px 10px!important;border:0!important;border-bottom:1px solid #e1e8eb!important}
+ #materialPage td,#materialRegiePage td{padding:10px 8px!important;border:0!important;border-bottom:1px solid #edf1f3!important;background:#fff!important;height:auto!important}
+ #materialPage input,#materialRegiePage input,#materialPage select,#materialRegiePage select{font-family:inherit!important;font-size:13px!important;color:#173343!important;height:34px!important;border:1px solid #e1e8eb!important;border-radius:6px!important;background:#fff!important;padding:6px 8px!important;box-sizing:border-box!important}
+ #materialPage input:focus,#materialRegiePage input:focus{outline:2px solid #91baa9!important;outline-offset:1px!important;background:#f7fcfa!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{font-size:12px!important;gap:5px!important}
+ #materialPage .linegrid .lbl,#materialRegiePage .linegrid .lbl{color:#6d7f89!important}
+ #adminOverlay .admin-modal{border-radius:14px!important}
+ #adminOverlay button{border-radius:7px!important}
+}
+@media screen and (max-width:760px){
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 20px)!important;margin:10px auto!important}
+ #pdfToolbar .head-main{padding:22px 17px!important;gap:32px!important;min-height:290px!important;background-position:61% center!important}
+ #pdfToolbar .head-main:after{font-size:15px!important;right:17px!important;top:75px!important}
+ #pdfToolbar .brand-mark{font-size:22px!important}#pdfToolbar .brand-title{font-size:25px!important}
+ #pdfToolbar .meta-strip{grid-template-columns:1fr 1fr!important;gap:8px!important}#pdfToolbar .meta-item{padding:10px!important;min-height:58px!important}
+ #pdfToolbar .head-actions{padding:14px!important;gap:8px!important}#pdfToolbar #orderSelect{flex-basis:100%!important;order:-1!important}
+ #pdfToolbar>.tabs{padding:0 7px!important}#pdfToolbar>.tabs a{padding:15px 12px!important;font-size:11px!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 20px)!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 20px)!important;padding:17px!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:12px!important}#materialPage .beiblatt-logo,#materialRegiePage .beiblatt-logo{font-size:12px!important}#materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:16px!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{display:grid!important;grid-template-columns:105px minmax(0,1fr)!important;gap:8px!important;font-size:11px!important}#materialPage .linegrid>*,#materialRegiePage .linegrid>*{grid-column:auto!important;grid-row:auto!important;min-width:0!important}#materialPage .linegrid input,#materialRegiePage .linegrid input{font-size:11px!important;padding:4px!important}
+ #materialPage table,#materialRegiePage table,#materialPage tbody,#materialRegiePage tbody{display:block!important;border:0!important}
+ #materialPage thead,#materialRegiePage thead{display:none!important}
+ #materialRows tr,#materialRegiePage tbody tr{display:grid!important;grid-template-columns:1.35fr 1fr 1fr!important;padding:15px 0!important;border-bottom:1px solid #e1e8eb!important;height:auto!important;gap:8px!important}
+ #materialRows td,#materialRegiePage tbody td{display:block!important;text-align:left!important;padding:0!important;border:0!important;min-width:0!important}
+ #materialRows td:first-child,#materialRegiePage tbody td:first-child{grid-column:1/-1!important}
+ #materialRows td:nth-child(2),#materialRegiePage tbody td:nth-child(2){grid-column:1/-1!important}
+ #materialRows td:before,#materialRegiePage tbody td:before{display:block;font-size:9px;color:#6d7f89;letter-spacing:.4px;margin-bottom:5px}
+ #materialRows td:nth-child(1):before,#materialRegiePage tbody td:nth-child(1):before{content:'BEZEICHNUNG'}
+ #materialRows td:nth-child(2):before,#materialRegiePage tbody td:nth-child(2):before{content:'ARTIKEL-NR.'}
+ #materialRows td:nth-child(3):before,#materialRegiePage tbody td:nth-child(3):before{content:'MENGE / EINHEIT'}
+ #materialRows td:nth-child(4):before,#materialRegiePage tbody td:nth-child(4):before{content:'E-PREIS'}
+ #materialRows td:nth-child(5):before,#materialRegiePage tbody td:nth-child(5):before{content:'BETRAG'}
+ #materialRows input,#materialRegiePage tbody input{width:100%!important}#materialPage .material-measure,#materialRegiePage .material-measure{display:flex!important;flex-wrap:wrap!important;gap:4px!important}#materialPage .material-unit,#materialRegiePage .material-unit{width:100%!important;max-width:none!important}
+}
+
+</style>
+</head><body spellcheck="false"><aside style="padding:8px;background:#fff4cf;text-align:center" class="v2-test-banner">V2-Testversion · Die bisherige Startseite bleibt bestehen. Firebase-Daten werden gemeinsam verwendet.</aside>
 <div class="pdf-toolbar" id="pdfToolbar">
 <div class="head-main">
 <div class="brand-block">
@@ -4510,7 +4581,7 @@ window.saveLocalUser=function(){};
 })();
 </script>
 
-</body></html>
+<script>function markCurrentRapportTab(){document.querySelectorAll('#pdfToolbar>.tabs a').forEach(a=>{const selected=a.hash===(location.hash||'#rapportPage');a.style.setProperty('background',selected?'#ffffff12':'transparent','important');a.style.setProperty('color',selected?'white':'#bcd0d9','important');if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}window.addEventListener('hashchange',markCurrentRapportTab);markCurrentRapportTab();</script></body></html>
 <style id="rapport-mobile-fix">
 @media screen and (max-width:700px){
   #pdfToolbar.pdf-toolbar{width:calc(100vw - 12px)!important;min-width:0!important;max-width:100%!important}
