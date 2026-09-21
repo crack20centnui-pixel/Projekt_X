@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="de"><head>
-<meta content="width=920, initial-scale=1, minimum-scale=0.25, maximum-scale=5, user-scalable=yes" name="viewport"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta charset="utf-8"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#244656"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
-<title>EQUANS Rapport HTML v3</title>
+<title>EQUANS Rapport</title>
+<script src="rapport-workflow.js"></script><script defer src="rapport-drafts.js"></script>
+<script defer src="rapport-drive.js"></script>
 <style>
 *{box-sizing:border-box} html,body{margin:0;background:#f2f4f5;font-family:Arial,sans-serif;color:#111}
 .toolbar{background:#244656;padding:9px;display:flex;gap:7px;justify-content:center;position:sticky;top:0;z-index:5}
@@ -1600,7 +1602,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 }
 </style>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 
 <style id="v13-design-alpen-final">
 /* 🔴🔴🔴 NICHT ÄNDERN: FUNKTIONIERENDE V10/V12-LOGIK 🔴🔴🔴
@@ -1778,7 +1780,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
   #pdfToolbar>.tabs a:first-child{min-height:34px!important}
 }
 @media screen and (max-width:900px){
-  #pdfToolbar>.tabs{display:flex!important;width:calc(100% - 16px)!important;margin:0 8px 9px!important;padding:5px!important;gap:3px!important;overflow-x:auto!important;scrollbar-width:thin!important}
+  #pdfToolbar>.tabs{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin:0!important;display:flex!important;width:calc(100% - 16px)!important;margin:0 8px 9px!important;padding:5px!important;gap:3px!important;overflow-x:auto!important;scrollbar-width:thin!important}
   #pdfToolbar>.tabs a{flex:0 0 auto!important;min-width:112px!important;min-height:36px!important;font-size:9px!important;padding:0 9px!important}
   #pdfToolbar>.tabs a:first-child{min-height:36px!important}
 }
@@ -1908,6 +1910,78 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 }
 </style>
 
+<style>@media print{#draftRecovery,#rapportStorageStatus{display:none!important}}</style>
+<style id="v2-screen-refresh">
+/* Screen-only refresh. Existing Alpine background and all form fields stay intact. */
+@media screen {
+ body{background:#f3f6f7!important;color:#173343;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 40px)!important;max-width:1280px!important;margin:22px auto 16px!important;border:1px solid #dfe7eb!important;border-radius:14px!important;box-shadow:0 8px 30px #17334308!important;overflow:visible!important}
+ #pdfToolbar .head-main{grid-template-columns:1fr!important;gap:34px!important;padding:30px!important;min-height:240px!important;border:0!important;border-radius:14px 14px 0 0!important;background-position:center 44%!important}
+ #pdfToolbar .head-main:after{right:30px!important;top:30px!important}
+ #pdfToolbar .brand-mark{font-size:26px!important;letter-spacing:.8px!important}
+ #pdfToolbar .brand-title{font-size:28px!important;font-weight:750!important}
+ #pdfToolbar .brand-sub{color:#59707e!important;font-size:11px!important}
+ #pdfToolbar .meta-strip{display:grid!important;width:100%!important;grid-template-columns:2fr .85fr 1.5fr 1.2fr!important;gap:12px!important}
+ #pdfToolbar .meta-item{border:1px solid #ffffffbb!important;box-shadow:none!important;min-height:66px!important;background:#ffffffdc!important;border-radius:9px!important;padding:12px 15px!important}
+ #pdfToolbar .meta-label{color:#6d7f89!important;letter-spacing:1px!important;text-transform:uppercase!important;font-size:9px!important}
+ #pdfToolbar .meta-value,#pdfToolbar #headerUserName{font-size:13px!important;font-weight:600!important;color:#173343!important}
+ #pdfToolbar .head-actions{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;padding:18px 24px!important;gap:10px!important;background:white!important;border:0!important}
+ #pdfToolbar .head-actions>button,#pdfToolbar select,#pdfToolbar .pdf-menu summary{width:auto!important;flex:0 0 auto!important;height:42px!important;border-radius:8px!important;font-size:12px!important;padding:0 15px!important;border:1px solid #dbe4e8!important;background:#fff!important;color:#173343!important;box-shadow:none!important;text-shadow:none!important;min-width:0!important}
+ #pdfToolbar .head-actions .primary-new{padding-left:15px!important;font-weight:600!important;background:#f5f8f9!important;color:#173343!important}
+ #pdfToolbar .primary-new:before,#pdfToolbar .primary-new:after{display:none!important}
+ #pdfToolbar button[onclick="saveOrder()"]{background:#123447!important;color:white!important;border-color:#123447!important}
+ #pdfToolbar #manualSyncBtn{background:#e8f3ed!important;color:#247656!important;border-color:#d6eadd!important}
+ #pdfToolbar .head-actions .action-delete{background:#fff!important;color:#9c5555!important;border-color:#eadfdf!important;font-weight:500!important}
+ #pdfToolbar #orderSelect{flex:1 1 240px!important;width:auto!important;max-width:none!important}
+ #pdfToolbar #pdfMenu.pdf-menu{height:42px!important;width:150px!important;max-width:150px!important;flex:0 0 auto!important}
+ #pdfToolbar .save-status{flex-basis:100%!important;font-size:11px!important;padding-top:2px!important;color:#247656!important}
+ #pdfToolbar>.tabs{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin:0!important;display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding:0 18px!important;gap:4px!important;min-height:56px!important;background:#123447!important;border-radius:0 0 13px 13px!important}
+ #pdfToolbar>.tabs a{display:flex!important;align-items:center!important;flex:0 0 auto!important;border:0!important;border-radius:0!important;background:transparent!important;color:#bcd0d9!important;padding:18px 15px!important;font-size:12px!important;font-weight:550!important;white-space:nowrap!important;text-decoration:none!important}
+ #pdfToolbar>.tabs a.active,#pdfToolbar>.tabs a[aria-current="page"]{color:white!important;background:#ffffff12!important;box-shadow:inset 0 -3px #72d4b1!important}
+ #rapportStorageStatus,#draftRecovery{max-width:1280px!important;width:calc(100% - 40px)!important;margin:12px auto!important;border-radius:8px!important;padding:12px 18px!important;line-height:1.55!important;font-size:12px!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 40px)!important;max-width:1280px!important;min-width:0!important;padding:28px!important;height:auto!important;min-height:0!important;margin:18px auto!important;border-radius:12px!important;box-shadow:0 4px 20px #17334305!important;border:1px solid #e1e8eb!important;transform:none!important}
+ #materialPage,#materialRegiePage{width:100%!important;max-width:none!important;height:auto!important;min-height:0!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{padding:4px 0 20px!important;border-bottom:1px solid #e1e8eb!important;margin-bottom:18px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:20px!important;color:#173343!important;font-weight:700!important}
+ #materialPage .section,#materialRegiePage .section{background:none!important;color:#173343!important;font-size:17px!important;border:0!important;padding:20px 0 14px!important}
+ #materialPage table,#materialRegiePage table{border-collapse:separate!important;border-spacing:0!important;width:100%!important;table-layout:fixed!important;border:1px solid #e1e8eb!important;border-radius:9px!important;overflow:hidden!important}
+ #materialPage th,#materialRegiePage th{font-size:10px!important;letter-spacing:.6px!important;color:#6d7f89!important;text-transform:uppercase!important;background:#f6f9fa!important;text-align:left!important;padding:14px 10px!important;border:0!important;border-bottom:1px solid #e1e8eb!important}
+ #materialPage td,#materialRegiePage td{padding:10px 8px!important;border:0!important;border-bottom:1px solid #edf1f3!important;background:#fff!important;height:auto!important}
+ #materialPage input,#materialRegiePage input,#materialPage select,#materialRegiePage select{font-family:inherit!important;font-size:13px!important;color:#173343!important;height:34px!important;border:1px solid #e1e8eb!important;border-radius:6px!important;background:#fff!important;padding:6px 8px!important;box-sizing:border-box!important}
+ #materialPage input:focus,#materialRegiePage input:focus{outline:2px solid #91baa9!important;outline-offset:1px!important;background:#f7fcfa!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{font-size:12px!important;gap:5px!important}
+ #materialPage .linegrid .lbl,#materialRegiePage .linegrid .lbl{color:#6d7f89!important}
+ #adminOverlay .admin-modal{border-radius:14px!important}
+ #adminOverlay button{border-radius:7px!important}
+}
+@media screen and (max-width:760px){
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 20px)!important;margin:10px auto!important}
+ #pdfToolbar .head-main{padding:22px 17px!important;gap:32px!important;min-height:290px!important;background-position:61% center!important}
+ #pdfToolbar .head-main:after{font-size:15px!important;right:17px!important;top:75px!important}
+ #pdfToolbar .brand-mark{font-size:22px!important}#pdfToolbar .brand-title{font-size:25px!important}
+ #pdfToolbar .meta-strip{grid-template-columns:1fr 1fr!important;gap:8px!important}#pdfToolbar .meta-item{padding:10px!important;min-height:58px!important}
+ #pdfToolbar .head-actions{padding:14px!important;gap:8px!important}#pdfToolbar #orderSelect{flex-basis:100%!important;order:-1!important}
+ #pdfToolbar>.tabs{padding:0 7px!important}#pdfToolbar>.tabs a{padding:15px 12px!important;font-size:11px!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 20px)!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 20px)!important;padding:17px!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:12px!important}#materialPage .beiblatt-logo,#materialRegiePage .beiblatt-logo{font-size:12px!important}#materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:16px!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{display:grid!important;grid-template-columns:105px minmax(0,1fr)!important;gap:8px!important;font-size:11px!important}#materialPage .linegrid>*,#materialRegiePage .linegrid>*{grid-column:auto!important;grid-row:auto!important;min-width:0!important}#materialPage .linegrid input,#materialRegiePage .linegrid input{font-size:11px!important;padding:4px!important}
+ #materialPage table,#materialRegiePage table,#materialPage tbody,#materialRegiePage tbody{display:block!important;border:0!important}
+ #materialPage thead,#materialRegiePage thead{display:none!important}
+ #materialRows tr,#materialRegiePage tbody tr{display:grid!important;grid-template-columns:1.35fr 1fr 1fr!important;padding:15px 0!important;border-bottom:1px solid #e1e8eb!important;height:auto!important;gap:8px!important}
+ #materialRows td,#materialRegiePage tbody td{display:block!important;text-align:left!important;padding:0!important;border:0!important;min-width:0!important}
+ #materialRows td:first-child,#materialRegiePage tbody td:first-child{grid-column:1/-1!important}
+ #materialRows td:nth-child(2),#materialRegiePage tbody td:nth-child(2){grid-column:1/-1!important}
+ #materialRows td:before,#materialRegiePage tbody td:before{display:block;font-size:9px;color:#6d7f89;letter-spacing:.4px;margin-bottom:5px}
+ #materialRows td:nth-child(1):before,#materialRegiePage tbody td:nth-child(1):before{content:'BEZEICHNUNG'}
+ #materialRows td:nth-child(2):before,#materialRegiePage tbody td:nth-child(2):before{content:'ARTIKEL-NR.'}
+ #materialRows td:nth-child(3):before,#materialRegiePage tbody td:nth-child(3):before{content:'MENGE / EINHEIT'}
+ #materialRows td:nth-child(4):before,#materialRegiePage tbody td:nth-child(4):before{content:'E-PREIS'}
+ #materialRows td:nth-child(5):before,#materialRegiePage tbody td:nth-child(5):before{content:'BETRAG'}
+ #materialRows input,#materialRegiePage tbody input{width:100%!important}#materialPage .material-measure,#materialRegiePage .material-measure{display:flex!important;flex-wrap:wrap!important;gap:4px!important}#materialPage .material-unit,#materialRegiePage .material-unit{width:100%!important;max-width:none!important}
+}
+
+</style>
 </head><body spellcheck="false">
 <div class="pdf-toolbar" id="pdfToolbar">
 <div class="head-main">
@@ -1917,19 +1991,15 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div><div class="brand-title">Rapport</div><div class="brand-sub">Elektro · Gebäude · Services</div></div>
 </div>
 <div class="meta-strip">
-<div class="meta-item"><div class="meta-label">Rapport-Nr.</div><div class="meta-value" id="headerRapportId">–</div></div>
+<div class="meta-item"><div class="meta-label">Referenz</div><div class="meta-value" id="headerRapportId">–</div></div>
 <div class="meta-item"><div class="meta-label">Datum</div><div class="meta-value" id="headerDate">–</div></div>
 <div class="meta-item"><div class="meta-label">Status</div><div class="meta-value" id="cloudHeaderStatus">Cloud</div></div>
 <div class="meta-item user-meta"><div class="meta-label">Benutzer</div><div class="meta-value">👤 <button id="headerUserName" onclick="changeLocalUser()" title="Benutzer / Abmelden" type="button">–</button></div></div>
 </div>
 </div>
-<div class="head-actions">
-<button class="primary-new" onclick="newOrder()" type="button">＋ Neuer Auftrag</button>
-<button onclick="saveOrder()" type="button">▣ Speichern</button> <button id="manualSyncBtn" type="button" title="Lokale Änderungen mit Firebase synchronisieren">↻ SYNC</button>
-<button id="adminAreaBtn" type="button" style="display:none">⚙ Admin</button> <button id="eldasImportBtn" type="button" title="ELDAS-Katalog lokal einlesen">ELDAS einlesen</button>
-<input id="eldasImportInput" type="file" accept=".json,application/json"/>
- <button id="systemDiagnoseBtn" type="button">🔍 System kontrollieren</button>
-<select aria-label="Gespeicherter Auftrag" id="orderSelect" onchange="loadSelectedOrder(true)"><option value="">Auftrag auswählen …</option></select>
+<div class="head-actions toolbar-v3">
+<div class="order-row"><div class="order-chooser"><label for="orderSelect">Aktueller Auftrag</label><select aria-label="Gespeicherter Auftrag" id="orderSelect" onchange="loadSelectedOrder(true)"><option value="">Auftrag auswählen …</option></select></div><button class="primary-new" onclick="newOrder()" type="button">＋ Neuer Auftrag</button></div>
+<div class="action-controls"><button class="toolbar-save" onclick="saveOrder()" type="button">Speichern</button><button id="manualSyncBtn" type="button" title="Lokale Änderungen mit Firebase synchronisieren">↻ SYNC</button>
 <details class="pdf-menu" id="pdfMenu">
 <summary>▧ PDF erstellen</summary>
 <div class="pdf-popover">
@@ -1946,8 +2016,14 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <button class="pdf-main" onclick="printSelectedPages()" type="button">PDF erstellen</button>
 </div>
 </details>
-<button class="delete-order action-delete" onclick="deleteSelectedOrder()" type="button">Auftrag löschen</button>
-<span class="save-status" id="saveStatus"></span>
+<details id="moreActions" class="more-actions"><summary>Weitere Aktionen <span aria-hidden="true">⌄</span></summary><div class="more-popover">
+<button id="adminAreaBtn" type="button" style="display:none">Administration</button>
+<button id="eldasImportBtn" type="button" title="ELDAS-Katalog lokal einlesen">ELDAS einlesen</button>
+<button id="systemDiagnoseBtn" type="button">System kontrollieren</button>
+<div class="more-separator"></div><button class="delete-order action-delete" onclick="deleteSelectedOrder()" type="button">Lokal entfernen</button>
+</div></details></div>
+<span class="save-status" id="saveStatus" role="status"></span>
+<input id="eldasImportInput" type="file" accept=".json,application/json"/>
 <input accept=".rapport,application/json" id="rapportImportInput" onchange="importRapportFile(event)" type="file"/>
 <input accept=".equans,.json,application/json" id="masterImportInput" onchange="importMasterBackup(event)" style="display:none" type="file"/>
 </div>
@@ -2049,7 +2125,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="register-actions"><button id="registerCancelBtn" type="button">Abbrechen</button><button id="registerSaveBtn" class="register-save" type="button">Registrieren</button></div>
 </div></div>
 <div id="adminOverlay" aria-hidden="true"><div class="admin-card">
-<div class="admin-top"><div><h2>Administration</h2><div style="font-size:11px;color:#65756d">Firebase V1 – zentrale Verwaltung</div></div><button id="adminCloseBtn" class="admin-close" type="button">×</button></div>
+<div class="admin-top"><div><h2>Administration</h2><div style="font-size:11px;color:#65756d">Firebase V1 – zentrale Verwaltung</div></div><button id="adminRefreshBtn" type="button">Ansicht aktualisieren</button><button id="adminCloseBtn" class="admin-close" type="button">×</button></div>
 
 <div class="admin-tabs">
 <button class="admin-tab active" data-admin-tab="rapporte" type="button">Rapporte</button>
@@ -2061,6 +2137,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 
 <div class="admin-panel active" data-admin-panel="rapporte">
 <div class="admin-section"><h3>Rapporte – Gesamtübersicht</h3>
+<label>Ansicht <select id="adminArchiveFilter"><option value="active">Aktive Rapporte</option><option value="archived">Archiv</option><option value="all">Alle Rapporte</option></select></label>
 <div class="admin-stat-grid">
 <div class="admin-stat"><b id="adminStatRapporte">0</b><span>Rapporte</span></div>
 <div class="admin-stat"><b id="adminStatOpen">0</b><span>In Bearbeitung</span></div>
@@ -2069,11 +2146,11 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 </div>
 <div class="admin-toolbar">
 <div class="admin-field"><label>MONTEUR</label><input id="adminMonteurSearch" list="adminMonteurList" placeholder="Alle / Name suchen …"><datalist id="adminMonteurList"></datalist></div>
-<div class="admin-field"><label>REFERENZ / RPT-ID</label><input id="adminReferenceSearch" list="adminReferenceList" placeholder="Referenz oder RPT-ID …"><datalist id="adminReferenceList"></datalist></div>
+<div class="admin-field"><label>REFERENZ</label><input id="adminReferenceSearch" list="adminReferenceList" placeholder="Referenz suchen …"><datalist id="adminReferenceList"></datalist></div>
 <div class="admin-field"><label>AUFTRAGSNUMMER</label><input id="adminOrderSearch" placeholder="Auftragsnummer …"></div>
 <button id="adminRapportFilterBtn" class="admin-primary" type="button">Filtern</button>
 </div>
-<div class="admin-table-wrap"><table id="adminRapportsTable" class="admin-data-table"><thead><tr><th>RPT-ID</th><th>Auftrag</th><th>Referenz</th><th>Owner</th><th>Status</th><th>Rev.</th><th>Freigaben</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
+<div class="admin-table-wrap"><table id="adminRapportsTable" class="admin-data-table"><thead><tr><th class="technical-id">Interne ID</th><th>Auftrag</th><th>Referenz</th><th>Owner</th><th>Status</th><th>Rev.</th><th>Freigaben</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
 <div id="adminRapportStatus" style="font-size:11px;color:#65756d;margin-top:7px"></div>
 </div>
 
@@ -2082,8 +2159,12 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div><label>ZUWEISEN AN</label><select id="adminAssignTarget"><option value="">Monteur auswählen …</option></select></div>
 <div><label>AKTUELLER OWNER</label><div id="adminAssignSource" style="padding:9px 0;font-size:12px">–</div></div>
 <button id="adminAssignAddBtn" class="admin-assign-add" type="button">Zusätzlich zuweisen</button>
+<button id="adminArchiveBtn" type="button">Archivieren</button>
+<button id="adminReopenBtn" type="button">Wieder öffnen</button>
+<button id="adminVersionsBtn" type="button">Gesicherte Stände</button>
 <button id="adminAssignTransferBtn" class="admin-assign-transfer" type="button">Übergeben</button>
 </div>
+<div id="adminVersionsList" class="admin-note"></div>
 <div class="admin-note">Freigabe arbeitet am selben RPT. Es wird keine Rapport-Kopie erzeugt.</div>
 </div>
 </div>
@@ -2113,16 +2194,20 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="admin-table-wrap"><table id="adminSyncTable" class="admin-data-table"><thead><tr><th>Mitarbeiter</th><th>Rolle</th><th>Sync-Version</th><th>Letzter Sync</th><th>Rapporte</th></tr></thead><tbody></tbody></table></div>
 <div class="admin-note">Die Sync-Version ist pro Benutzer. Die Revision eines einzelnen RPT wird separat in der Rapportübersicht angezeigt.</div>
 </div>
-<div class="admin-section"><h3>Konflikte / Hinweise</h3><div id="adminConflictInfo" class="admin-note">Keine zentral gespeicherten Konflikte gefunden. Lokale Sync-Konflikte werden beim betroffenen Benutzer nicht überschrieben.</div></div>
+<div class="admin-section"><h3>Konflikte / Hinweise</h3><div id="adminConflictInfo" class="admin-note">Hier erfolgt keine zentrale Konfliktprüfung. Konflikte werden beim manuellen SYNC auf dem jeweiligen Gerät angezeigt; betroffene Änderungen bleiben lokal erhalten.</div></div>
 </div>
 
 <div class="admin-panel" data-admin-panel="dateien">
-<div class="admin-section admin-backup-section"><h3>Backup / Dateien</h3><div class="admin-backup-actions">
+<div class="admin-section admin-backup-section"><h3>Backup / Dateien</h3>
+<button id="downloadPdfBtn" type="button">PDF-Datei herunterladen</button>
+<p>Bei Drive-Verbindungsproblemen: PDF und Rapport-Datei herunterladen und in deinem privaten Drive ablegen. <a href="https://drive.google.com/" target="_blank" rel="noopener">Google Drive öffnen</a></p><button id="driveBackupBtn" type="button">Geöffneten Rapport als PDF + Datei privat auf Drive sichern</button>
+<div id="driveBackupStatus" role="status"></div><div class="admin-backup-actions">
 <button type="button" onclick="exportRapportFile()">▧ Rapport exportieren</button>
 <button type="button" onclick="document.getElementById('rapportImportInput').click()">▱ Rapport einlesen</button>
-<button type="button" onclick="exportMasterBackup()">▣ Master erstellen</button>
-<button type="button" onclick="document.getElementById('masterImportInput').click()">▱ Master laden</button>
-</div><div class="admin-backup-note">Bestehende Backup-Funktionen wurden nicht verändert.</div></div>
+<button type="button" onclick="exportMasterBackup()">▣ Lokales Backup erstellen</button>
+<button type="button" onclick="document.getElementById('masterImportInput').click()">▱ Lokales Backup laden</button>
+<button id="legacyBackupBtn" type="button">Alten lokalen Speicher sichern</button>
+</div><div class="admin-backup-note">Dieses Backup enthält nur die auf diesem Gerät für den angemeldeten Benutzer gespeicherten Rapporte. Es ist kein vollständiges Firebase-Backup. Ältere, noch keinem Benutzer zugeordnete lokale Daten bleiben unverändert erhalten und können mit „Alten lokalen Speicher sichern“ heruntergeladen werden.</div></div>
 </div>
 
 </div></div>
@@ -2138,7 +2223,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="pagepart" id="rapportPage">
 <div class="top">
 <div class="logo">EQUANS<br/>SWITZERLAND</div><div class="rtitle">RAPPORT</div>
-<div class="lbl" style="grid-column:9/11;grid-row:1">Rapport-Nr.:</div><div class="in" style="grid-column:11/15;grid-row:1"><input class="" name="rapportnr" readonly=""/></div>
+<div class="lbl" style="grid-column:9/11;grid-row:1">Referenz:</div><div class="in" style="grid-column:11/15;grid-row:1"><input type="hidden" class="" name="rapportnr" readonly=""/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:9/11;grid-row:2">Auftrags-Nr.:</div><div class="in" style="grid-column:11/15;grid-row:2;position:relative"><input class="" name="auftrag" autocomplete="off"/><datalist id="equansMasterOrderSuggestions"></datalist><div id="equansMasterOrderMobileSuggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99999;background:#fff;border:1px solid #aaa;max-height:180px;overflow:auto;box-shadow:0 3px 10px #0002"></div></div>
 <div class="lbl" style="grid-column:9/11;grid-row:3">Referenz:</div><div class="in" style="grid-column:11/15;grid-row:3"><input class="" name="ref"/></div>
 <div class="lbl" style="grid-column:1/4;grid-row:5">Erfasst am:</div><div class="in" style="grid-column:4/7;grid-row:5"><input class="" name="datum"/></div>
@@ -2192,7 +2277,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="pagepart" id="regiePage">
 <div class="top">
 <div class="logo">EQUANS<br/>SWITZERLAND</div><div class="rtitle">REGIERAPPORT</div>
-<div class="lbl" style="grid-column:9/11;grid-row:1">Rapport-Nr.:</div><div class="in" style="grid-column:11/15;grid-row:1"><input class="" name="regie_rapportnr" readonly=""/></div>
+<div class="lbl" style="grid-column:9/11;grid-row:1">Referenz:</div><div class="in" style="grid-column:11/15;grid-row:1"><input type="hidden" class="" name="regie_rapportnr" readonly=""/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:9/11;grid-row:2">Auftrags-Nr.:</div><div class="in" style="grid-column:11/15;grid-row:2"><input class="" name="regie_auftrag"/></div>
 <div class="lbl" style="grid-column:9/11;grid-row:3">Referenz:</div><div class="in" style="grid-column:11/15;grid-row:3"><input class="" name="regie_ref"/></div>
 <div class="lbl" style="grid-column:1/4;grid-row:5">Erfasst am:</div><div class="in" style="grid-column:4/7;grid-row:5"><input class="" name="regie_datum"/></div>
@@ -2265,7 +2350,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
   <div class="beiblatt-spacer"></div>
 </div>
 <div class="linegrid">
-<div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="az_rapportnr" readonly=""/></div>
+<div class="lbl" style="grid-column:1/3">Referenz:</div><div class="in" style="grid-column:3/6"><input type="hidden" name="az_rapportnr" readonly=""/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="az_auftrag" readonly=""/></div>
 <div class="lbl" style="grid-column:11/13">Seite:</div><div class="in" style="grid-column:13/15"><input name="az_seite" value="2"/></div>
 <div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="az_ref" readonly=""/></div>
@@ -2305,7 +2390,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
   <div class="beiblatt-spacer"></div>
 </div>
 <div class="linegrid">
-<div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="messrapport"/></div>
+<div class="lbl" style="grid-column:1/3">Referenz:</div><div class="in" style="grid-column:3/6"><input type="hidden" name="messrapport"/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="messauftrag"/></div>
 <div class="lbl" style="grid-column:11/13">Seite:</div><div class="in" style="grid-column:13/15"><input name="messseite" value="2"/></div>
 <div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="messprojekt"/></div>
@@ -2337,7 +2422,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
   <div class="beiblatt-spacer"></div>
 </div>
 <div class="linegrid">
-<div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="mrapport"/></div>
+<div class="lbl" style="grid-column:1/3">Referenz:</div><div class="in" style="grid-column:3/6"><input type="hidden" name="mrapport"/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="mauftrag"/></div>
 <div class="lbl" style="grid-column:11/13">Seite:</div><div class="in" style="grid-column:13/15"><input name="mseite" value="2"/></div>
 <div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="mprojekt"/></div>
@@ -2391,7 +2476,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
   <div class="beiblatt-spacer"></div>
 </div>
 <div class="linegrid">
-<div class="lbl" style="grid-column:1/3">Rapport-Nr.:</div><div class="in" style="grid-column:3/6"><input name="regiemat_mrapport"/></div>
+<div class="lbl" style="grid-column:1/3">Referenz:</div><div class="in" style="grid-column:3/6"><input type="hidden" name="regiemat_mrapport"/><span class="rapport-reference-display">–</span></div>
 <div class="lbl" style="grid-column:6/8">Auftrags-Nr.:</div><div class="in" style="grid-column:8/11"><input name="regiemat_mauftrag"/></div>
 <div class="lbl" style="grid-column:11/13">Seite:</div><div class="in" style="grid-column:13/15"><input name="regiemat_mseite" value="2"/></div>
 <div class="lbl" style="grid-column:1/4">Projekt / Objekt:</div><div class="in" style="grid-column:4/15"><input name="regiemat_mprojekt"/></div>
@@ -2441,6 +2526,46 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <script>
 // 🔴🔴🔴 NICHT ÄNDERN – FUNKTIONIERENDER RAPPORT-/LOCAL-STAND. NUR ERWEITERN, NICHT ERSETZEN. 🔴🔴🔴
 const ORDER_DB_KEY='equansRapportOrdersV13';
+let activeLocalUid='';
+let formDirty=false;
+window.masterStorageKey=()=> 'equansMasterDataV1_'+(activeLocalUid||'signed-out');
+function confirmDiscard(){window.flushRapportDraft?.();return !formDirty||confirm('Ungespeicherte Änderungen verwerfen?');}
+window.addEventListener('beforeunload',e=>{if(formDirty){e.preventDefault();e.returnValue='';}});
+document.addEventListener('input',e=>{if(e.target.closest('.sheet')){formDirty=true;window.queueRapportDraft?.();}});
+document.addEventListener('change',e=>{
+  if(!e.target.closest('.sheet'))return;
+  formDirty=true;window.queueRapportDraft?.();
+  const row=e.target.closest('.checkrow');
+  if(row&&row.textContent.includes('Arbeit fertig:')&&e.target.checked){
+    const boxes=[...row.querySelectorAll('input[type="checkbox"]')],i=boxes.indexOf(e.target);
+    if(i>=0&&i<4)boxes[i%2===0?i+1:i-1].checked=false;
+  }
+});
+function preserveRapportMetadata(previous,captured){
+  const result={...captured};
+  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource','__archived','__accessRevoked']){
+    if(previous&&key in previous)result[key]=previous[key];
+  }
+  return result;
+}
+function activateLocalAccount(uid){
+  if(activeLocalUid===uid)return;
+  window.flushRapportDraft?.();activeLocalUid=uid||'';
+  if(uid){
+    const key=ORDER_DB_KEY+'_'+uid;
+    if(localStorage.getItem(key)===null){
+      const legacy=JSON.parse(localStorage.getItem(ORDER_DB_KEY)||'{}');
+      const owned=Object.fromEntries(Object.entries(legacy).filter(([,v])=>v.__ownerUid===uid||(v.__accessUids||[]).includes(uid)));
+      localStorage.setItem(key,JSON.stringify(owned));
+    }
+  }
+  if(initialTemplate)applyForm(initialTemplate);
+  const suggestions=document.getElementById('equansMasterOrderSuggestions');if(suggestions)suggestions.innerHTML='';
+  const mobileSuggestions=document.getElementById('equansMasterOrderMobileSuggestions');if(mobileSuggestions){mobileSuggestions.innerHTML='';mobileSuggestions.style.display='none';}
+  currentOrderKey='';currentCreatedAt=new Date().toISOString();formDirty=false;
+  clearSignature?.();ensureRapportId();refreshOrderSelect();updateHeaderInfo();
+}
+
 let initialTemplate=null;
 let currentOrderKey='';
 let currentCreatedAt='';
@@ -2488,13 +2613,17 @@ function captureForm(){
   const d={};
   fields().forEach((x,i)=>{const k=fieldKey(x,i);d[k]=(x.type==='checkbox')?{checked:x.checked}:{value:x.value};});
   d.__materialUnits=[...document.querySelectorAll('.material-unit')].map(x=>x.value);
-  d.__signatures={aussteller:document.getElementById('sigAussteller')?.src||'',kunde:document.getElementById('sigKunde')?.src||'',regieAussteller:document.getElementById('regie_sigAussteller')?.src||'',regieKunde:document.getElementById('regie_sigKunde')?.src||''};
+  d.__signatures={aussteller:document.getElementById('sigAussteller')?.getAttribute('src')||'',kunde:document.getElementById('sigKunde')?.getAttribute('src')||'',regieAussteller:document.getElementById('regie_sigAussteller')?.getAttribute('src')||'',regieKunde:document.getElementById('regie_sigKunde')?.getAttribute('src')||''};
+  const completion=[...document.querySelectorAll('#rapportPage .checkrow')].find(row=>row.textContent.includes('Arbeit fertig:'));
+  const checks=completion?[...completion.querySelectorAll('input[type="checkbox"]')]:[];
+  d.__status=checks[2]?.checked&&!checks[3]?.checked?'fertig':'in_bearbeitung';
   d.__savedAt=new Date().toISOString();
   d.__createdAt=currentCreatedAt||new Date().toISOString();
   return d;
 }
 function applyForm(d){
   fields().forEach((x,i)=>{const k=fieldKey(x,i);if(!(k in d))return;if(x.type==='checkbox')x.checked=!!d[k].checked;else x.value=d[k].value??'';});
+  formDirty=false;
   const materialUnits=[...document.querySelectorAll('.material-unit')];
   materialUnits.forEach((x,i)=>x.value=(d.__materialUnits&&d.__materialUnits[i])||'');
   // Kompatibilität zu älteren gespeicherten Versionen mit einem kombinierten Ort/Datum-Feld.
@@ -2509,15 +2638,22 @@ function applyForm(d){
   const ra=document.getElementById('regie_sigAussteller'),rk=document.getElementById('regie_sigKunde');
   if(ra)ra.src=d.__signatures?.regieAussteller||''; if(rk)rk.src=d.__signatures?.regieKunde||'';
 }
-function getDB(){try{return JSON.parse(localStorage.getItem(ORDER_DB_KEY)||'{}')}catch(e){return {}}}
-function putDB(db){localStorage.setItem(ORDER_DB_KEY,JSON.stringify(db))}
+function getDB(){
+  if(!activeLocalUid)return {};
+  const raw=localStorage.getItem(ORDER_DB_KEY+'_'+activeLocalUid);
+  try{return JSON.parse(raw||'{}')}catch(e){throw new Error('Lokaler Speicher beschädigt. Nicht überschreiben; zuerst sichern.');}
+}
+function putDB(db){
+  if(!activeLocalUid)throw new Error('Bitte zuerst anmelden.');
+  localStorage.setItem(ORDER_DB_KEY+'_'+activeLocalUid,JSON.stringify(db));
+}
 function referenceValue(){return (document.querySelector('input[name="ref"]')?.value||'').trim()}
 function setStatus(t){const e=document.getElementById('saveStatus');if(e){e.textContent=t;setTimeout(()=>{if(e.textContent===t)e.textContent=''},2500)}}
 function refreshOrderSelect(prefer=''){
   const sel=document.getElementById('orderSelect'); if(!sel)return;
   const db=getDB(), chosen=prefer||sel.value;
   sel.innerHTML='<option value="">Auftrag auswählen …</option>';
-  Object.entries(db).sort((a,b)=>(b[1].__savedAt||'').localeCompare(a[1].__savedAt||'')).forEach(([key,data])=>{
+  Object.entries(db).filter(([,data])=>!RapportWorkflow.isArchived(data)&&!data.__accessRevoked).sort((a,b)=>(b[1].__savedAt||'').localeCompare(a[1].__savedAt||'')).forEach(([key,data])=>{
     const o=document.createElement('option');o.value=key;const ref=(data.ref?.value||data.__reference||'').trim();const created=data.__createdAt||data.__savedAt||'';let dateLabel='';if(created){const cd=new Date(created);if(!isNaN(cd))dateLabel=String(cd.getDate()).padStart(2,'0')+'.'+String(cd.getMonth()+1).padStart(2,'0')+'.'+cd.getFullYear();}o.textContent=ref ? (ref+(dateLabel?' — '+dateLabel:'')) : ('Ohne Referenz'+(dateLabel?' — '+dateLabel:''));sel.appendChild(o);
   });
   if(chosen&&db[chosen])sel.value=chosen;
@@ -2538,9 +2674,11 @@ function ensureRapportId(){
   syncBeiblattHeaders?.(); return id;
 }
 function updateHeaderInfo(){
+  window.updateRapportStorageStatus?.();
   const rid=document.getElementById('headerRapportId');
   const dat=document.getElementById('headerDate');
-  if(rid) rid.textContent=rapportIdValue()||'–';
+  if(rid) rid.textContent=referenceValue()||'Ohne Referenz';
+  document.querySelectorAll('.rapport-reference-display').forEach(el=>el.textContent=referenceValue()||'–');
   if(dat){
     const d=currentCreatedAt ? new Date(currentCreatedAt) : null;
     dat.textContent=(d && !isNaN(d)) ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '–';
@@ -2548,18 +2686,22 @@ function updateHeaderInfo(){
 }
 function saveOrder(){
   const id=ensureRapportId(), ref=referenceValue(), db=getDB();
+  if(db[id]?.__accessRevoked)throw new Error('Rapport wurde übergeben. Lokale Änderungen können noch als Datei exportiert werden.');
+  if(RapportWorkflow.isArchived(db[id]))throw new Error('Archivierter Rapport: zuerst als Admin wieder öffnen.');
   currentCreatedAt=currentCreatedAt||db[id]?.__createdAt||new Date().toISOString();
   if(db[id]&&currentOrderKey!==id&&!confirm('Rapport „'+id+'“ ist bereits gespeichert. Aktualisieren?'))return;
   if(currentOrderKey&&currentOrderKey!==id&&db[currentOrderKey])delete db[currentOrderKey];
-  const data=captureForm();data.__rapportId=id;data.__reference=ref;data.__version=(db[id]?.__version||0)+1;db[id]=data;
-  putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();setStatus('Gespeichert ✓');
+  const data=preserveRapportMetadata(db[id],captureForm());data.__rapportId=id;data.__reference=ref;data.__version=(db[id]?.__version||0)+1;db[id]=data;
+  putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();formDirty=false;setStatus('Gespeichert ✓');return true;
 }
 function loadSelectedOrder(silent=false){
+  if(!confirmDiscard()){document.getElementById('orderSelect').value=currentOrderKey;return;}
   const sel=document.getElementById('orderSelect'),key=sel?.value;if(!key){if(!silent)alert('Bitte zuerst einen Auftrag auswählen.');return;}
   const db=getDB(),data=db[key];if(!data){refreshOrderSelect();alert('Auftrag nicht gefunden.');return;}
   applyForm(data);currentOrderKey=key;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();clearSignature?.();location.hash='#rapportPage';syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();setStatus('Geladen ✓');
 }
 function newOrder(){
+  window.flushRapportDraft?.();
   if(!confirm('Neuen Auftrag erstellen? Die aktuell eingegebenen, noch nicht gespeicherten Änderungen werden geleert.'))return;
   if(initialTemplate)applyForm(initialTemplate);currentOrderKey='';currentCreatedAt=new Date().toISOString();document.getElementById('orderSelect').value='';clearSignature?.();
   ensureRapportId();syncBeiblattHeaders?.();updateHeaderInfo();location.hash='#rapportPage';setStatus('Neuer Auftrag ✓');
@@ -2569,21 +2711,22 @@ function deleteSelectedOrder(){
   const key=sel?.value||currentOrderKey;
   if(!key){alert('Bitte zuerst einen gespeicherten Auftrag auswählen.');return;}
   const label=(sel&&sel.value&&sel.options[sel.selectedIndex])?sel.options[sel.selectedIndex].text:key;
-  if(!confirm('ACHTUNG – Auftrag wirklich löschen?\n\n'+label+'\n\nDer gespeicherte Auftrag wird endgültig gelöscht.\nDieser Vorgang kann nicht rückgängig gemacht werden.'))return;
+  if(!confirm('Lokale Kopie wirklich entfernen?\n\n'+label+'\n\nNur die lokale Kopie wird entfernt. Nicht synchronisierte Änderungen gehen verloren.\nEin Cloud-Rapport bleibt erhalten und wird beim nächsten SYNC erneut geladen.'))return;
   const db=getDB();delete db[key];putDB(db);
-  if(currentOrderKey===key)currentOrderKey='';
+  window.rapportLocalRemoved?.(key);
+  if(currentOrderKey===key){if(initialTemplate)applyForm(initialTemplate);currentOrderKey='';ensureRapportId();updateHeaderInfo();}
   refreshOrderSelect(); if(sel)sel.value='';
   setStatus('Gelöscht');
 }
 function exportRapportFile(){
-  const id=ensureRapportId();
-  currentCreatedAt=currentCreatedAt||getDB()[id]?.__createdAt||new Date().toISOString();
-  const data=captureForm();data.__rapportId=id;data.__reference=referenceValue();data.__version=(getDB()[id]?.__version||0)+1;data.__fileType='EQUANS_RAPPORT';data.__formatVersion=1;
-  const db=getDB();db[id]=data;putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();
+  const id=ensureRapportId(),previous=getDB()[id];
+  const data=RapportWorkflow.isArchived(previous)?structuredClone(previous):preserveRapportMetadata(previous,captureForm());
+  data.__rapportId=id;data.__reference=referenceValue();data.__fileType='EQUANS_RAPPORT';data.__formatVersion=1;
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=id+'.rapport';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('Rapport-Datei erstellt ✓');
+  a.href=url;a.download=(referenceValue()||'Rapport').replace(/[\\/]/g,'_')+'.rapport';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('Rapport-Datei erstellt ✓');
 }
 function importRapportFile(ev){
+  if(!confirmDiscard()){ev.target.value='';return;}
   const input=ev.target,file=input.files?.[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=()=>{try{
@@ -2595,16 +2738,16 @@ function importRapportFile(ev){
       const msg='Rapport „'+id+'“ ist bereits vorhanden.'+(newV&&oldV?'\nVorhandene Version: '+oldV+'\nEingelesene Version: '+newV:'')+'\n\nDiesen Auftrag aktualisieren?';
       if(!confirm(msg)){input.value='';return;}
     }
-    db[id]=data;putDB(db);applyForm(data);addLocalUserToPersonal();currentOrderKey=id;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();refreshOrderSelect(id);syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();location.hash='#rapportPage';setStatus('Eingelesen ✓');
+    db[id]=data;putDB(db);window.rapportLocalSaved?.(id);applyForm(data);addLocalUserToPersonal();currentOrderKey=id;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();refreshOrderSelect(id);syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();location.hash='#rapportPage';setStatus('Eingelesen ✓');
   }catch(e){alert('Diese Datei konnte nicht eingelesen werden.\n'+e.message);}finally{input.value='';}};
   reader.readAsText(file);
 }
 function exportMasterBackup(){
   // Aktuell geöffneten Auftrag zuerst sichern, damit im Master nichts fehlt.
   const id=rapportIdValue();
-  if(id){
+  if(id&&!RapportWorkflow.isArchived(getDB()[id])){
     currentCreatedAt=currentCreatedAt||getDB()[id]?.__createdAt||new Date().toISOString();
-    const db=getDB(), data=captureForm();
+    const db=getDB(), data=preserveRapportMetadata(getDB()[id],captureForm());
     data.__rapportId=id;data.__reference=referenceValue();data.__version=(db[id]?.__version||0)+1;db[id]=data;putDB(db);currentOrderKey=id;
   }
   const now=new Date();
@@ -2614,7 +2757,7 @@ function exportMasterBackup(){
   };
   const blob=new Blob([JSON.stringify(master,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='EQUANS_Master.equans';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  refreshOrderSelect(id||'');updateHeaderInfo();setStatus('Master gesichert ✓');
+  refreshOrderSelect(id||'');updateHeaderInfo();if(id&&!RapportWorkflow.isArchived(getDB()[id]))window.rapportLocalSaved?.(id);formDirty=false;setStatus('Lokales Backup gesichert ✓');
 }
 function importMasterBackup(ev){
   const input=ev.target,file=input.files?.[0];if(!file)return;
@@ -2645,6 +2788,7 @@ function importMasterBackup(ev){
       if(iv>lv || (iv===lv && it>lt))local[id]=data;
     });
     putDB(local);
+    Object.keys(incoming).forEach(id=>window.rapportLocalSaved?.(id));
     if(who){localStorage.setItem(LOCAL_USER_KEY,who);updateLocalUserHeader();}
     refreshOrderSelect(currentOrderKey);setStatus('Master eingelesen ✓');
     alert('Master-Backup wurde eingelesen.\n\nNeue Aufträge: '+add+'\nAktualisierte Aufträge: '+update+'\nNicht überschrieben: '+keep);
@@ -2797,11 +2941,11 @@ window.addEventListener('beforeprint', cleanEmptySignatureImages);
   window.transferSignature=function(){
     const data=canvas.toDataURL('image/png');
     const img=currentSignatureImage();
-    if(img) img.src=data;
+    if(img){img.src=data;formDirty=true;window.queueRapportDraft?.();}
   };
   window.deleteTransferredSignature=function(){
     const img=currentSignatureImage();
-    if(img){img.removeAttribute('src'); img.src='';}
+    if(img){img.removeAttribute('src');formDirty=true;window.queueRapportDraft?.();}
   };
 })();
 
@@ -3228,63 +3372,15 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
-<!-- GOOGLE LOGIN TEST ONLY -->
-<style id="google-login-test-style">
-#googleLoginTest{position:fixed;right:14px;bottom:14px;z-index:99998;background:#fff;border:1px solid #cbd5df;border-radius:10px;padding:10px;box-shadow:0 4px 18px #0002;font:12px Arial,sans-serif}
-#googleLoginUser{margin-top:6px;font-weight:700}
-#googleLoginLogout{display:none;margin-top:6px}
-@media print{#googleLoginTest{display:none!important}}
-</style>
-<div id="googleLoginTest" class="no-print">
-  <div id="googleSignIn"></div>
-  <div id="googleLoginUser"></div>
-  <button id="googleLoginLogout" type="button">Abmelden</button>
-</div>
-<script id="google-login-test-js">
-(function(){
- const CLIENT_ID='916807708145-svmug44l4usafautgf70vfoapisuno33.apps.googleusercontent.com';
- function decodeJwt(t){
-   try{
-     let p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-     p += '='.repeat((4-p.length%4)%4);
-     return JSON.parse(decodeURIComponent(atob(p).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-   }catch(e){ return null; }
- }
- function setUser(p){
-   const b=document.getElementById('googleSignIn'), u=document.getElementById('googleLoginUser'), o=document.getElementById('googleLoginLogout');
-   if(p){ b.style.display='none'; u.textContent='Angemeldet: '+(p.name||p.email||'Google Benutzer'); o.style.display='inline-block'; }
-   else{ b.style.display='block'; u.textContent=''; o.style.display='none'; }
- }
- window.addEventListener('load', function(){
-   if(!(window.google && google.accounts && google.accounts.id)){
-     document.getElementById('googleLoginUser').textContent='Google Login konnte nicht geladen werden.';
-     return;
-   }
-   google.accounts.id.initialize({
-     client_id: CLIENT_ID,
-     callback: function(r){ const p=decodeJwt(r.credential); if(p) setUser(p); }
-   });
-   google.accounts.id.renderButton(document.getElementById('googleSignIn'), {
-     type:'standard', theme:'outline', size:'large', text:'signin_with'
-   });
-   document.getElementById('googleLoginLogout').addEventListener('click', function(){
-     google.accounts.id.disableAutoSelect();
-     setUser(null);
-   });
- });
-})();
-</script>
-
-
 <script type="module" id="equans-firebase-cloud-v2">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut, onAuthStateChanged
+  createUserWithEmailAndPassword, reauthenticateWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, getDocs, collection, collectionGroup,
-  query, where, serverTimestamp, deleteDoc, deleteField
+  getFirestore, doc, getDoc, setDoc, getDocs, collection, collectionGroup, runTransaction,
+  query, where, Timestamp, serverTimestamp, deleteDoc, deleteField
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 // 🔴🔴🔴 NICHT ÄNDERN – FIREBASE / SYNC FUNKTIONIERT. NUR ZUSÄTZLICH ERWEITERN. 🔴🔴🔴
@@ -3361,8 +3457,11 @@ function markDirty(id){
   meta.changes[id]={at:new Date().toISOString(),baseRevision:Number(local.__serverRevision||0)};
   putSyncMeta(meta);
 }
-function clearDirty(id,serverRevision){
-  const meta=getSyncMeta(); delete meta.changes[id]; putSyncMeta(meta);
+function clearDirty(id,serverRevision,sentAt){
+  const meta=getSyncMeta();
+  if(!meta.changes[id]||meta.changes[id].at===sentAt)delete meta.changes[id];
+  else meta.changes[id].baseRevision=serverRevision;
+  putSyncMeta(meta);
   const ldb=window.getDB?.()||{}; if(ldb[id]){ldb[id].__serverRevision=serverRevision;ldb[id].__ownerUid=ldb[id].__ownerUid||cloudUser.uid;window.putDB?.(ldb)}
 }
 function masterOrderSource(nr,master){
@@ -3381,7 +3480,7 @@ async function verifyProfile(user){
 function refreshMasterOrderSuggestions(masterData=null){
   let master=masterData;
   if(!master){
-    try{master=JSON.parse(localStorage.getItem("equansMasterDataV1")||"null")}catch(_){master=null}
+    try{master=JSON.parse(localStorage.getItem(window.masterStorageKey())||"null")}catch(_){master=null}
   }
   const dl=document.getElementById("equansMasterOrderSuggestions");
   if(!dl)return;
@@ -3408,8 +3507,8 @@ async function readMaster(){
   // und auf neuen Handys/PCs. Beim Tippen gibt es keine Firebase-Abfrage.
   const s=await getDoc(doc(db,"admin","system","masterData","data"));
   const x=s.exists()?s.data():{version:0,auftraege:[]};
-  localStorage.setItem("equansMasterDataV1",JSON.stringify(x));
-  localStorage.setItem("equansMasterDataV1_syncedAt",new Date().toISOString());
+  localStorage.setItem(window.masterStorageKey(),JSON.stringify(x));
+  localStorage.setItem(window.masterStorageKey()+"_syncedAt",new Date().toISOString());
   refreshMasterOrderSuggestions(x);
   return x;
 }
@@ -3419,7 +3518,7 @@ async function readMaster(){
 // und neuen PCs gleich funktioniert. Beim Tippen KEINE Firebase-Abfrage.
 function localMasterOrderNumbers(){
   let master=null;
-  try{master=JSON.parse(localStorage.getItem("equansMasterDataV1")||"null")}catch(_){master=null}
+  try{master=JSON.parse(localStorage.getItem(window.masterStorageKey())||"null")}catch(_){master=null}
   const list=Array.isArray(master?.auftraege)?master.auftraege:[];
   const out=[],seen=new Set();
   for(const x of list){
@@ -3458,11 +3557,17 @@ function setupMobileOrderSuggestions(){
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{refreshMasterOrderSuggestions();setupMobileOrderSuggestions()});
 else {refreshMasterOrderSuggestions();setupMobileOrderSuggestions()}
 
-async function accessibleServerRapports(){
-  const q=cloudProfile?.role==="admin"
-    ? collectionGroup(db,"rapporte")
-    : query(collectionGroup(db,"rapporte"),where("accessUids","array-contains",cloudUser.uid));
-  const snap=await getDocs(q), rows=[];
+async function accessibleServerRapports({incremental=false}={}){
+  const filters=[];
+  if(cloudProfile?.role!=="admin")filters.push(where("accessUids","array-contains",cloudUser.uid));
+  if(incremental){
+    const cursor=getSyncMeta().downloadCursor;
+    // Inclusive boundary prevents losing two changes with the same server timestamp.
+    if(cursor)filters.push(where("updatedAt",">=",new Timestamp(cursor.seconds,cursor.nanoseconds||0)));
+    else filters.push(where("status","in",["in_bearbeitung","fertig"]));
+  }
+  const base=collectionGroup(db,"rapporte"),q=filters.length?query(base,...filters):base;
+  const snap=await getDocs(q),rows=[];
   snap.forEach(d=>rows.push({snap:d,data:d.data(),ownerUid:d.ref.parent.parent.id}));
   return rows;
 }
@@ -3477,6 +3582,10 @@ function applyServerToLocal(row,localDB,meta){
   }
   if(!x.rapportStateJson)return {conflict:false,id,skipped:true};
   const st=JSON.parse(x.rapportStateJson);
+  // Old cloud records omitted signatures. Never erase a locally retained signature.
+  if(!Object.prototype.hasOwnProperty.call(st,'__signatures')&&local?.__signatures)st.__signatures=local.__signatures;
+  st.__accessRevoked=false;
+  st.__archived=RapportWorkflow.isArchived(x);
   st.__rapportId=id;
   st.__serverRevision=serverRev;
   st.__ownerUid=x.ownerUid||row.ownerUid;
@@ -3487,18 +3596,31 @@ function applyServerToLocal(row,localDB,meta){
 }
 async function syncAll(){
   if(!cloudUser){showLogin("Bitte zuerst anmelden.");return}
+  if(syncBtn?.disabled)return;
+  if(formDirty){alert("Bitte den geöffneten Rapport zuerst lokal speichern oder Änderungen verwerfen.");return;}
   if(syncBtn)syncBtn.disabled=true;
+  const syncUid=cloudUser.uid;
+  const checkSession=()=>{if(cloudUser?.uid!==syncUid)throw new Error('Benutzer während SYNC gewechselt. Bitte erneut synchronisieren.');};
   setCloudHeader("SYNC läuft …");
-  const meta=getSyncMeta(), localDB=window.getDB?.()||{};
+  let meta=getSyncMeta(), localDB=window.getDB?.()||{};
   let master={version:0,auftraege:[]},serverRows=[],downloaded=0,uploaded=0,conflicts=[],stage="Start";
   try{
+    stage="Übergaben prüfen";
+    const syncRef=doc(db,"monteure",cloudUser.uid,"sync","data");
+    const ss=await getDoc(syncRef),syncData=ss.exists()?ss.data():{};
+    for(const id of Object.keys(syncData.revokedRapports||{})){
+      if(localDB[id])localDB[id].__accessRevoked=true;
+    }
+    window.putDB?.(localDB);
     stage="MasterData Firebase → lokal laden";
     master=await readMaster();
     setCloudHeader("Aufträge lokal ✓ · SYNC läuft …");
 
     stage="zugängliche Rapporte lesen";
-    serverRows=await accessibleServerRapports();
+    serverRows=await accessibleServerRapports({incremental:true});
 
+    checkSession();
+    meta=getSyncMeta();localDB=window.getDB?.()||{};
     stage="Firebase → lokal prüfen";
     for(const row of serverRows){
       const r=applyServerToLocal(row,localDB,meta);
@@ -3508,58 +3630,62 @@ async function syncAll(){
 
     stage="lokale Änderungen hochladen";
     for(const [id,ch] of Object.entries({...meta.changes})){
+      checkSession();
       const local=(window.getDB?.()||{})[id]; if(!local)continue;
+      if(local.__accessRevoked){conflicts.push({id,base:ch.baseRevision,serverRev:"übergeben – nur lokaler Export möglich"});continue;}
+      if(RapportWorkflow.isArchived(local)){conflicts.push({id,base:ch.baseRevision,serverRev:"archiviert"});continue;}
       const ownerUid=local.__ownerUid||cloudUser.uid;
       const r=doc(db,"monteure",ownerUid,"rapporte",id);
 
-      stage="RPT "+id+" Serverstand lesen";
-      const server=await getDoc(r);
-      const state={...local}; delete state.__signatures;
-      const nr=orderNumberFromState(state);
-
-      if(!server.exists()){
-        if(ownerUid!==cloudUser.uid && cloudProfile?.role!=="admin"){
-          conflicts.push({id,base:ch.baseRevision,serverRev:"fehlt"});continue
+      stage="RPT "+id+" sicher synchronisieren";
+      const state={...local},nr=orderNumberFromState(state);
+      const json=JSON.stringify(state);
+      if(new TextEncoder().encode(json).length>900000)throw new Error("Rapport inklusive Unterschriften ist zu gross für Cloud-Speicherung. Lokales Backup erstellen.");
+      const result=await runTransaction(db,async tx=>{
+        const server=await tx.get(r),base=Number(ch.baseRevision||0);
+        if(!server.exists()){
+          if(base>0||(ownerUid!==cloudUser.uid&&cloudProfile?.role!=="admin"))return {conflict:true,id,base,serverRev:"fehlt / verschoben"};
+          tx.set(r,{rptId:id,ownerUid,createdBy:cloudUser.uid,accessUids:[ownerUid],revision:1,
+            archived:false,status:state.__status||"in_bearbeitung",orderNumber:nr,orderSource:masterOrderSource(nr,master),
+            reference:state.__reference||"",rapportStateJson:json,updatedBy:cloudUser.uid,updatedByName:displayName(),
+            createdAt:serverTimestamp(),updatedAt:serverTimestamp(),deleted:false});
+          return {revision:1};
         }
-        stage="RPT "+id+" neu schreiben";
-        await setDoc(r,{
-          rptId:id,ownerUid:ownerUid,createdBy:cloudUser.uid,
-          accessUids:[ownerUid],revision:1,status:"in_bearbeitung",
-          orderNumber:nr,orderSource:masterOrderSource(nr,master),
-          reference:state.__reference||"",rapportStateJson:JSON.stringify(state),
-          updatedBy:cloudUser.uid,updatedByName:displayName(),
-          createdAt:serverTimestamp(),updatedAt:serverTimestamp(),deleted:false
-        });
-        clearDirty(id,1); uploaded++;
-      }else{
-        const x=server.data(),serverRev=Number(x.revision||0),base=Number(ch.baseRevision||0);
-        if(serverRev!==base){conflicts.push({id,base,serverRev});continue}
-        stage="RPT "+id+" Revision "+serverRev+" → "+(serverRev+1)+" schreiben";
-        await setDoc(r,{
-          rapportStateJson:JSON.stringify(state),revision:serverRev+1,
-          orderNumber:nr,orderSource:masterOrderSource(nr,master),
-          reference:state.__reference||"",status:x.status||"in_bearbeitung",
-          updatedBy:cloudUser.uid,updatedByName:displayName(),updatedAt:serverTimestamp()
-        },{merge:true});
-        clearDirty(id,serverRev+1); uploaded++;
-      }
+        const x=server.data(),serverRev=Number(x.revision||0);
+        if(RapportWorkflow.isArchived(x))return {conflict:true,id,base,serverRev:"archiviert"};
+        if(serverRev!==base)return {conflict:true,id,base,serverRev};
+        tx.set(r,{rapportStateJson:json,revision:serverRev+1,orderNumber:nr,orderSource:masterOrderSource(nr,master),
+          reference:state.__reference||"",status:state.__status||x.status||"in_bearbeitung",
+          updatedBy:cloudUser.uid,updatedByName:displayName(),updatedAt:serverTimestamp()},{merge:true});
+        return {revision:serverRev+1};
+      });
+      if(result.conflict){if(!conflicts.some(c=>c.id===id))conflicts.push(result);continue;}
+      checkSession();
+      clearDirty(id,result.revision,ch.at);uploaded++;
+
     }
 
     if(conflicts.length===0){
       stage="eigene sync/data Version aktualisieren";
-      const syncRef=doc(db,"monteure",cloudUser.uid,"sync","data");
-      const ss=await getDoc(syncRef),oldV=ss.exists()?Number(ss.data().version||0):0;
+      const oldV=Number(syncData.version||0);
       await setDoc(syncRef,{version:oldV+1,updatedAt:serverTimestamp()},{merge:true});
-      const m=getSyncMeta();m.version=oldV+1;putSyncMeta(m);
+      const m=getSyncMeta();m.version=oldV+1;
+      m.downloadCursor=RapportWorkflow.nextCursor(m.downloadCursor,serverRows);putSyncMeta(m);
     }
 
+    checkSession();
     originalRefreshOrderSelect?.();
+    // Refresh the open form only if it has not been edited while SYNC was running.
+    if(!formDirty&&currentOrderKey&&!getSyncMeta().changes[currentOrderKey]){
+      const latest=window.getDB?.()?.[currentOrderKey];
+      if(latest){applyForm(latest);syncBeiblattHeaders?.();updateHeaderInfo();}
+    }
     if(conflicts.length){
       setCloudHeader("SYNC Konflikt: "+conflicts.length);
-      window.setStatus?.("SYNC Konflikt – nichts überschrieben");
+      window.setStatus?.("SYNC teilweise erfolgt – Konflikte nicht überschrieben");
       showSyncError("Konflikt erkannt. Lokale Änderungen bleiben erhalten. "+conflicts.map(c=>c.id+": lokal Basis "+c.base+" / Firebase "+c.serverRev).join(" | "));
     }else{
-      setCloudHeader("SYNC ✓ "+downloaded+"↓ "+uploaded+"↑");
+      setCloudHeader("Synchronisiert ✓ "+downloaded+"↓ "+uploaded+"↑");
       window.setStatus?.("SYNC erfolgreich ✓");
     }
   }catch(e){
@@ -3568,11 +3694,12 @@ async function syncAll(){
     showSyncError(stage+": "+(e.message||e));
     console.error("EQUANS SYNC Fehler bei:",stage,e);
   }finally{
-    if(syncBtn)syncBtn.disabled=false;
+    if(syncBtn)syncBtn.disabled=false;window.updateRapportStorageStatus?.();
   }
 }
 function localSaveWithChangeLog(){
-  originalSaveOrder?.();
+  try{if(originalSaveOrder?.()!==true)return;}
+  catch(e){showSyncError('Lokal speichern fehlgeschlagen: '+(e.message||e));return;}
   const id=window.ensureRapportId?.();
   const ldb=window.getDB?.()||{};
   if(ldb[id]){
@@ -3580,8 +3707,11 @@ function localSaveWithChangeLog(){
     window.putDB?.(ldb); markDirty(id);
   }
   window.setStatus?.("Lokal gespeichert ✓");
-  setCloudHeader("Änderungen lokal");
+  setCloudHeader("Nur lokal gespeichert – SYNC ausstehend");
+  window.rapportDraftSaved?.();window.updateRapportStorageStatus?.();
 }
+window.rapportLocalSaved=id=>markDirty(id);
+window.rapportLocalRemoved=id=>{const meta=getSyncMeta();delete meta.changes[id];putSyncMeta(meta);};
 function localDeleteOnly(){originalDeleteSelectedOrder?.()}
 function localNew(){originalNewOrder?.()}
 function localLoad(silent=false){originalLoadSelectedOrder?.(silent)}
@@ -3610,7 +3740,87 @@ registerSaveBtn?.addEventListener("click",async()=>{
   }catch(e){registrationInProgress=false;if(st)st.textContent="Fehler: "+(e.code||e.message);try{if(auth.currentUser)await signOut(auth)}catch(_){}}
 });
 
+let driveCredential=null;
+window.rapportPendingChanges=()=>getSyncMeta().changes;
+window.rapportIsAdmin=()=>cloudProfile?.role==="admin";
+window.rapportDriveToken=async()=>{
+  if(!adminOnly())throw new Error('Nur Admin darf Drive-Backups erstellen.');
+  if(driveCredential?.uid===cloudUser.uid&&driveCredential.expires>Date.now())return driveCredential.token;
+  const driveProvider=new GoogleAuthProvider();driveProvider.addScope('https://www.googleapis.com/auth/drive.file');
+  driveProvider.setCustomParameters({login_hint:'latthiwan.danuwat@gmail.com',prompt:'consent'});
+  const result=await reauthenticateWithPopup(auth.currentUser,driveProvider);
+  const token=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+  if(!token)throw new Error('Keine Drive-Freigabe erhalten.');
+  driveCredential={uid:cloudUser.uid,token,expires:Date.now()+45*60*1000};return token;
+};
+window.rapportDriveContext=()=>{
+  if(!adminOnly())throw new Error('Drive-Backup ist nur für den Admin verfügbar.');
+  if(formDirty)throw new Error('Bitte zuerst lokal speichern.');
+  const state=window.getDB?.()?.[currentOrderKey];
+  if(!state)throw new Error('Bitte zuerst einen gespeicherten Rapport öffnen.');
+  return {uid:cloudUser.uid,state:structuredClone(state),id:currentOrderKey,reference:referenceValue(),orderNumber:orderNumberFromState(state)};
+};
+function completionFieldKeys(){
+  const all=window.fields(),out=[];
+  for(const page of ['rapportPage','regiePage']){
+    const row=[...document.querySelectorAll('#'+page+' .checkrow')].find(r=>r.textContent.includes('Arbeit fertig:'));
+    const boxes=row?[...row.querySelectorAll('input[type="checkbox"]')]:[];
+    for(const el of boxes.slice(0,4)){const i=all.indexOf(el);if(i>=0)out.push(window.fieldKey(el,i));}
+  }
+  return out;
+}
+async function changeArchiveState(archived){
+  if(!adminOnly())return;
+  const row=adminOrderRows.find(r=>r.id===adminSelectedRptId);
+  if(!row)throw new Error('Zuerst einen Rapport mit «Wählen» auswählen.');
+  if(formDirty||getSyncMeta().changes[row.id])throw new Error('Zuerst lokale Änderungen speichern und synchronisieren.');
+  const ref=doc(db,'monteure',row.ownerUid,'rapporte',row.id);
+  const keys=completionFieldKeys();
+  await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref);if(!snap.exists())throw new Error('Rapport existiert nicht mehr.');
+    const data=snap.data();
+    if(Number(data.revision)!==Number(row.revision))throw new Error('Rapport wurde inzwischen geändert. Übersicht neu öffnen.');
+    if(RapportWorkflow.isArchived(data)===archived)throw new Error(archived?'Bereits archiviert.':'Rapport ist bereits aktiv.');
+    if(archived&&data.status!=='fertig')throw new Error('Rapport zuerst als fertig markieren, speichern und synchronisieren.');
+    const version=doc(db,'admin','system','rapportArchive',row.id,'versions','revision-'+data.revision);
+    const saved=await tx.get(version);
+    if(!saved.exists())tx.set(version,{...data,snapshotAt:serverTimestamp(),snapshotBy:cloudUser.uid});
+    const state=RapportWorkflow.archiveState(data,archived,keys);
+    tx.set(ref,{archived,status:archived?'archiviert':'in_bearbeitung',rapportStateJson:JSON.stringify(state),revision:Number(data.revision||0)+1,updatedAt:serverTimestamp(),updatedBy:cloudUser.uid},{merge:true});
+  });
+  await loadAdminOrders();
+  const updated=adminOrderRows.find(x=>x.id===row.id),local=window.getDB();
+  if(updated){applyServerToLocal({data:updated,snap:{id:row.id},ownerUid:updated.ownerUid},local,getSyncMeta());window.putDB(local);originalRefreshOrderSelect?.();}
+  document.getElementById('adminRapportStatus').textContent=archived?'Archiviert – Stand gesichert.':'Wieder geöffnet – alte Unterschriften im gesicherten Stand erhalten. Jetzt Monteur zuweisen.';
+  if(currentOrderKey===row.id&&updated){applyForm(local[row.id]);updateHeaderInfo();}
+}
+async function showSavedVersions(){
+  if(!adminOnly())return;
+  if(!adminSelectedRptId)throw new Error('Zuerst einen Rapport auswählen.');
+  const rows=await getDocs(collection(db,'admin','system','rapportArchive',adminSelectedRptId,'versions'));
+  const list=document.getElementById('adminVersionsList');list.replaceChildren();
+  if(rows.empty){list.textContent='Noch keine gesicherten Stände.';return;}
+  rows.forEach(snap=>{
+    const data=snap.data(),button=document.createElement('button');button.type='button';button.textContent='Stand '+data.revision+' herunterladen';
+    button.addEventListener('click',()=>{
+      const state=JSON.parse(data.rapportStateJson);state.__rapportId=data.rptId;state.__fileType='EQUANS_RAPPORT';state.__formatVersion=1;
+      const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.href=url;a.download=(data.reference||'Rapport').replace(/[^a-zA-Z0-9äöüÄÖÜ ._-]/g,'_')+'-Stand-'+data.revision+'.rapport';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    });list.appendChild(button);
+  });
+}
+for(const [id,action] of [['adminArchiveBtn',()=>changeArchiveState(true)],['adminReopenBtn',()=>changeArchiveState(false)],['adminVersionsBtn',showSavedVersions]]){
+  document.getElementById(id)?.addEventListener('click',()=>action().catch(e=>showSyncError(e.message||e)));
+}
 function adminOnly(){return !!cloudUser&&cloudProfile?.role==="admin"}
+document.getElementById('legacyBackupBtn')?.addEventListener('click',()=>{
+  if(!adminOnly())return;
+  const raw=localStorage.getItem(ORDER_DB_KEY);
+  if(!raw){alert('Auf diesem Gerät ist kein älterer lokaler Speicher vorhanden.');return;}
+  const archive={__fileType:'EQUANS_MASTER',__formatVersion:1,__exportedAt:new Date().toISOString(),userName:'',orders:JSON.parse(raw)};
+  const blob=new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='EQUANS_Lokaler_Altbestand.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
 let adminSelectedRptId="";
 
 function adminUserName(uid){
@@ -3664,7 +3874,7 @@ function refreshAdminReferences(){
   const uid=selectedAdminMonteurUid(),dl=document.getElementById("adminReferenceList");if(!dl)return;dl.innerHTML="";
   const seen=new Set();
   adminOrderRows.filter(r=>!uid||r.ownerUid===uid||(r.accessUids||[]).includes(uid)).forEach(r=>{
-    for(const val of [String(r.reference||"").trim(),r.id]){
+    for(const val of [String(r.reference||"").trim()]){
       if(!val||seen.has(val))continue;seen.add(val);const o=document.createElement("option");o.value=val;dl.appendChild(o)
     }
   })
@@ -3673,7 +3883,9 @@ function filteredAdminRapports(){
   const monUid=selectedAdminMonteurUid();
   const ref=(document.getElementById("adminReferenceSearch")?.value||"").trim().toLowerCase();
   const nr=(document.getElementById("adminOrderSearch")?.value||"").trim().toLowerCase();
+  const view=document.getElementById("adminArchiveFilter")?.value||"active";
   return adminOrderRows.filter(r=>
+    (view==="all"||(view==="archived")===RapportWorkflow.isArchived(r)) &&
     (!monUid||r.ownerUid===monUid||(r.accessUids||[]).includes(monUid)) &&
     (!ref||String(r.reference||"").toLowerCase().includes(ref)||String(r.id).toLowerCase().includes(ref)) &&
     (!nr||String(r.orderNumber||"").toLowerCase().includes(nr))
@@ -3692,7 +3904,7 @@ function renderAdminRapports(){
   for(const r of rows){
     const tr=document.createElement("tr");
     const access=(r.accessUids||[]).filter(x=>x!==r.ownerUid).map(adminUserName).join(", ")||"–";
-    tr.innerHTML=`<td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.orderNumber||"–")}<br><small>${escapeHtml(r.orderSource||"none")}</small></td><td>${escapeHtml(r.reference||"–")}</td><td>${escapeHtml(adminUserName(r.ownerUid))}</td><td>${escapeHtml(r.status||"in_bearbeitung")}</td><td>${Number(r.revision||0)}</td><td>${escapeHtml(access)}</td><td><button class="admin-mini-btn green" data-rpt-open="${escapeHtml(r.id)}">Öffnen</button> <button class="admin-mini-btn" data-rpt-select="${escapeHtml(r.id)}">Wählen</button></td>`;
+    tr.innerHTML=`<td class="technical-id">${escapeHtml(r.id)}</td><td>${escapeHtml(r.orderNumber||"–")}<br><small>${escapeHtml(r.orderSource||"none")}</small></td><td>${escapeHtml(r.reference||"–")}</td><td>${escapeHtml(adminUserName(r.ownerUid))}</td><td>${escapeHtml(r.status||"in_bearbeitung")}</td><td>${Number(r.revision||0)}</td><td>${escapeHtml(access)}</td><td><button class="admin-mini-btn green" data-rpt-open="${escapeHtml(r.id)}">Öffnen</button> <button class="admin-mini-btn" data-rpt-select="${escapeHtml(r.id)}">Wählen</button></td>`;
     body.appendChild(tr)
   }
   const st=document.getElementById("adminRapportStatus");if(st)st.textContent=rows.length+" Rapport(e) angezeigt."
@@ -3700,15 +3912,23 @@ function renderAdminRapports(){
 function selectAdminRpt(id){
   const x=adminOrderRows.find(r=>r.id===id);if(!x)return;
   adminSelectedRptId=id;
-  const src=document.getElementById("adminAssignSource");if(src)src.textContent=adminUserName(x.ownerUid)+" | "+x.id;
-  const st=document.getElementById("adminRapportStatus");if(st)st.textContent="Ausgewählt: "+x.id
+  const src=document.getElementById("adminAssignSource");if(src)src.textContent=adminUserName(x.ownerUid)+" | "+(x.reference||"Ohne Referenz");
+  const st=document.getElementById("adminRapportStatus");if(st)st.textContent="Ausgewählt: "+(x.reference||"Ohne Referenz")
 }
 function openAdminRptById(id){
   const x=adminOrderRows.find(r=>r.id===id);if(!x||!x.rapportStateJson)return;
-  const state=JSON.parse(x.rapportStateJson);state.__ownerUid=x.ownerUid;state.__serverRevision=Number(x.revision||0);
+  if(!confirmDiscard())return;
+  if(getSyncMeta().changes[id]){alert('Dieser Rapport enthält lokale Änderungen. Bitte zuerst synchronisieren oder ein lokales Backup erstellen.');return;}
+  const state=JSON.parse(x.rapportStateJson);state.__archived=RapportWorkflow.isArchived(x);state.__ownerUid=x.ownerUid;state.__serverRevision=Number(x.revision||0);
+  state.__accessUids=x.accessUids||[];
+  const previous=window.getDB?.()?.[id];
+  if(!Object.prototype.hasOwnProperty.call(state,'__signatures')&&previous?.__signatures)state.__signatures=previous.__signatures;
+  formDirty=false;
   const ldb=window.getDB?.()||{};ldb[x.id]=state;window.putDB?.(ldb);originalRefreshOrderSelect?.(x.id);
   const sel=document.getElementById("orderSelect");if(sel)sel.value=x.id;
-  adminOverlay?.classList.remove("show");localLoad(true)
+  adminOverlay?.classList.remove("show");
+  applyForm(state);window.__setRapportOrderContext(x.id,state.__createdAt||state.__savedAt);syncBeiblattHeaders();updateHeaderInfo();location.hash='#rapportPage';
+  window.setStatus?.(state.__archived?'Archivansicht – Bearbeitung gesperrt':'Rapport geöffnet');
 }
 async function loadAdminMaster(){
   if(!adminOnly())return;
@@ -3746,18 +3966,33 @@ async function loadAdminSync(){
     const tr=document.createElement("tr");tr.innerHTML=`<td>${escapeHtml(u.displayName||u.username||u.uid)}</td><td>${escapeHtml(u.role||"–")}</td><td>${v}</td><td>${escapeHtml(last)}</td><td>${count}</td>`;body.appendChild(tr)
   }
 }
+let adminCacheUid='',adminLoaded=new Set();
+async function loadAdminPanel(force=false){
+  if(!adminOnly())return;
+  if(adminCacheUid!==cloudUser.uid){adminCacheUid=cloudUser.uid;adminLoaded.clear();}
+  const panel=document.querySelector('.admin-tab.active')?.dataset.adminTab||'rapporte';
+  async function need(key,fn){if(force||!adminLoaded.has(key)){await fn();adminLoaded.add(key);}}
+  if(panel==='dateien')return;
+  await need('users',loadAdminUsers);
+  if(panel==='rapporte'||panel==='sync'||panel==='auftraege')await need('orders',loadAdminOrders);
+  if(panel==='auftraege')await need('master',loadAdminMaster);
+  if(panel==='sync')await need('sync',loadAdminSync);
+}
 async function openAdmin(){
   if(!adminOnly())return;
   adminOverlay?.classList.add("show");adminOverlay?.setAttribute("aria-hidden","false");
-  await loadAdminUsers();await loadAdminOrders();await Promise.all([loadAdminMaster(),loadAdminSync()])
+  await loadAdminPanel();
 }
-adminBtn?.addEventListener("click",openAdmin);
+adminBtn?.addEventListener("click",()=>openAdmin().catch(e=>showSyncError("Admin-Daten konnten nicht geladen werden: "+(e.message||e))));
 document.getElementById("adminCloseBtn")?.addEventListener("click",()=>{adminOverlay?.classList.remove("show");adminOverlay?.setAttribute("aria-hidden","true")});
+document.getElementById('adminRefreshBtn')?.addEventListener('click',()=>loadAdminPanel(true).catch(e=>showSyncError(e.message)));
 document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
-  document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===b.dataset.adminTab))
+  document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===b.dataset.adminTab));
+  loadAdminPanel().catch(e=>showSyncError(e.message));
 }));
 ["adminMonteurSearch","adminReferenceSearch","adminOrderSearch"].forEach(id=>document.getElementById(id)?.addEventListener("input",()=>{refreshAdminReferences();renderAdminRapports()}));
+document.getElementById("adminArchiveFilter")?.addEventListener("change",renderAdminRapports);
 document.getElementById("adminRapportFilterBtn")?.addEventListener("click",renderAdminRapports);
 document.querySelector("#adminRapportsTable tbody")?.addEventListener("click",e=>{
   const o=e.target.closest("[data-rpt-open]"),w=e.target.closest("[data-rpt-select]");
@@ -3788,17 +4023,34 @@ async function adminAssignOrder(transfer){
   const targetUid=document.getElementById("adminAssignTarget")?.value||"",st=document.getElementById("adminRapportStatus");
   const row=adminOrderRows.find(r=>r.id===adminSelectedRptId);
   if(!row||!targetUid){if(st)st.textContent="Zuerst Rapport mit «Wählen» markieren und Ziel-Monteur auswählen.";return}
-  const r=doc(db,"monteure",row.ownerUid,"rapporte",row.id),access=new Set(row.accessUids||[]);access.add(targetUid);
-  if(transfer){
-    const oldSnap=await getDoc(r),data=oldSnap.data(),newRef=doc(db,"monteure",targetUid,"rapporte",row.id);
-    data.ownerUid=targetUid;data.accessUids=[...access].filter(x=>x!==row.ownerUid);if(!data.accessUids.includes(targetUid))data.accessUids.unshift(targetUid);
-    await setDoc(newRef,{...data,updatedAt:serverTimestamp()});await deleteDoc(r)
-  }else await setDoc(r,{accessUids:[...access],updatedAt:serverTimestamp()},{merge:true});
+  if(transfer&&targetUid===row.ownerUid){if(st)st.textContent="Dieser Monteur ist bereits Eigentümer.";return;}
+  const r=doc(db,"monteure",row.ownerUid,"rapporte",row.id);
+  const targetSync=doc(db,"monteure",targetUid,"sync","data");
+  await runTransaction(db,async tx=>{
+    const oldSnap=await tx.get(r),targetMeta=await tx.get(targetSync);
+    if(!oldSnap.exists())throw new Error("Quelle fehlt. Übersicht neu öffnen.");
+    const data=oldSnap.data();
+    const revocations={...(targetMeta.exists()?targetMeta.data().revokedRapports||{}:{})};delete revocations[row.id];
+    if(transfer){
+      const newRef=doc(db,"monteure",targetUid,"rapporte",row.id),oldSync=doc(db,"monteure",row.ownerUid,"sync","data");
+      const existing=await tx.get(newRef),oldMeta=await tx.get(oldSync);
+      if(existing.exists())throw new Error("Übergabe abgebrochen: Ziel existiert bereits.");
+      data.ownerUid=targetUid;
+      data.accessUids=[...new Set([...(data.accessUids||[]),targetUid])].filter(x=>x!==row.ownerUid);
+      data.revision=Number(data.revision||0)+1;
+      tx.set(newRef,{...data,updatedAt:serverTimestamp()});tx.delete(r);
+      tx.set(oldSync,{revokedRapports:{...(oldMeta.exists()?oldMeta.data().revokedRapports||{}:{}),[row.id]:true}},{merge:true});
+    }else{
+      tx.set(r,{accessUids:[...new Set([...(data.accessUids||[]),targetUid])],updatedAt:serverTimestamp()},{merge:true});
+    }
+    // Replace map deliberately: a reassignment must remove an earlier revocation.
+    tx.set(targetSync,{...(targetMeta.exists()?targetMeta.data():{}),revokedRapports:revocations});
+  });
   if(st)st.textContent=transfer?"Rapport erfolgreich übergeben ✓":"Monteur zusätzlich freigegeben ✓";
   adminSelectedRptId="";await loadAdminOrders();await loadAdminSync()
 }
-document.getElementById("adminAssignAddBtn")?.addEventListener("click",()=>adminAssignOrder(false));
-document.getElementById("adminAssignTransferBtn")?.addEventListener("click",()=>adminAssignOrder(true));
+document.getElementById("adminAssignAddBtn")?.addEventListener("click",()=>adminAssignOrder(false).catch(e=>showSyncError(e.message||e)));
+document.getElementById("adminAssignTransferBtn")?.addEventListener("click",()=>adminAssignOrder(true).catch(e=>showSyncError(e.message||e)));
 
 
 // =========================================================
@@ -4089,14 +4341,14 @@ diagnoseCopyBtn?.addEventListener("click",async()=>{try{await navigator.clipboar
 emailBtn?.addEventListener("click",async()=>{try{if(loginStatus)loginStatus.textContent="Anmeldung wird geprüft …";const email=loginEmailValue(userInput?.value),password=passwordInput?.value||"";if(!email||!password)throw new Error("Benutzername und Passwort eingeben.");await signInWithEmailAndPassword(auth,email,password)}catch(e){if(loginStatus)loginStatus.textContent="Login-Fehler: "+(e.code||e.message)}});
 googleBtn?.addEventListener("click",async()=>{try{if(loginStatus)loginStatus.textContent="Google-Anmeldung wird geöffnet …";await signInWithPopup(auth,provider)}catch(e){if(loginStatus)loginStatus.textContent="Login-Fehler: "+(e.code||e.message)}});
 passwordInput?.addEventListener("keydown",e=>{if(e.key==="Enter")emailBtn?.click()});
-window.changeLocalUser=async function(){if(cloudUser){if(confirm("Benutzer "+displayName()+" abmelden?"))await signOut(auth)}else showLogin()};
+window.changeLocalUser=async function(){if(cloudUser){if(!confirmDiscard())return;if(syncBtn?.disabled){alert("Bitte laufenden SYNC abwarten.");return;}if(confirm("Benutzer "+displayName()+" abmelden?"))await signOut(auth)}else showLogin()};
 
 onAuthStateChanged(auth,async user=>{
   if(registrationInProgress)return;
-  cloudUser=null;cloudProfile=null;
-  if(!user){if(headerUser)headerUser.textContent="–";if(adminBtn)adminBtn.style.display="none";setCloudHeader("Nicht angemeldet");showLogin("Bitte anmelden.");return}
+  cloudUser=null;cloudProfile=null;adminLoaded.clear();
+  if(!user){activateLocalAccount('');if(headerUser)headerUser.textContent="–";if(adminBtn)adminBtn.style.display="none";setCloudHeader("Nicht angemeldet");showLogin("Bitte anmelden.");return}
   try{
-    cloudProfile=await verifyProfile(user);cloudUser=user;
+    cloudProfile=await verifyProfile(user);activateLocalAccount(user.uid);cloudUser=user;refreshMasterOrderSuggestions();
     if(headerUser)headerUser.textContent=displayName();
     if(adminBtn)adminBtn.style.display=cloudProfile.role==="admin"?"inline-block":"none";
     hideLogin();setCloudHeader("Lokal bereit – SYNC manuell");
@@ -4105,7 +4357,7 @@ onAuthStateChanged(auth,async user=>{
     window.loadSelectedOrder=localLoad;window.load=localLoad;
     window.newOrder=localNew;window.deleteSelectedOrder=localDeleteOnly;
     window.refreshOrderSelect=originalRefreshOrderSelect;
-    originalRefreshOrderSelect?.();
+    originalRefreshOrderSelect?.();window.showRapportDraft?.();
   }catch(e){if(loginStatus)loginStatus.textContent=e.message||String(e);await signOut(auth)}
 });
 window.openLocalUserDialog=function(){showLogin()};
@@ -4328,6 +4580,171 @@ window.saveLocalUser=function(){};
       else setStatus("ELDAS einlesen");
     }catch(_){setStatus("ELDAS einlesen")}
   });
+})();
+</script>
+
+<script>function markCurrentRapportTab(){document.querySelectorAll('#pdfToolbar>.tabs a,#appSidebar .tabs a').forEach(a=>{const selected=a.hash===(location.hash||'#rapportPage');a.style.setProperty('background',selected?'#ffffff12':'transparent','important');a.style.setProperty('color',selected?'white':'#bcd0d9','important');if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}window.addEventListener('hashchange',markCurrentRapportTab);markCurrentRapportTab();</script><style id="toolbar-v3-style">
+@media screen{
+ #pdfToolbar .head-main{min-height:195px!important;padding:24px 28px!important;gap:23px!important}
+ #pdfToolbar .head-main:after{top:24px!important}
+ #pdfToolbar .meta-item{min-height:58px!important}
+ #pdfToolbar .head-actions.toolbar-v3{display:block!important;padding:22px 26px!important}
+ #pdfToolbar .toolbar-v3 .order-row{display:flex;align-items:flex-end;gap:12px}
+ #pdfToolbar .toolbar-v3 .order-chooser{flex:1;min-width:0}
+ #pdfToolbar .toolbar-v3 .order-chooser label{display:block;color:#6d7f89;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px;font-weight:600}
+ #pdfToolbar .toolbar-v3 #orderSelect{width:100%!important;max-width:none!important;min-width:0!important;height:48px!important;border:1px solid #d7e2e7!important;border-radius:9px!important;padding:0 13px!important;font-size:14px!important;font-weight:550!important;display:block!important}
+ #pdfToolbar .toolbar-v3 .primary-new{height:48px!important;width:auto!important;padding:0 18px!important;font-size:12px!important;background:#f5f8fa!important;color:#173343!important;border:1px solid #dce5e9!important;border-radius:8px!important;flex:none!important}
+ #pdfToolbar .toolbar-v3 .action-controls{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:18px}
+ #pdfToolbar .toolbar-v3 .action-controls>button{width:auto!important;height:43px!important;padding:0 20px!important;border-radius:8px!important;font-size:12px!important;border:1px solid #dce5e9!important}
+ #pdfToolbar .toolbar-v3 #pdfMenu{height:43px!important;width:auto!important;max-width:none!important;flex:none!important}
+ #pdfToolbar .toolbar-v3 #pdfMenu>summary{height:43px!important;padding:0 18px!important;width:auto!important;background:white!important;color:#173343!important;border-radius:8px!important;font-size:12px!important;border:1px solid #dce5e9!important}
+ #pdfToolbar #moreActions{position:relative;margin-left:auto!important;flex:none!important;width:auto!important;height:43px!important;z-index:150}
+ #pdfToolbar #moreActions>summary{display:flex;align-items:center;gap:14px;height:43px;list-style:none;padding:0 14px;font-size:12px;font-weight:550;color:#5b7280;border:1px solid transparent;border-radius:8px;cursor:pointer;background:transparent}
+ #pdfToolbar #moreActions>summary::-webkit-details-marker{display:none}
+ #pdfToolbar #moreActions[open]>summary,#pdfToolbar #moreActions>summary:hover{background:#f4f7f8;border-color:#dce5e9}
+ #pdfToolbar .more-popover{position:absolute;right:0;top:51px;width:230px;max-width:calc(100vw - 40px);padding:7px;background:white;border:1px solid #dce5e9;border-radius:10px;box-shadow:0 12px 32px #16344725;z-index:300}
+ #pdfToolbar .toolbar-v3 .more-popover>button{width:100%!important;max-width:none!important;min-width:0!important;text-align:left!important;height:42px!important;padding:0 12px!important;font-size:12px!important;border:0!important;border-radius:6px!important;background:white!important;color:#274657!important;box-shadow:none!important;cursor:pointer}
+ #pdfToolbar .toolbar-v3 .more-popover>button:hover{background:#f3f7f8!important}
+ #pdfToolbar .toolbar-v3 .more-popover>.action-delete{color:#a05c5c!important}
+ #pdfToolbar .more-separator{height:1px;background:#edf1f3;margin:6px 4px}
+ #pdfToolbar .toolbar-v3 #saveStatus{display:block!important;margin-top:12px!important;padding:0!important;min-height:0!important;line-height:1.5}
+ #pdfToolbar .toolbar-v3 #saveStatus:empty{display:none!important}
+}
+@media screen and (max-width:600px){
+ #pdfToolbar .head-main{padding:20px 17px!important;min-height:240px!important;gap:28px!important}
+ #pdfToolbar .head-actions.toolbar-v3{padding:17px!important}
+ #pdfToolbar .toolbar-v3 .order-row{flex-wrap:wrap;gap:9px}
+ #pdfToolbar .toolbar-v3 .order-chooser{flex-basis:100%}
+ #pdfToolbar .toolbar-v3 .primary-new{height:36px!important;padding:0 12px!important;font-size:11px!important}
+ #pdfToolbar .toolbar-v3 #orderSelect{font-size:13px!important}
+ #pdfToolbar .toolbar-v3 .action-controls{gap:7px;margin-top:14px}
+ #pdfToolbar .toolbar-v3 .action-controls>button{flex:1!important;padding:0 12px!important;font-size:12px!important}
+ #pdfToolbar .toolbar-v3 #pdfMenu{flex:1!important}
+ #pdfToolbar .toolbar-v3 #pdfMenu>summary{padding:0 10px!important;font-size:11px!important;justify-content:center}
+ #pdfToolbar #moreActions{margin-top:3px!important;margin-left:0!important;width:100%!important;height:37px!important}
+ #pdfToolbar #moreActions>summary{height:37px;padding:0 2px;font-size:11px;justify-content:space-between}
+ #pdfToolbar .more-popover{left:0;right:auto;top:42px;width:100%}
+}
+</style>
+<script>
+(()=>{const more=document.getElementById('moreActions');more?.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('pointerdown',e=>{if(more&&!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more?.open){more.open=false;more.querySelector('summary').focus();}});})();
+</script>
+<style id="rapport-mobile-fix">
+@media screen and (max-width:700px){
+  #pdfToolbar.pdf-toolbar{width:calc(100vw - 12px)!important;min-width:0!important;max-width:100%!important}
+  #pdfToolbar .head-main:after{display:none!important}
+  #pdfToolbar .brand-block{min-width:0!important;gap:10px!important}
+  #pdfToolbar .brand-mark,#pdfToolbar .brand-title{font-size:24px!important}
+  #pdfToolbar .meta-value{white-space:normal!important;overflow-wrap:anywhere}
+  #pdfToolbar .head-main{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+  #pdfToolbar .meta-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #pdfToolbar .head-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+  #pdfToolbar .head-actions>*{max-width:100%!important;min-width:0!important}
+  #pdfToolbar .tabs{display:flex!important;overflow-x:auto!important;max-width:100%!important;white-space:nowrap}
+  #pdfToolbar .tabs a{flex-shrink:0!important}
+  #loginOverlay,.register-overlay{padding:12px!important;box-sizing:border-box}
+  #loginOverlay .login-card{width:100%!important;max-width:390px!important;padding:18px!important}
+  .admin-card{max-width:calc(100vw - 18px)!important}
+  #adminUsersTable{min-width:550px}
+  .admin-section{overflow-x:auto}
+}
+</style>
+
+<style>
+.technical-id{display:none!important}
+.rapport-reference-display{display:block;padding:2px;white-space:normal;overflow-wrap:anywhere}
+#adminArchiveFilter{height:34px;width:auto;padding:4px;margin-bottom:8px}
+#adminVersionsList button{margin:4px;padding:7px}
+#driveBackupBtn{padding:10px;margin:8px 0}
+#driveBackupStatus{font-size:12px;white-space:pre-wrap}
+</style>
+
+<style id="sidebar-layout-v4">
+@media screen {
+ body{padding-left:218px!important;margin:0!important;box-sizing:border-box!important;min-width:0!important}
+ #appSidebar{position:fixed;inset:0 auto 0 0;width:218px;padding:34px 20px;box-sizing:border-box;background:#123447;color:white;display:flex;flex-direction:column;z-index:200;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+ #appSidebar .brand-block{display:block!important}#appSidebar .brand-mark{font-size:26px!important;font-weight:850!important;letter-spacing:-1px!important;color:white!important}#appSidebar .brand-mark small{display:block;font-size:9px;letter-spacing:3.5px;margin-top:5px;color:#b6c9d1}
+ #appSidebar .brand-divider,#appSidebar .brand-block>div:last-child{display:none!important}
+ #appSidebar .nav-caption{margin:46px 12px 18px;color:#8fadb9;font-size:10px;letter-spacing:2px}
+ #appSidebar .tabs{display:grid!important;gap:7px!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;width:auto!important;min-width:0!important}
+ #appSidebar .tabs a{display:flex!important;align-items:center;gap:9px;border:0!important;border-radius:8px!important;padding:13px 10px!important;font-size:12px!important;font-weight:550!important;text-decoration:none!important;line-height:1.4!important;white-space:normal!important}
+ #appSidebar .tabs a:before{content:attr(data-number);color:#8fadb9;font-size:10px}#appSidebar .tabs a[aria-current=page]{box-shadow:inset 3px 0 #72d4b1!important}
+ #appSidebar .user-meta{margin-top:auto!important;border:0!important;border-top:1px solid #ffffff20!important;padding:22px 7px 0!important;background:none!important;color:#bcd0d9!important;min-height:0!important;box-shadow:none!important}
+ #appSidebar .meta-label{font-size:10px;color:#8fadb9;margin-bottom:9px}#appSidebar #headerUserName{border:0!important;background:none!important;color:white!important;font-size:12px!important;text-align:left;cursor:pointer;white-space:normal!important}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 80px)!important;max-width:1280px!important;min-width:0!important;margin:0 auto 12px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;position:relative!important;top:auto!important}
+ #pdfToolbar .layout-top{width:100%!important;max-width:none!important;display:flex;align-items:center;gap:16px;min-height:92px;border-bottom:1px solid #e1e8eb;margin-bottom:22px;padding:12px 0;box-sizing:border-box}
+ #pdfToolbar .layout-top .order-row{display:flex;flex:1;gap:12px;align-items:end;min-width:0}#pdfToolbar .layout-top .order-chooser{flex:1;min-width:0;max-width:580px}
+ #pdfToolbar .layout-top .order-chooser label{display:block;font-size:10px;color:#6d7f89;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+ #pdfToolbar .layout-top #orderSelect{width:100%!important;height:38px!important;min-width:0!important;font-size:12px!important;border:1px solid #dce5e9!important;border-radius:7px!important}
+ #pdfToolbar .layout-top .primary-new{height:38px!important;width:auto!important;flex:none!important;border:1px solid #dce5e9!important;background:white!important;color:#173343!important;border-radius:7px!important;padding:0 12px!important;font-size:11px!important}
+ #pdfToolbar .head-main{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:22px!important;min-height:180px!important;padding:28px 24px!important;border:1px solid #e1e8eb!important;border-radius:12px!important;background-position:center 45%!important;position:relative;isolation:isolate}
+ #pdfToolbar .head-main:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fffffff5,#ffffffce 43%,#ffffff25);z-index:-1;border-radius:12px}#pdfToolbar .head-main:after{display:none!important}
+ #pdfToolbar .meta-strip{display:flex!important;flex-direction:column!important;gap:8px!important;width:auto!important;flex:1!important;min-width:0!important;margin:0!important;align-self:stretch!important;text-align:left!important;align-items:flex-start!important}
+ #pdfToolbar .meta-item{padding:0!important;min-height:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+ #pdfToolbar #headerRapportId{font-size:29px!important;line-height:1.2!important;letter-spacing:-.8px!important;font-weight:700!important;white-space:normal!important;overflow-wrap:anywhere;color:#173343!important;margin:8px 0 4px}
+ #pdfToolbar .meta-strip .meta-item:nth-child(2){display:flex!important;gap:8px;align-items:center}#pdfToolbar #headerDate{font-size:12px!important;font-weight:400!important;color:#6d7f89!important}
+ #pdfToolbar .head-main .action-controls{display:flex!important;flex-wrap:wrap!important;gap:8px!important;margin:0!important;align-items:center!important;flex-shrink:0}
+ #pdfToolbar .head-main .toolbar-save{order:3}#pdfToolbar .head-main #manualSyncBtn{order:2}#pdfToolbar .head-main #pdfMenu{order:1}
+ #pdfToolbar .head-actions.toolbar-v3{display:block!important;padding:0!important;background:transparent!important}
+ #pdfToolbar #moreActions{margin:18px 0 0 auto!important;width:auto!important;height:38px!important}#pdfToolbar #moreActions>summary{height:38px!important;font-size:11px!important}
+ #pdfToolbar .layout-sync{margin-top:16px;color:#247656;display:flex;gap:8px;align-items:center;font-size:12px}#pdfToolbar .layout-sync .meta-label{display:none}#pdfToolbar .layout-sync .meta-value{font-size:12px!important;color:#247656!important;font-weight:500!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 80px)!important;max-width:1280px!important;margin:12px auto!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 80px)!important;max-width:1280px!important;padding:24px 26px!important;margin:22px auto!important}
+ #materialPage .beiblatt-logo,#materialRegiePage .beiblatt-logo{display:none!important}#materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{display:block!important;padding:0 0 18px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:19px!important;text-align:left!important;text-transform:none!important;letter-spacing:-.3px!important}
+ .layout-description{display:block;font-size:12px;color:#6d7f89;margin-top:7px;font-weight:400}.layout-print-title{display:none!important}
+ #materialPage .section,#materialRegiePage .section{display:none!important}#materialPage table,#materialRegiePage table{margin-top:20px!important;border:0!important;border-radius:0!important}
+ #materialPage td,#materialRegiePage td{padding:17px 8px!important}#materialPage td input,#materialRegiePage td input{border-color:transparent!important;background:transparent!important}#materialPage td input:hover,#materialRegiePage td input:hover{border-color:#dce5e9!important}
+ #materialPage .layout-empty-row,#materialRegiePage .layout-empty-row{display:none!important}
+ .layout-add-row{display:block;margin:16px 0 24px;border:0;background:none;color:#247656;padding:8px;font:600 12px inherit;cursor:pointer}
+}
+@media screen and (max-width:1150px){#pdfToolbar .head-main{align-items:flex-start!important;flex-direction:column!important}#pdfToolbar .head-main .action-controls{width:100%}#pdfToolbar .head-main .toolbar-save{margin-left:auto!important}}
+@media screen and (max-width:700px){
+ body{padding-left:0!important}#appSidebar{position:relative!important;width:100%!important;padding:20px 16px 12px!important;display:block!important}#appSidebar .brand-mark{font-size:22px!important}#appSidebar .nav-caption{display:none!important}#appSidebar .tabs{display:flex!important;overflow-x:auto!important;margin-top:20px!important;gap:4px!important}#appSidebar .tabs a{flex-shrink:0;white-space:nowrap!important;padding:11px!important}#appSidebar .tabs a:before{display:none}#appSidebar .tabs a[aria-current=page]{box-shadow:inset 0 -2px #72d4b1!important}#appSidebar .user-meta{position:absolute;right:16px;top:20px;max-width:45%;padding:0!important;border:0!important}#appSidebar .user-meta .meta-label{display:none}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 32px)!important;margin:0 auto 12px!important}#pdfToolbar .layout-top{flex-wrap:wrap;gap:8px;padding:16px 0;min-height:0;margin-bottom:18px}#pdfToolbar .layout-top .order-row{flex-wrap:wrap;flex-basis:100%}#pdfToolbar .layout-top .order-chooser{flex-basis:100%}#pdfToolbar #moreActions{margin:0!important}#pdfToolbar .layout-top .primary-new{font-size:11px!important}#pdfToolbar .head-main{padding:24px 17px!important;min-height:205px!important;gap:20px!important}#pdfToolbar .meta-strip{display:flex!important}#pdfToolbar #headerRapportId{font-size:25px!important}#pdfToolbar .head-main .action-controls{gap:6px!important}#pdfToolbar .head-main .action-controls>button{padding:0 10px!important;flex:1!important;font-size:11px!important}#pdfToolbar .head-main #pdfMenu>summary{font-size:11px!important;padding:0 10px!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 32px)!important;box-sizing:border-box!important}body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 32px)!important;padding:20px 17px!important}#materialPage td,#materialRegiePage td{padding:5px 0!important}
+}
+@media screen{
+ #pdfToolbar .meta-strip .meta-item:nth-child(2){flex-direction:row!important;justify-content:flex-start!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{height:auto!important;min-height:0!important;position:relative!important;margin-bottom:20px!important;padding-right:145px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{height:auto!important;min-height:0!important;margin:0!important;padding:0!important;line-height:1.4!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{height:auto!important;min-height:0!important;row-gap:10px!important;align-items:center!important;margin-bottom:12px!important}
+ #materialPage .linegrid .lbl,#materialRegiePage .linegrid .lbl{background:none!important;border:0!important;padding:0!important;font-weight:500!important}
+ #materialPage .linegrid .in,#materialRegiePage .linegrid .in{background:none!important;border:0!important;height:auto!important;min-height:32px!important}
+ #materialPage .linegrid textarea,#materialRegiePage .linegrid textarea{background:#fafcfc!important;border:1px solid #e1e8eb!important;border-radius:6px!important;padding:8px!important;box-sizing:border-box!important}
+ .layout-eldas{position:absolute;right:0;top:0;background:white;border:1px solid #dce5e9;border-radius:8px;padding:11px 14px;color:#173343;font-size:11px;cursor:pointer}
+ #materialPage input.material-qty,#materialRegiePage input.material-qty{min-width:0!important;width:40%!important}#materialPage select.material-unit,#materialRegiePage select.material-unit{width:60%!important;min-width:0!important;padding:4px!important;font-size:11px!important}
+ .layout-add-row[hidden]{display:none!important}
+}
+@media screen and (max-width:700px){#materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{padding-right:0!important;padding-top:0!important}.layout-eldas{position:static;margin-top:13px}.layout-description{line-height:1.5}}
+@media print{#appSidebar,.layout-add-row,.layout-eldas,.layout-description,.layout-screen-title{display:none!important}.layout-print-title{display:inline!important}}
+</style>
+<script id="sidebar-layout-script">
+(()=>{
+ const toolbar=document.getElementById('pdfToolbar'),hero=toolbar.querySelector('.head-main');
+ const sidebar=document.createElement('aside');sidebar.id='appSidebar';sidebar.setAttribute('aria-label','Rapport-Navigation');
+ sidebar.append(toolbar.querySelector('.brand-block'));
+ const caption=document.createElement('div');caption.className='nav-caption';caption.textContent='MEIN RAPPORT';sidebar.append(caption);
+ const tabs=toolbar.querySelector('.tabs');tabs.setAttribute('role','navigation');tabs.setAttribute('aria-label','Rapportblätter');
+ tabs.querySelectorAll('a').forEach((a,i)=>{a.dataset.number=String(i+1).padStart(2,'0');if(a.hash==='#materialPage')a.textContent='Material';if(a.hash==='#arbeitszeitPage')a.textContent='Arbeitszeit';});
+ sidebar.append(tabs,toolbar.querySelector('.user-meta'));document.body.prepend(sidebar);
+ const top=document.createElement('div');top.className='layout-top toolbar-v3';top.append(toolbar.querySelector('.order-row'),document.getElementById('moreActions'));toolbar.prepend(top);
+ hero.classList.add('toolbar-v3');hero.append(toolbar.querySelector('.action-controls'));
+ const sync=document.getElementById('cloudHeaderStatus').parentElement;sync.classList.add('layout-sync');hero.after(sync);
+ markCurrentRapportTab();
+ // Keep every original input in place: old reports use positional keys for unnamed fields.
+ for(const id of ['materialPage','materialRegiePage']){
+  const page=document.getElementById(id),tbody=page.querySelector('tbody');
+  const title=page.querySelector('.beiblatt-title'),original=document.createElement('span'),screen=document.createElement('span');original.className='layout-print-title';original.textContent=title.textContent;screen.className='layout-screen-title';screen.textContent=id==='materialPage'?'Material':'Material Regie';title.replaceChildren(original,screen);
+  const description=document.createElement('div');description.className='layout-description';description.textContent='Verwendete Artikel und Mengen für diesen Einsatz.';title.after(description);
+  const eldas=document.createElement('button');eldas.type='button';eldas.className='layout-eldas';eldas.textContent='ELDAS-Katalog ↗';eldas.addEventListener('click',()=>document.getElementById('eldasImportBtn').click());page.querySelector('.beiblatt-top').append(eldas);
+  const rows=[...tbody.rows];let extra=0;
+  const update=()=>{let last=-1;rows.forEach((row,i)=>{if([...row.querySelectorAll('input,select')].some(el=>el.value.trim()!==''))last=i;});rows.forEach((row,i)=>row.classList.toggle('layout-empty-row',i>Math.max(last+1,extra)));button.hidden=rows.every(row=>!row.classList.contains('layout-empty-row'));};
+  const button=document.createElement('button');button.type='button';button.className='layout-add-row';button.textContent='+ Weitere Materialzeile';tbody.closest('table').after(button);
+  button.addEventListener('click',()=>{const index=rows.findIndex(row=>row.classList.contains('layout-empty-row'));if(index>=0){extra=index;update();rows[index].querySelector('input').focus();}});
+  tbody.addEventListener('input',update);tbody.addEventListener('change',update);window.addEventListener('hashchange',update);
+  new MutationObserver(update).observe(document.getElementById('headerRapportId'),{childList:true,characterData:true,subtree:true});update();
+ }
 })();
 </script>
 
