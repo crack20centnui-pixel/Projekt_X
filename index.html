@@ -2889,65 +2889,41 @@ window.addEventListener('beforeprint', cleanEmptySignatureImages);
 </script>
 <script>
 (function(){
-  const canvas = document.getElementById('signaturePad');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let drawing=false, last=null;
-
-  function resizeCanvas(){
-    const rect=canvas.getBoundingClientRect();
-    const ratio=Math.max(window.devicePixelRatio||1,1);
-    const old=canvas.toDataURL();
-    canvas.width=Math.max(1,Math.round(rect.width*ratio));
-    canvas.height=Math.max(1,Math.round(rect.height*ratio));
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-    ctx.lineWidth=1.8; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111';
-    if(old && old !== 'data:,'){
-      const im=new Image(); im.onload=()=>ctx.drawImage(im,0,0,rect.width,rect.height); im.src=old;
-    }
-  }
-  function pos(e){
-    const r=canvas.getBoundingClientRect();
-    return {x:e.clientX-r.left,y:e.clientY-r.top};
-  }
-  canvas.addEventListener('pointerdown',e=>{
-    drawing=true; last=pos(e); canvas.setPointerCapture?.(e.pointerId); e.preventDefault();
-  });
-  canvas.addEventListener('pointermove',e=>{
-    if(!drawing)return;
-    const p=pos(e); ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;e.preventDefault();
-  });
-  function stop(e){drawing=false;last=null;if(e)e.preventDefault();}
-  canvas.addEventListener('pointerup',stop); canvas.addEventListener('pointercancel',stop);
-  window.addEventListener('resize',resizeCanvas);
-  setTimeout(resizeCanvas,50);
-  window.clearSignature=function(){
-    const r=canvas.getBoundingClientRect();
-    ctx.clearRect(0,0,r.width,r.height);
-  };
-  let signatureTarget='aussteller';
-  window.setSignatureTarget=function(target){
-    signatureTarget=target;
-    document.getElementById('targetAussteller')?.classList.toggle('active-target',target==='aussteller');
-    document.getElementById('targetKunde')?.classList.toggle('active-target',target==='kunde');
-  };
-  /* 🔴 NICHT ÄNDERN: Ein Zeichenfeld, getrennte Ziele für Rapport und Regierapport. */
-  function currentSignatureImage(){
-    const isRegie=(location.hash==='#regiePage');
-    const id=isRegie
-      ? (signatureTarget==='aussteller'?'regie_sigAussteller':'regie_sigKunde')
-      : (signatureTarget==='aussteller'?'sigAussteller':'sigKunde');
-    return document.getElementById(id);
-  }
-  window.transferSignature=function(){
-    const data=canvas.toDataURL('image/png');
-    const img=currentSignatureImage();
-    if(img){img.src=data;formDirty=true;window.queueRapportDraft?.();}
-  };
-  window.deleteTransferredSignature=function(){
-    const img=currentSignatureImage();
-    if(img){img.removeAttribute('src');formDirty=true;window.queueRapportDraft?.();}
-  };
+ const panel=document.getElementById('signatureBlock');
+ panel.innerHTML='<div class="signature-panel-title">Unterschriften</div><div class="signature-actions"><button id="targetAussteller" type="button">Aussteller unterschreiben</button><button id="targetKunde" type="button">Kunde unterschreiben</button></div>';
+ const dialog=document.createElement('dialog');dialog.id='signatureDialog';dialog.setAttribute('aria-labelledby','signatureDialogTitle');
+ dialog.innerHTML='<div class="signature-dialog-head"><h2 id="signatureDialogTitle">Unterschreiben</h2><button type="button" data-action="cancel" aria-label="Schliessen">×</button></div><p class="signature-dialog-help">Mit Finger, Stift oder Maus unterschreiben. Auf dem Handy bietet das Querformat mehr Platz. <button type="button" data-action="remove" hidden>Gespeicherte Unterschrift entfernen</button></p><div class="signature-drawing"><canvas id="signaturePad" aria-label="Unterschrift zeichnen"></canvas></div><div class="signature-dialog-footer"><button type="button" data-action="clear">Neu zeichnen</button><button type="button" data-action="cancel">Abbrechen</button><button type="button" data-action="apply" disabled>Übernehmen</button></div>';
+ document.body.append(dialog);
+ const canvas=dialog.querySelector('canvas'),ctx=canvas.getContext('2d'),apply=dialog.querySelector('[data-action="apply"]');
+ let strokes=[],active=null,targetImage=null,signatureTarget='aussteller',orderAtOpen='';
+ const editable=()=>!document.querySelector('.sheet')?.inert;
+ function redraw(){
+   const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
+   const ratio=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(rect.width*ratio);canvas.height=Math.round(rect.height*ratio);
+   ctx.setTransform(ratio,0,0,ratio,0,0);ctx.strokeStyle='#111';ctx.fillStyle='#111';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';
+   for(const stroke of strokes){ctx.beginPath();stroke.forEach((p,i)=>{const x=p.x*rect.width,y=p.y*rect.height;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();if(stroke.length===1){ctx.beginPath();ctx.arc(stroke[0].x*rect.width,stroke[0].y*rect.height,1.1,0,Math.PI*2);ctx.fill();}}
+   apply.disabled=!strokes.length;
+ }
+ function point(e){const r=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))};}
+ canvas.addEventListener('pointerdown',e=>{if(active||e.button!==0)return;active={id:e.pointerId,stroke:[point(e)]};strokes.push(active.stroke);canvas.setPointerCapture(e.pointerId);redraw();e.preventDefault();});
+ canvas.addEventListener('pointermove',e=>{if(!active||e.pointerId!==active.id)return;active.stroke.push(point(e));redraw();e.preventDefault();});
+ const stop=e=>{if(active?.id===e.pointerId)active=null;};canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+ new ResizeObserver(()=>{if(dialog.open)redraw();}).observe(canvas);
+ window.clearSignature=()=>{strokes=[];active=null;apply.disabled=true;if(dialog.open)redraw();};
+ window.setSignatureTarget=target=>{signatureTarget=target;};
+ function currentImage(){return document.getElementById((location.hash==='#regiePage'?'regie_':'')+(signatureTarget==='kunde'?'sigKunde':'sigAussteller'));}
+ function open(target){if(!editable())return;setSignatureTarget(target);targetImage=currentImage();if(!targetImage)return;orderAtOpen=typeof currentOrderKey==='undefined'?'':currentOrderKey;clearSignature();dialog.querySelector('[data-action="remove"]').hidden=!targetImage.getAttribute('src');document.getElementById('signatureDialogTitle').textContent=(location.hash==='#regiePage'?'Regierapport':'Rapport')+' · '+(target==='kunde'?'Kunde':'Aussteller');dialog.showModal();redraw();}
+ window.transferSignature=()=>{
+   if(!dialog.open||!strokes.length||!targetImage||!editable()||orderAtOpen!==currentOrderKey)return;
+   const bounds=strokes.flat().reduce((b,p)=>({left:Math.min(b.left,p.x*canvas.width),right:Math.max(b.right,p.x*canvas.width),top:Math.min(b.top,p.y*canvas.height),bottom:Math.max(b.bottom,p.y*canvas.height)}),{left:canvas.width,right:0,top:canvas.height,bottom:0}),pad=8;
+   const x=Math.max(0,Math.floor(bounds.left)-pad),y=Math.max(0,Math.floor(bounds.top)-pad),w=Math.min(canvas.width-x,Math.ceil(bounds.right)-x+pad),h=Math.min(canvas.height-y,Math.ceil(bounds.bottom)-y+pad);
+   const output=document.createElement('canvas');const scale=Math.min(1,900/w,300/h);output.width=Math.max(1,Math.ceil(w*scale));output.height=Math.max(1,Math.ceil(h*scale));output.getContext('2d').drawImage(canvas,x,y,w,h,0,0,output.width,output.height);
+   targetImage.src=output.toDataURL('image/png');formDirty=true;window.queueRapportDraft?.();window.updateRapportStorageStatus?.();dialog.close();
+ };
+ window.deleteTransferredSignature=()=>{if(!editable())return;const img=currentImage();if(img){img.removeAttribute('src');formDirty=true;window.queueRapportDraft?.();}};
+ panel.querySelector('#targetAussteller').onclick=()=>open('aussteller');panel.querySelector('#targetKunde').onclick=()=>open('kunde');
+ dialog.querySelectorAll('[data-action="cancel"]').forEach(button=>button.onclick=()=>dialog.close());dialog.querySelector('[data-action="clear"]').onclick=()=>clearSignature();apply.onclick=()=>transferSignature();dialog.querySelector('[data-action="remove"]').onclick=()=>{deleteTransferredSignature();window.updateRapportStorageStatus?.();dialog.close();};
+ dialog.addEventListener('close',()=>{clearSignature();targetImage=null;});window.addEventListener('hashchange',()=>{if(dialog.open)dialog.close();});
 })();
 
 function printSelectedPages(){
@@ -4756,4 +4732,15 @@ window.saveLocalUser=function(){};
 })();
 </script>
 
+<style id="signature-dialog-style">
+#signatureDialog{width:min(940px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:0;border:1px solid #dce5e9;border-radius:14px;color:#173343;background:white;box-sizing:border-box;font-family:Arial,sans-serif}
+#signatureDialog[open]{display:flex;flex-direction:column}#signatureDialog::backdrop{background:#12344799}
+.signature-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;gap:12px;flex-shrink:0}.signature-dialog-head h2{font-size:19px;margin:0}.signature-dialog-head button{background:none;border:0;font-size:26px;cursor:pointer}
+.signature-dialog-help{margin:0;padding:0 20px 12px;font-size:12px;color:#617580}.signature-drawing{margin:0 16px;border:1px solid #cbd8df;border-radius:8px;background:#fbfcfd;min-height:80px;overflow:hidden;flex:1}
+#signatureDialog #signaturePad{display:block;width:100%!important;height:min(42dvh,340px)!important;min-height:80px;touch-action:none;cursor:crosshair;background:transparent!important}
+.signature-dialog-footer{display:flex;justify-content:flex-end;gap:8px;padding:16px;flex-shrink:0}.signature-dialog-footer button{padding:12px 16px;border:1px solid #dce5e9;border-radius:8px;background:white;color:#173343;font-size:13px;cursor:pointer}.signature-dialog-footer [data-action="apply"]{background:#123447;color:white}.signature-dialog-footer [data-action="apply"]:disabled{opacity:.4;cursor:not-allowed}.signature-dialog-footer [data-action="clear"]{margin-right:auto}
+@media screen{#signatureBlock .signature-actions button{min-height:42px;padding:10px 18px;border-radius:8px;background:#123447;color:white;border:0;cursor:pointer}}
+@media (max-height:450px){.signature-dialog-head{padding:8px 16px}.signature-dialog-help{display:none}.signature-dialog-footer{padding:8px 16px}#signatureDialog #signaturePad{height:45dvh!important}}
+@media print{#signatureDialog{display:none!important}}
+</style>
 </body></html>
