@@ -2018,6 +2018,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 </details>
 <details id="moreActions" class="more-actions"><summary>Weitere Aktionen <span aria-hidden="true">⌄</span></summary><div class="more-popover">
 <button id="adminAreaBtn" type="button" style="display:none">Administration</button>
+<button id="eldasDownloadBtn" type="button">ELDAS herunterladen</button>
 <button id="eldasImportBtn" type="button" title="ELDAS-Katalog lokal einlesen">ELDAS einlesen</button>
 <button id="systemDiagnoseBtn" type="button">System kontrollieren</button>
 <div class="more-separator"></div><button class="delete-order action-delete" onclick="deleteSelectedOrder()" type="button">Lokal entfernen</button>
@@ -4371,7 +4372,7 @@ window.saveLocalUser=function(){};
 (() => {
   const DB_NAME="equans_eldas_local_v2", STORE="catalog", KEY="current";
   const MAX_HITS=15, DEBOUNCE_MS=180, MIN_TEXT=2;
-  let DATA=[], PREFIX=new Map(), exactE=new Map(), timer=null;
+  let DATA=[], PREFIX=new Map(), exactE=new Map(), timer=null, downloading=false;
 
   const fmtE=v=>{
     const raw=String(v||"").replace(/\s+/g,"");
@@ -4460,7 +4461,11 @@ window.saveLocalUser=function(){};
       r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});db.close();return d;
   }
   function setStatus(msg,state){
-    const b=document.getElementById("eldasImportBtn");if(!b)return;b.textContent=msg;
+    document.querySelectorAll('.layout-eldas,#eldasDownloadBtn').forEach(button=>{
+      button.textContent=state==='eldas-ready'?msg+' · Aktualisieren':state==='eldas-error'?'ELDAS erneut laden':msg==='ELDAS einlesen'?'ELDAS herunterladen':msg;
+      button.disabled=downloading;
+    });
+    const b=document.getElementById("eldasImportBtn");if(!b)return;b.textContent='ELDAS aus Datei importieren';
     b.classList.remove("eldas-ready","eldas-error");if(state)b.classList.add(state);
   }
 
@@ -4562,7 +4567,22 @@ window.saveLocalUser=function(){};
     setStatus(DATA.length.toLocaleString("de-CH")+" ELDAS","eldas-ready");
   }
 
+  async function downloadCatalog(){
+    if(downloading)return;
+    downloading=true;setStatus('ELDAS wird geladen…');
+    try{
+      const response=await fetch('./catalog/eldas.json',{cache:'reload'});
+      if(!response.ok)throw new Error('Download fehlgeschlagen ('+response.status+').');
+      const blob=await response.blob();
+      await importFile(new File([blob],'eldas.json',{type:'application/json'}));
+      downloading=false;setStatus(DATA.length.toLocaleString('de-CH')+' ELDAS','eldas-ready');
+    }catch(error){
+      downloading=false;setStatus('ELDAS Fehler','eldas-error');
+      document.querySelectorAll('.layout-eldas,#eldasDownloadBtn').forEach(button=>button.title='Katalog konnte nicht geladen werden. Bitte Internetverbindung prüfen. '+String(error.message||error));
+    }
+  }
   document.addEventListener("DOMContentLoaded",async()=>{
+    document.querySelectorAll('.layout-eldas,#eldasDownloadBtn').forEach(button=>button.addEventListener('click',downloadCatalog));
     decorate();
     // Observe only row additions; callback itself is cheap and decorate skips existing rows.
     new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length))decorate()}).observe(document.body,{childList:true,subtree:true});
@@ -4706,7 +4726,7 @@ window.saveLocalUser=function(){};
 }
 @media screen{
  #pdfToolbar .meta-strip .meta-item:nth-child(2){flex-direction:row!important;justify-content:flex-start!important}
- #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{height:auto!important;min-height:0!important;position:relative!important;margin-bottom:20px!important;padding-right:145px!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{height:auto!important;min-height:0!important;position:relative!important;margin-bottom:20px!important;padding-right:235px!important}
  #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{height:auto!important;min-height:0!important;margin:0!important;padding:0!important;line-height:1.4!important}
  #materialPage .linegrid,#materialRegiePage .linegrid{height:auto!important;min-height:0!important;row-gap:10px!important;align-items:center!important;margin-bottom:12px!important}
  #materialPage .linegrid .lbl,#materialRegiePage .linegrid .lbl{background:none!important;border:0!important;padding:0!important;font-weight:500!important}
@@ -4737,7 +4757,7 @@ window.saveLocalUser=function(){};
   const page=document.getElementById(id),tbody=page.querySelector('tbody');
   const title=page.querySelector('.beiblatt-title'),original=document.createElement('span'),screen=document.createElement('span');original.className='layout-print-title';original.textContent=title.textContent;screen.className='layout-screen-title';screen.textContent=id==='materialPage'?'Material':'Material Regie';title.replaceChildren(original,screen);
 
-  const eldas=document.createElement('button');eldas.type='button';eldas.className='layout-eldas';eldas.textContent='ELDAS-Katalog ↗';eldas.addEventListener('click',()=>document.getElementById('eldasImportBtn').click());page.querySelector('.beiblatt-top').append(eldas);
+  const eldas=document.createElement('button');eldas.type='button';eldas.className='layout-eldas';eldas.textContent='ELDAS herunterladen';page.querySelector('.beiblatt-top').append(eldas);
   const rows=[...tbody.rows];let extra=0;
   const update=()=>{let last=-1;rows.forEach((row,i)=>{if([...row.querySelectorAll('input,select')].some(el=>el.value.trim()!==''))last=i;});rows.forEach((row,i)=>row.classList.toggle('layout-empty-row',i>Math.max(last+1,extra)));button.hidden=rows.every(row=>!row.classList.contains('layout-empty-row'));};
   const button=document.createElement('button');button.type='button';button.className='layout-add-row';button.textContent='+ Weitere Materialzeile';tbody.closest('table').after(button);
