@@ -4583,7 +4583,7 @@ window.saveLocalUser=function(){};
 })();
 </script>
 
-<script>function markCurrentRapportTab(){document.querySelectorAll('#pdfToolbar>.tabs a').forEach(a=>{const selected=a.hash===(location.hash||'#rapportPage');a.style.setProperty('background',selected?'#ffffff12':'transparent','important');a.style.setProperty('color',selected?'white':'#bcd0d9','important');if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}window.addEventListener('hashchange',markCurrentRapportTab);markCurrentRapportTab();</script><style id="toolbar-v3-style">
+<script>function markCurrentRapportTab(){document.querySelectorAll('#pdfToolbar>.tabs a,#appSidebar .tabs a').forEach(a=>{const selected=a.hash===(location.hash||'#rapportPage');a.style.setProperty('background',selected?'#ffffff12':'transparent','important');a.style.setProperty('color',selected?'white':'#bcd0d9','important');if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}window.addEventListener('hashchange',markCurrentRapportTab);markCurrentRapportTab();</script><style id="toolbar-v3-style">
 @media screen{
  #pdfToolbar .head-main{min-height:195px!important;padding:24px 28px!important;gap:23px!important}
  #pdfToolbar .head-main:after{top:24px!important}
@@ -4628,7 +4628,7 @@ window.saveLocalUser=function(){};
 </style>
 <script>
 (()=>{const more=document.getElementById('moreActions');more?.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('pointerdown',e=>{if(more&&!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more?.open){more.open=false;more.querySelector('summary').focus();}});})();
-</script></body></html>
+</script>
 <style id="rapport-mobile-fix">
 @media screen and (max-width:700px){
   #pdfToolbar.pdf-toolbar{width:calc(100vw - 12px)!important;min-width:0!important;max-width:100%!important}
@@ -4658,3 +4658,94 @@ window.saveLocalUser=function(){};
 #driveBackupBtn{padding:10px;margin:8px 0}
 #driveBackupStatus{font-size:12px;white-space:pre-wrap}
 </style>
+
+<style id="sidebar-layout-v4">
+@media screen {
+ body{padding-left:218px!important;margin:0!important;box-sizing:border-box!important;min-width:0!important}
+ #appSidebar{position:fixed;inset:0 auto 0 0;width:218px;padding:34px 20px;box-sizing:border-box;background:#123447;color:white;display:flex;flex-direction:column;z-index:200;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+ #appSidebar .brand-block{display:block!important}#appSidebar .brand-mark{font-size:26px!important;font-weight:850!important;letter-spacing:-1px!important;color:white!important}#appSidebar .brand-mark small{display:block;font-size:9px;letter-spacing:3.5px;margin-top:5px;color:#b6c9d1}
+ #appSidebar .brand-divider,#appSidebar .brand-block>div:last-child{display:none!important}
+ #appSidebar .nav-caption{margin:46px 12px 18px;color:#8fadb9;font-size:10px;letter-spacing:2px}
+ #appSidebar .tabs{display:grid!important;gap:7px!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;width:auto!important;min-width:0!important}
+ #appSidebar .tabs a{display:flex!important;align-items:center;gap:9px;border:0!important;border-radius:8px!important;padding:13px 10px!important;font-size:12px!important;font-weight:550!important;text-decoration:none!important;line-height:1.4!important;white-space:normal!important}
+ #appSidebar .tabs a:before{content:attr(data-number);color:#8fadb9;font-size:10px}#appSidebar .tabs a[aria-current=page]{box-shadow:inset 3px 0 #72d4b1!important}
+ #appSidebar .user-meta{margin-top:auto!important;border:0!important;border-top:1px solid #ffffff20!important;padding:22px 7px 0!important;background:none!important;color:#bcd0d9!important;min-height:0!important;box-shadow:none!important}
+ #appSidebar .meta-label{font-size:10px;color:#8fadb9;margin-bottom:9px}#appSidebar #headerUserName{border:0!important;background:none!important;color:white!important;font-size:12px!important;text-align:left;cursor:pointer;white-space:normal!important}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 80px)!important;max-width:1280px!important;min-width:0!important;margin:0 auto 12px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;position:relative!important;top:auto!important}
+ #pdfToolbar .layout-top{width:100%!important;max-width:none!important;display:flex;align-items:center;gap:16px;min-height:92px;border-bottom:1px solid #e1e8eb;margin-bottom:22px;padding:12px 0;box-sizing:border-box}
+ #pdfToolbar .layout-top .order-row{display:flex;flex:1;gap:12px;align-items:end;min-width:0}#pdfToolbar .layout-top .order-chooser{flex:1;min-width:0;max-width:580px}
+ #pdfToolbar .layout-top .order-chooser label{display:block;font-size:10px;color:#6d7f89;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+ #pdfToolbar .layout-top #orderSelect{width:100%!important;height:38px!important;min-width:0!important;font-size:12px!important;border:1px solid #dce5e9!important;border-radius:7px!important}
+ #pdfToolbar .layout-top .primary-new{height:38px!important;width:auto!important;flex:none!important;border:1px solid #dce5e9!important;background:white!important;color:#173343!important;border-radius:7px!important;padding:0 12px!important;font-size:11px!important}
+ #pdfToolbar .head-main{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:22px!important;min-height:180px!important;padding:28px 24px!important;border:1px solid #e1e8eb!important;border-radius:12px!important;background-position:center 45%!important;position:relative;isolation:isolate}
+ #pdfToolbar .head-main:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fffffff5,#ffffffce 43%,#ffffff25);z-index:-1;border-radius:12px}#pdfToolbar .head-main:after{display:none!important}
+ #pdfToolbar .meta-strip{display:flex!important;flex-direction:column!important;gap:8px!important;width:auto!important;flex:1!important;min-width:0!important;margin:0!important;align-self:stretch!important;text-align:left!important;align-items:flex-start!important}
+ #pdfToolbar .meta-item{padding:0!important;min-height:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+ #pdfToolbar #headerRapportId{font-size:29px!important;line-height:1.2!important;letter-spacing:-.8px!important;font-weight:700!important;white-space:normal!important;overflow-wrap:anywhere;color:#173343!important;margin:8px 0 4px}
+ #pdfToolbar .meta-strip .meta-item:nth-child(2){display:flex!important;gap:8px;align-items:center}#pdfToolbar #headerDate{font-size:12px!important;font-weight:400!important;color:#6d7f89!important}
+ #pdfToolbar .head-main .action-controls{display:flex!important;flex-wrap:wrap!important;gap:8px!important;margin:0!important;align-items:center!important;flex-shrink:0}
+ #pdfToolbar .head-main .toolbar-save{order:3}#pdfToolbar .head-main #manualSyncBtn{order:2}#pdfToolbar .head-main #pdfMenu{order:1}
+ #pdfToolbar .head-actions.toolbar-v3{display:block!important;padding:0!important;background:transparent!important}
+ #pdfToolbar #moreActions{margin:18px 0 0 auto!important;width:auto!important;height:38px!important}#pdfToolbar #moreActions>summary{height:38px!important;font-size:11px!important}
+ #pdfToolbar .layout-sync{margin-top:16px;color:#247656;display:flex;gap:8px;align-items:center;font-size:12px}#pdfToolbar .layout-sync .meta-label{display:none}#pdfToolbar .layout-sync .meta-value{font-size:12px!important;color:#247656!important;font-weight:500!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 80px)!important;max-width:1280px!important;margin:12px auto!important}
+ body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 80px)!important;max-width:1280px!important;padding:24px 26px!important;margin:22px auto!important}
+ #materialPage .beiblatt-logo,#materialRegiePage .beiblatt-logo{display:none!important}#materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{display:block!important;padding:0 0 18px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{font-size:19px!important;text-align:left!important;text-transform:none!important;letter-spacing:-.3px!important}
+ .layout-description{display:block;font-size:12px;color:#6d7f89;margin-top:7px;font-weight:400}.layout-print-title{display:none!important}
+ #materialPage .section,#materialRegiePage .section{display:none!important}#materialPage table,#materialRegiePage table{margin-top:20px!important;border:0!important;border-radius:0!important}
+ #materialPage td,#materialRegiePage td{padding:17px 8px!important}#materialPage td input,#materialRegiePage td input{border-color:transparent!important;background:transparent!important}#materialPage td input:hover,#materialRegiePage td input:hover{border-color:#dce5e9!important}
+ #materialPage .layout-empty-row,#materialRegiePage .layout-empty-row{display:none!important}
+ .layout-add-row{display:block;margin:16px 0 24px;border:0;background:none;color:#247656;padding:8px;font:600 12px inherit;cursor:pointer}
+}
+@media screen and (max-width:1150px){#pdfToolbar .head-main{align-items:flex-start!important;flex-direction:column!important}#pdfToolbar .head-main .action-controls{width:100%}#pdfToolbar .head-main .toolbar-save{margin-left:auto!important}}
+@media screen and (max-width:700px){
+ body{padding-left:0!important}#appSidebar{position:relative!important;width:100%!important;padding:20px 16px 12px!important;display:block!important}#appSidebar .brand-mark{font-size:22px!important}#appSidebar .nav-caption{display:none!important}#appSidebar .tabs{display:flex!important;overflow-x:auto!important;margin-top:20px!important;gap:4px!important}#appSidebar .tabs a{flex-shrink:0;white-space:nowrap!important;padding:11px!important}#appSidebar .tabs a:before{display:none}#appSidebar .tabs a[aria-current=page]{box-shadow:inset 0 -2px #72d4b1!important}#appSidebar .user-meta{position:absolute;right:16px;top:20px;max-width:45%;padding:0!important;border:0!important}#appSidebar .user-meta .meta-label{display:none}
+ #pdfToolbar.pdf-toolbar{width:calc(100% - 32px)!important;margin:0 auto 12px!important}#pdfToolbar .layout-top{flex-wrap:wrap;gap:8px;padding:16px 0;min-height:0;margin-bottom:18px}#pdfToolbar .layout-top .order-row{flex-wrap:wrap;flex-basis:100%}#pdfToolbar .layout-top .order-chooser{flex-basis:100%}#pdfToolbar #moreActions{margin:0!important}#pdfToolbar .layout-top .primary-new{font-size:11px!important}#pdfToolbar .head-main{padding:24px 17px!important;min-height:205px!important;gap:20px!important}#pdfToolbar .meta-strip{display:flex!important}#pdfToolbar #headerRapportId{font-size:25px!important}#pdfToolbar .head-main .action-controls{gap:6px!important}#pdfToolbar .head-main .action-controls>button{padding:0 10px!important;flex:1!important;font-size:11px!important}#pdfToolbar .head-main #pdfMenu>summary{font-size:11px!important;padding:0 10px!important}
+ #rapportStorageStatus,#draftRecovery{width:calc(100% - 32px)!important;box-sizing:border-box!important}body:has(#materialPage:target) .sheet,body:has(#materialRegiePage:target) .sheet{width:calc(100% - 32px)!important;padding:20px 17px!important}#materialPage td,#materialRegiePage td{padding:5px 0!important}
+}
+@media screen{
+ #pdfToolbar .meta-strip .meta-item:nth-child(2){flex-direction:row!important;justify-content:flex-start!important}
+ #materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{height:auto!important;min-height:0!important;position:relative!important;margin-bottom:20px!important;padding-right:145px!important}
+ #materialPage .beiblatt-title,#materialRegiePage .beiblatt-title{height:auto!important;min-height:0!important;margin:0!important;padding:0!important;line-height:1.4!important}
+ #materialPage .linegrid,#materialRegiePage .linegrid{height:auto!important;min-height:0!important;row-gap:10px!important;align-items:center!important;margin-bottom:12px!important}
+ #materialPage .linegrid .lbl,#materialRegiePage .linegrid .lbl{background:none!important;border:0!important;padding:0!important;font-weight:500!important}
+ #materialPage .linegrid .in,#materialRegiePage .linegrid .in{background:none!important;border:0!important;height:auto!important;min-height:32px!important}
+ #materialPage .linegrid textarea,#materialRegiePage .linegrid textarea{background:#fafcfc!important;border:1px solid #e1e8eb!important;border-radius:6px!important;padding:8px!important;box-sizing:border-box!important}
+ .layout-eldas{position:absolute;right:0;top:0;background:white;border:1px solid #dce5e9;border-radius:8px;padding:11px 14px;color:#173343;font-size:11px;cursor:pointer}
+ #materialPage input.material-qty,#materialRegiePage input.material-qty{min-width:0!important;width:40%!important}#materialPage select.material-unit,#materialRegiePage select.material-unit{width:60%!important;min-width:0!important;padding:4px!important;font-size:11px!important}
+ .layout-add-row[hidden]{display:none!important}
+}
+@media screen and (max-width:700px){#materialPage .beiblatt-top,#materialRegiePage .beiblatt-top{padding-right:0!important;padding-top:0!important}.layout-eldas{position:static;margin-top:13px}.layout-description{line-height:1.5}}
+@media print{#appSidebar,.layout-add-row,.layout-eldas,.layout-description,.layout-screen-title{display:none!important}.layout-print-title{display:inline!important}}
+</style>
+<script id="sidebar-layout-script">
+(()=>{
+ const toolbar=document.getElementById('pdfToolbar'),hero=toolbar.querySelector('.head-main');
+ const sidebar=document.createElement('aside');sidebar.id='appSidebar';sidebar.setAttribute('aria-label','Rapport-Navigation');
+ sidebar.append(toolbar.querySelector('.brand-block'));
+ const caption=document.createElement('div');caption.className='nav-caption';caption.textContent='MEIN RAPPORT';sidebar.append(caption);
+ const tabs=toolbar.querySelector('.tabs');tabs.setAttribute('role','navigation');tabs.setAttribute('aria-label','Rapportblätter');
+ tabs.querySelectorAll('a').forEach((a,i)=>{a.dataset.number=String(i+1).padStart(2,'0');if(a.hash==='#materialPage')a.textContent='Material';if(a.hash==='#arbeitszeitPage')a.textContent='Arbeitszeit';});
+ sidebar.append(tabs,toolbar.querySelector('.user-meta'));document.body.prepend(sidebar);
+ const top=document.createElement('div');top.className='layout-top toolbar-v3';top.append(toolbar.querySelector('.order-row'),document.getElementById('moreActions'));toolbar.prepend(top);
+ hero.classList.add('toolbar-v3');hero.append(toolbar.querySelector('.action-controls'));
+ const sync=document.getElementById('cloudHeaderStatus').parentElement;sync.classList.add('layout-sync');hero.after(sync);
+ markCurrentRapportTab();
+ // Keep every original input in place: old reports use positional keys for unnamed fields.
+ for(const id of ['materialPage','materialRegiePage']){
+  const page=document.getElementById(id),tbody=page.querySelector('tbody');
+  const title=page.querySelector('.beiblatt-title'),original=document.createElement('span'),screen=document.createElement('span');original.className='layout-print-title';original.textContent=title.textContent;screen.className='layout-screen-title';screen.textContent=id==='materialPage'?'Material':'Material Regie';title.replaceChildren(original,screen);
+  const description=document.createElement('div');description.className='layout-description';description.textContent='Verwendete Artikel und Mengen für diesen Einsatz.';title.after(description);
+  const eldas=document.createElement('button');eldas.type='button';eldas.className='layout-eldas';eldas.textContent='ELDAS-Katalog ↗';eldas.addEventListener('click',()=>document.getElementById('eldasImportBtn').click());page.querySelector('.beiblatt-top').append(eldas);
+  const rows=[...tbody.rows];let extra=0;
+  const update=()=>{let last=-1;rows.forEach((row,i)=>{if([...row.querySelectorAll('input,select')].some(el=>el.value.trim()!==''))last=i;});rows.forEach((row,i)=>row.classList.toggle('layout-empty-row',i>Math.max(last+1,extra)));button.hidden=rows.every(row=>!row.classList.contains('layout-empty-row'));};
+  const button=document.createElement('button');button.type='button';button.className='layout-add-row';button.textContent='+ Weitere Materialzeile';tbody.closest('table').after(button);
+  button.addEventListener('click',()=>{const index=rows.findIndex(row=>row.classList.contains('layout-empty-row'));if(index>=0){extra=index;update();rows[index].querySelector('input').focus();}});
+  tbody.addEventListener('input',update);tbody.addEventListener('change',update);window.addEventListener('hashchange',update);
+  new MutationObserver(update).observe(document.getElementById('headerRapportId'),{childList:true,characterData:true,subtree:true});update();
+ }
+})();
+</script>
+
+</body></html>
