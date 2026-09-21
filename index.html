@@ -4774,7 +4774,7 @@ if(mountain)toolbar.style.setProperty('background-image','linear-gradient(90deg,
 <script>
 (()=>{
  const context=document.createElement('canvas').getContext('2d');
- function fit(field){const rect=field.getBoundingClientRect();if(!rect.width)return;const css=getComputedStyle(field);const width=field.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-2;context.font=css.fontWeight+' 13px '+css.fontFamily;const length=context.measureText(field.value).width;field.style.setProperty('--material-fit-size',Math.min(13,length?13*Math.max(1,width)/length:13)+'px');field.title=field.value;}
+ function fit(field){const rect=field.getBoundingClientRect();if(!rect.width)return;const css=getComputedStyle(field);const width=field.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-2;context.font=css.fontWeight+' 13px '+css.fontFamily;const length=context.measureText(field.value).width;field.style.setProperty('--material-fit-size',Math.min(13,length?13*Math.max(1,width)/length:13)+'px');for(let i=0;i<3&&field.scrollWidth>field.clientWidth;i++){const size=parseFloat(getComputedStyle(field).fontSize);field.style.setProperty('--material-fit-size',size*Math.max(1,field.clientWidth-20)/Math.max(1,field.scrollWidth-16)+'px');}field.title=field.value;}
  window.fitMaterialNames=()=>document.querySelectorAll('input.eldas-material-search').forEach(fit);
  document.addEventListener('input',e=>{if(e.target.matches('input.eldas-material-search'))fit(e.target);});
  window.addEventListener('resize',()=>window.fitMaterialNames());window.addEventListener('hashchange',()=>requestAnimationFrame(()=>window.fitMaterialNames()));document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>window.fitMaterialNames()));
