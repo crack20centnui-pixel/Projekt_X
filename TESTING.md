@@ -85,3 +85,17 @@ Abschluss-Hinweis: Admins sehen bei fertigen/archivierten Rapporten einen gelben
 Hinweis, wenn auf diesem Gerät kein aktueller Nachweis für beide Drive-Dateien
 vorliegt. Andere Geräte und manuelle Backups werden ausdrücklich nicht beurteilt.
 Die Prüfung liest ausschliesslich localStorage und verursacht keine Cloud-Abfrage.
+
+## GitHub-Pages-V2-Test (21.09.2026)
+
+V2 unter https://crack20centnui-pixel.github.io/Projekt_X/index_v2.html veröffentlicht
+(Weiterleitung nach v2/index.html), Veröffentlichung PR #2 erfolgreich.
+Die bisherige index.html, manifest.json und service-worker.js sind unverändert.
+V2 besitzt eigenen Worker-Bereich und Cache. Firebase wird weiterhin gemeinsam genutzt.
+
+Online mit Testkonto Peter geprüft: Anmeldung, erste Synchronisierung ohne Daten,
+klar gekennzeichneter Testrapport „TEST V2 – Peter – 21.09.2026“, lokales Speichern,
+Upload (1 Dokument), Neuladen, erneutes Öffnen mit vollständiger Arbeitsbeschreibung,
+zweiter SYNC mit Download. Die Online-Entwurfsprüfung wurde durch den nativen
+Bestätigungsdialog unterbrochen und gilt noch nicht als abgeschlossen.
+Mustermax-/Admin-/Drive-Onlineprüfung stehen noch aus.
