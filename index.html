@@ -4743,4 +4743,28 @@ window.saveLocalUser=function(){};
 @media (max-height:450px){.signature-dialog-head{padding:8px 16px}.signature-dialog-help{display:none}.signature-dialog-footer{padding:8px 16px}#signatureDialog #signaturePad{height:45dvh!important}}
 @media print{#signatureDialog{display:none!important}}
 </style>
+<style id="full-mountain-header">
+@media screen{
+ #pdfToolbar.pdf-toolbar{background-size:cover!important;background-position:center 45%!important;border:1px solid #dce5e9!important;border-radius:14px!important;padding:20px 24px!important;margin-top:20px!important;box-sizing:border-box!important}
+ #pdfToolbar .head-main{background:none!important;border:0!important;padding:22px 0!important;min-height:170px!important;isolation:auto!important}
+ #pdfToolbar .head-main:before{display:none!important}
+ #pdfToolbar .layout-top{background:transparent!important;margin-bottom:0!important;padding-top:0!important;min-height:76px!important;border-color:#ffffffb0!important}
+ #pdfToolbar .layout-top label{color:#345363!important}#pdfToolbar #moreActions>summary{background:#ffffffed!important;border:1px solid #dce5e9!important;color:#173343!important;padding:0 12px!important}
+ #pdfToolbar .layout-sync{background:#ffffffed!important;display:inline-flex!important;border-radius:7px!important;padding:9px 12px!important;margin-top:0!important}
+ #pdfToolbar .head-actions.toolbar-v3{background:none!important}#pdfToolbar #saveStatus:not(:empty){background:#ffffffed!important;border-radius:7px;padding:9px 12px!important}
+ #rapportStorageStatus{display:flex;align-items:center;gap:10px;border:1px solid #dce5e9;box-sizing:border-box;font-weight:550;color:#173343}
+ #rapportStorageStatus:empty{display:none!important}#rapportStorageStatus:not(:empty):before{content:'';width:9px;height:9px;border-radius:50%;background:#a87716;flex-shrink:0}
+ #rapportStorageStatus[data-state="synced"]:before{background:#247656}#rapportStorageStatus[data-state="locked"]:before{background:#6d7f89}
+}
+@media screen and (max-width:700px){#pdfToolbar.pdf-toolbar{padding:16px!important;margin-top:16px!important;background-position:60% center!important}#pdfToolbar .head-main{padding:22px 0!important;min-height:200px!important}#pdfToolbar .layout-top{padding-bottom:14px!important}#pdfToolbar .layout-sync{font-size:11px!important}}
+</style>
+<script>
+(()=>{const toolbar=document.getElementById('pdfToolbar'),hero=toolbar.querySelector('.head-main');
+// Reuse the existing embedded Alpine image for the whole header; no extra download.
+const styles=[...document.querySelectorAll('style')].map(style=>style.textContent).join('\n');
+const mountain=styles.match(/url\("(data:image\/png;base64,[^"]+)"\)/);
+if(mountain)toolbar.style.setProperty('background-image','linear-gradient(90deg,rgba(255,255,255,.97),rgba(255,255,255,.85) 44%,rgba(255,255,255,.4)),url("'+mountain[1].replace(/\s/g,'')+'")','important');
+})();
+</script>
+
 </body></html>
