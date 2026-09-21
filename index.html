@@ -2131,7 +2131,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <button class="admin-tab active" data-admin-tab="rapporte" type="button">Rapporte</button>
 <button class="admin-tab" data-admin-tab="auftraege" type="button">Auftragsnummern</button>
 <button class="admin-tab" data-admin-tab="benutzer" type="button">Benutzer</button>
-<button class="admin-tab" data-admin-tab="sync" type="button">SYNC / Versionen</button>
+<button class="admin-tab" data-admin-tab="sync" type="button">Synchronisierung</button>
 <button class="admin-tab" data-admin-tab="dateien" type="button">Backup / Dateien</button>
 </div>
 
@@ -2165,7 +2165,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <button id="adminAssignTransferBtn" class="admin-assign-transfer" type="button">Übergeben</button>
 </div>
 <div id="adminVersionsList" class="admin-note"></div>
-<div class="admin-note">Freigabe arbeitet am selben RPT. Es wird keine Rapport-Kopie erzeugt.</div>
+
 </div>
 </div>
 
@@ -2180,7 +2180,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="admin-table-wrap"><table id="adminMasterTable" class="admin-data-table"><thead><tr><th>Auftragsnummer</th><th>Bezeichnung</th><th>Status</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div class="admin-section"><h3>Externe / noch nicht geprüfte Auftragsnummern</h3>
-<div class="admin-note">Diese Nummern wurden in Rapporten verwendet, sind aber noch nicht im Master.</div>
+
 <div class="admin-table-wrap"><table id="adminExternalTable" class="admin-data-table"><thead><tr><th>Auftragsnummer</th><th>Rapporte</th><th>Aktion</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
@@ -2190,9 +2190,9 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 </div>
 
 <div class="admin-panel" data-admin-panel="sync">
-<div class="admin-section"><h3>SYNC / Versionen</h3>
+<div class="admin-section"><h3>Synchronisierung</h3>
 <div class="admin-table-wrap"><table id="adminSyncTable" class="admin-data-table"><thead><tr><th>Mitarbeiter</th><th>Rolle</th><th>Sync-Version</th><th>Letzter Sync</th><th>Rapporte</th></tr></thead><tbody></tbody></table></div>
-<div class="admin-note">Die Sync-Version ist pro Benutzer. Die Revision eines einzelnen RPT wird separat in der Rapportübersicht angezeigt.</div>
+
 </div>
 <div class="admin-section"><h3>Konflikte / Hinweise</h3><div id="adminConflictInfo" class="admin-note">Hier erfolgt keine zentrale Konfliktprüfung. Konflikte werden beim manuellen SYNC auf dem jeweiligen Gerät angezeigt; betroffene Änderungen bleiben lokal erhalten.</div></div>
 </div>
@@ -4736,7 +4736,7 @@ window.saveLocalUser=function(){};
  for(const id of ['materialPage','materialRegiePage']){
   const page=document.getElementById(id),tbody=page.querySelector('tbody');
   const title=page.querySelector('.beiblatt-title'),original=document.createElement('span'),screen=document.createElement('span');original.className='layout-print-title';original.textContent=title.textContent;screen.className='layout-screen-title';screen.textContent=id==='materialPage'?'Material':'Material Regie';title.replaceChildren(original,screen);
-  const description=document.createElement('div');description.className='layout-description';description.textContent='Verwendete Artikel und Mengen für diesen Einsatz.';title.after(description);
+
   const eldas=document.createElement('button');eldas.type='button';eldas.className='layout-eldas';eldas.textContent='ELDAS-Katalog ↗';eldas.addEventListener('click',()=>document.getElementById('eldasImportBtn').click());page.querySelector('.beiblatt-top').append(eldas);
   const rows=[...tbody.rows];let extra=0;
   const update=()=>{let last=-1;rows.forEach((row,i)=>{if([...row.querySelectorAll('input,select')].some(el=>el.value.trim()!==''))last=i;});rows.forEach((row,i)=>row.classList.toggle('layout-empty-row',i>Math.max(last+1,extra)));button.hidden=rows.every(row=>!row.classList.contains('layout-empty-row'));};
