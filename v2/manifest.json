@@ -1,7 +1,7 @@
 {
-  "name": "EQUANS Rapport V2 Test",
-  "short_name": "Rapport V2",
-  "start_url": "./",
+  "name": "EQUANS Rapport",
+  "short_name": "EQUANS Rapport",
+  "start_url": "../index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f4f5",
