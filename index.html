@@ -4382,66 +4382,20 @@ window.saveLocalUser=function(){};
     .replace(/ß/g,"ss").replace(/×/g,"x").replace(/[^\p{L}\p{N}.+-]+/gu," ").replace(/\s+/g," ").trim();
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
-  function prepare(raw){
-    DATA = raw.map((x,i)=>{
-      const name=String(x.name||"").trim(), e=String(x.eNumber||x.e||"").replace(/\s+/g,"").trim();
-      return {i,name,e,n:norm(name)};
-    }).filter(x=>x.name&&x.e);
-    PREFIX=new Map(); exactE=new Map();
-    DATA.forEach((a,idx)=>{
-      exactE.set(a.e,idx);
-      const seen=new Set();
-      for(const word of a.n.split(" ")){
-        if(!word) continue;
-        // 2–8 character prefixes are enough to reduce candidates sharply.
-        for(let n=2;n<=Math.min(8,word.length);n++){
-          const p=word.slice(0,n);
-          if(seen.has(p)) continue; seen.add(p);
-          let arr=PREFIX.get(p); if(!arr) PREFIX.set(p,arr=[]);
-          arr.push(idx);
-        }
-      }
-    });
-  }
-
-  function intersect(a,b){
-    if(!a||!b)return [];
-    const small=a.length<=b.length?a:b, big=a.length<=b.length?b:a, set=new Set(big), out=[];
-    for(const x of small) if(set.has(x)) out.push(x);
-    return out;
-  }
-  function candidates(q){
-    const digits=String(q||"").replace(/\s+/g,"");
-    if(/^\d+$/.test(digits)){
-      if(digits.length===9 && exactE.has(digits)) return [exactE.get(digits)];
-      const out=[];
-      for(let i=0;i<DATA.length && out.length<80;i++) if(DATA[i].e.startsWith(digits)) out.push(i);
-      return out;
+  let worker=null,requestId=0,renderId=0;
+  const requests=new Map();
+  function queryWorker(type,payload){
+    if(!worker){
+      worker=new Worker('./eldas-search-worker.js');
+      worker.onmessage=({data})=>{const pending=requests.get(data.id);if(!pending)return;requests.delete(data.id);data.error?pending.reject(new Error(data.error)):pending.resolve(data);};
+      worker.onerror=()=>{for(const pending of requests.values())pending.reject(new Error('ELDAS-Suche konnte nicht gestartet werden. Bitte App neu laden.'));requests.clear();worker.terminate();worker=null;};
     }
-    const terms=norm(q).split(" ").filter(Boolean);
-    if(!terms.length || terms.some(t=>t.length<MIN_TEXT)) return [];
-    let ids=null;
-    for(const t of terms){
-      const arr=PREFIX.get(t.slice(0,Math.min(8,t.length)))||[];
-      ids=ids===null?arr:intersect(ids,arr);
-      if(!ids.length) break;
-    }
-    return ids||[];
+    return new Promise((resolve,reject)=>{const id=++requestId;requests.set(id,{resolve,reject});try{worker.postMessage({id,type,...payload});}catch(error){requests.delete(id);reject(error);}});
   }
-  function search(q){
-    const nq=norm(q), terms=nq.split(" ").filter(Boolean), ids=candidates(q), scored=[];
-    for(const idx of ids){
-      const a=DATA[idx];
-      if(!terms.every(t=>a.n.includes(t) || a.e.includes(t))) continue;
-      let s=0;
-      if(a.n===nq||a.e===String(q).replace(/\s+/g,""))s+=1000;
-      if(a.n.startsWith(nq)||a.e.startsWith(String(q).replace(/\s+/g,"")))s+=500;
-      for(const t of terms){ if(a.n.startsWith(t))s+=60; else if(a.n.includes(" "+t))s+=45; else s+=20; }
-      scored.push({a,s});
-    }
-    scored.sort((x,y)=>y.s-x.s||x.a.name.localeCompare(y.a.name,"de"));
-    return scored.slice(0,MAX_HITS).map(x=>x.a);
+  async function prepare(raw){
+    const result=await queryWorker('init',{products:raw});DATA={length:result.count};
   }
+  async function search(query){return (await queryWorker('search',{query})).hits;}
 
   function openDB(){
     return new Promise((res,rej)=>{
@@ -4500,12 +4454,15 @@ window.saveLocalUser=function(){};
     if(n)n.value=a.name;if(e)e.value=fmtE(a.e);list.style.display="none";list.innerHTML="";
     if(n)fire(n);if(e)fire(e);input.focus();
   }
-  function render(input,isE){
+  async function render(input,isE){
+    const currentRender=++renderId;
     if(!DATA.length)return;
     const list=input.closest(isE?".eldas-e-cell":".eldas-search-cell")?.querySelector(".eldas-hit-list");if(!list)return;
     const q=input.value.trim();closeAll(list);list.innerHTML="";
     const min=isE?1:MIN_TEXT;if(q.length<min){list.style.display="none";return}
-    const found=search(q);
+    let found;
+    try{found=await search(q);}catch(error){if(currentRender===renderId){list.textContent='Suche nicht verfügbar – manuelle Eingabe möglich.';list.style.display='block';}return;}
+    if(currentRender!==renderId||input.value.trim()!==q||document.activeElement!==input)return;
     if(!found.length)list.innerHTML='<div class="eldas-no-hit">Kein Treffer – manuelle Eingabe bleibt möglich.</div>';
     else found.forEach(a=>{
       const d=document.createElement("div");d.className="eldas-hit";
@@ -4517,7 +4474,7 @@ window.saveLocalUser=function(){};
   }
   document.addEventListener("input",e=>{
     if(!e.target.classList.contains("eldas-material-search")&&!e.target.classList.contains("eldas-e-search"))return;
-    clearTimeout(timer);const input=e.target,isE=input.classList.contains("eldas-e-search");
+    ++renderId;clearTimeout(timer);closeAll();const input=e.target,isE=input.classList.contains("eldas-e-search");
     timer=setTimeout(()=>render(input,isE),DEBOUNCE_MS);
   });
   document.addEventListener("mousedown",e=>{if(!e.target.closest(".eldas-search-cell,.eldas-e-cell"))closeAll()});
@@ -4562,7 +4519,7 @@ window.saveLocalUser=function(){};
     if(!p) throw new Error("Keine gültige ELDAS-Artikelliste gefunden");
 
     setStatus("Index wird erstellt…");
-    prepare(p);
+    await prepare(p);
     await saveLocal(p);
     setStatus(DATA.length.toLocaleString("de-CH")+" ELDAS","eldas-ready");
   }
@@ -4596,7 +4553,7 @@ window.saveLocalUser=function(){};
     });
     try{
       const saved=await loadLocal();
-      if(Array.isArray(saved)&&saved.length){setStatus("ELDAS Index…");prepare(saved);setStatus(DATA.length.toLocaleString("de-CH")+" ELDAS","eldas-ready")}
+      if(Array.isArray(saved)&&saved.length){setStatus("ELDAS Index…");await prepare(saved);setStatus(DATA.length.toLocaleString("de-CH")+" ELDAS","eldas-ready")}
       else setStatus("ELDAS einlesen");
     }catch(_){setStatus("ELDAS einlesen")}
   });
