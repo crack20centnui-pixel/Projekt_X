@@ -4748,4 +4748,35 @@ window.saveLocalUser=function(){};
 })();
 </script>
 
+<style id="pdf-dialog-style">
+#pdfExportDialog{width:min(440px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:0;border:1px solid #dce5e9;border-radius:14px;box-shadow:0 24px 80px #12344740;color:#173343;background:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;box-sizing:border-box}
+#pdfExportDialog::backdrop{background:#12344780}
+#pdfExportDialog[open]{display:flex;flex-direction:column}
+#pdfExportDialog .pdf-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:1px solid #e1e8eb;flex-shrink:0}
+#pdfExportDialog h2{font-size:19px;margin:0;color:#173343}
+#pdfExportDialog .pdf-dialog-close{border:0;background:none;font-size:26px;color:#5b7280;cursor:pointer;padding:0 5px}
+#pdfExportDialog .pdf-options{display:grid;gap:4px;padding:14px 22px;overflow-y:auto;min-height:0}
+#pdfExportDialog .pdf-options label{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14px;font-weight:500;cursor:pointer}
+#pdfExportDialog .pdf-options input{width:19px;height:19px;accent-color:#247656;flex-shrink:0}
+#pdfExportDialog .pdf-dialog-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 22px;border-top:1px solid #e1e8eb;background:#f8fafb;flex-shrink:0}
+#pdfExportDialog .pdf-dialog-footer button{min-height:44px;border:1px solid #dce5e9;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:#173343}
+#pdfExportDialog .pdf-dialog-footer .pdf-main{background:#123447;color:white;border-color:#123447}
+#pdfExportDialog .pdf-dialog-footer .pdf-main:disabled{opacity:.45;cursor:not-allowed}
+@media print{#pdfExportDialog{display:none!important}}
+</style>
+<script id="pdf-dialog-script">
+(()=>{
+ const menu=document.getElementById('pdfMenu'),trigger=menu.querySelector('summary'),old=menu.querySelector('.pdf-popover');
+ const dialog=document.createElement('dialog');dialog.id='pdfExportDialog';dialog.setAttribute('aria-labelledby','pdfDialogTitle');
+ const head=document.createElement('div');head.className='pdf-dialog-head';head.innerHTML='<h2 id="pdfDialogTitle">PDF-Seiten auswählen</h2><button class="pdf-dialog-close" type="button" aria-label="Schliessen">×</button>';
+ const options=old.querySelector('.pdf-options'),create=old.querySelector('.pdf-main'),footer=document.createElement('div');footer.className='pdf-dialog-footer';
+ const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Abbrechen';footer.append(cancel,create);dialog.append(head,options,footer);document.body.append(dialog);old.remove();
+ trigger.setAttribute('aria-haspopup','dialog');trigger.setAttribute('aria-controls',dialog.id);
+ const update=()=>{create.disabled=!options.querySelector('input:checked');};options.addEventListener('change',update);
+ trigger.addEventListener('click',event=>{event.preventDefault();menu.open=false;update();dialog.showModal();});
+ const close=()=>dialog.close();cancel.addEventListener('click',close);head.querySelector('button').addEventListener('click',close);
+ create.addEventListener('click',close,{capture:true});dialog.addEventListener('close',()=>trigger.focus());
+})();
+</script>
+
 </body></html>
