@@ -1,4 +1,4 @@
-const CACHE_NAME = 'equans-rapport-v78';
+const CACHE_NAME = 'equans-rapport-v79';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './eldas-search-worker.js', './rapport-workflow.js', './rapport-drafts.js', './rapport-drive.js', './vendor/html2canvas-1.4.1.min.js', './vendor/jspdf-4.2.1.umd.min.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
