@@ -3669,6 +3669,7 @@ registerSaveBtn?.addEventListener("click",async()=>{
 
 let driveCredential=null;
 window.rapportPendingChanges=()=>getSyncMeta().changes;
+window.rapportIsAdmin=()=>cloudProfile?.role==="admin";
 window.rapportDriveToken=async()=>{
   if(!adminOnly())throw new Error('Nur Admin darf Drive-Backups erstellen.');
   if(driveCredential?.uid===cloudUser.uid&&driveCredential.expires>Date.now())return driveCredential.token;

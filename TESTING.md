@@ -80,3 +80,8 @@ ein file://-Aufruf genügt nicht für Anmeldung und Service Worker.
   steht noch aus; alternativ PDF und .rapport manuell im privaten Drive ablegen.
 - Abrechnung am 21.09.2026 per Cloud Billing API als deaktiviert bestätigt. Keine
   kostenpflichtigen Dienste für diese Änderungen eingerichtet.
+
+Abschluss-Hinweis: Admins sehen bei fertigen/archivierten Rapporten einen gelben
+Hinweis, wenn auf diesem Gerät kein aktueller Nachweis für beide Drive-Dateien
+vorliegt. Andere Geräte und manuelle Backups werden ausdrücklich nicht beurteilt.
+Die Prüfung liest ausschliesslich localStorage und verursacht keine Cloud-Abfrage.
