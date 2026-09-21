@@ -111,3 +111,32 @@ test('Later sync uses inclusive server timestamp so equal-timestamp updates are 
  let queryArgs;const c=context({cloudUser:{uid:'M'},cloudProfile:{role:'monteur'},db:{},Timestamp:class{constructor(seconds,nanoseconds){this.seconds=seconds;this.nanoseconds=nanoseconds;}},where:(...x)=>x,collectionGroup:()=>({}),query:(...x)=>(queryArgs=x),getSyncMeta:()=>({downloadCursor:{seconds:12,nanoseconds:34}}),getDocs:async()=>({forEach:()=>{}})});
  load(c,'async function accessibleServerRapports(','function applyServerToLocal');await c.accessibleServerRapports({incremental:true});assert.equal(queryArgs[2][0],'updatedAt');assert.equal(queryArgs[2][1],'>=');assert.equal(queryArgs[2][2].nanoseconds,34);
 });
+test('Revoked local report cannot be saved',()=>{const c=saveContext();const db=c.getDB();db.R.__accessRevoked=true;c.putDB(db);c.localSaveWithChangeLog();assert.match(c.error,/übergeben/);assert.equal(c.marked,undefined);});
+test('Transfer revocation blocks upload without deleting unsynced work',async()=>{
+ const c=syncContext();c.getDoc=async()=>({exists:()=>true,data:()=>({revokedRapports:{R:true}})});
+ await c.syncAll();assert.equal(c.writes.length,0);assert.equal(c.getDB().R.__accessRevoked,true);assert.equal(c.getDB().R.__signatures.kunde,'signature');assert.match(c.error,/übergeben/);
+});
+test('Transfer moves report and delivers revocation atomically',async()=>{
+ const docs={'monteure/A/rapporte/R':{revision:3,ownerUid:'A',accessUids:['A','C']},'monteure/B/sync/data':{revokedRapports:{R:true,Other:true}}};const writes=[];
+ const c=context({adminOnly:()=>true,adminSelectedRptId:'R',adminOrderRows:[{id:'R',ownerUid:'A'}],db:{},document:{getElementById:id=>id==='adminAssignTarget'?{value:'B'}:{}},doc:(_, ...parts)=>parts.join('/'),serverTimestamp:()=> 'now',loadAdminOrders:async()=>{},loadAdminSync:async()=>{},runTransaction:async(_,fn)=>fn({get:async ref=>({exists:()=>!!docs[ref],data:()=>structuredClone(docs[ref])}),set:(ref,data)=>writes.push({ref,data}),delete:ref=>writes.push({ref,deleted:true})})});
+ load(c,'async function adminAssignOrder(','document.getElementById("adminAssignAddBtn")');await c.adminAssignOrder(true);
+ assert.equal(writes.find(w=>w.ref==='monteure/A/rapporte/R').deleted,true);
+ const moved=writes.find(w=>w.ref==='monteure/B/rapporte/R').data;assert.equal(moved.ownerUid,'B');assert.equal(moved.revision,4);assert.deepEqual(Array.from(moved.accessUids),['C','B']);
+ assert.equal(writes.find(w=>w.ref==='monteure/A/sync/data').data.revokedRapports.R,true);
+ assert.equal(writes.find(w=>w.ref==='monteure/B/sync/data').data.revokedRapports.R,undefined);
+});
+test('Backup panel opens without reading users or rapports',async()=>{
+ const c=context({adminOnly:()=>true,cloudUser:{uid:'A'},document:{querySelector:()=>({dataset:{adminTab:'dateien'}})},loadAdminUsers:()=>{throw Error('unnecessary read')},loadAdminOrders:()=>{throw Error('unnecessary read')}});
+ load(c,"let adminCacheUid=",'async function openAdmin');await c.loadAdminPanel();
+});
+test('External workflow scripts parse',()=>{for(const file of ['rapport-drive.js','rapport-drafts.js','rapport-workflow.js']){const result=spawnSync(process.execPath,['--check',path.join(__dirname,'..',file)],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);}});
+test('Drive rejects wrong account before creating or uploading files',async()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../rapport-drive.js'),'utf8');const a=source.indexOf('  async function privateFolder('),b=source.indexOf('  async function upload(',a);const calls=[];
+ const c=context({OWNER:'latthiwan.danuwat@gmail.com',api:async(_,url)=>{calls.push(url);return {user:{emailAddress:'wrong@example.com'}};}});vm.runInContext(source.slice(a,b),c);
+ await assert.rejects(()=>c.privateFolder('fake'),/Drive-Konto/);assert.equal(calls.length,1);
+});
+test('Drive rejects shared backup folder',async()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../rapport-drive.js'),'utf8');const a=source.indexOf('  async function privateFolder('),b=source.indexOf('  async function upload(',a);
+ const c=context({OWNER:'latthiwan.danuwat@gmail.com',api:async(_,url)=>url.startsWith('/about')?{user:{emailAddress:'latthiwan.danuwat@gmail.com'}}:url.startsWith('/files?')?{files:[{id:'folder'}]}:{id:'folder',shared:true}});vm.runInContext(source.slice(a,b),c);
+ await assert.rejects(()=>c.privateFolder('fake'),/nicht ausschliesslich privat/);
+});

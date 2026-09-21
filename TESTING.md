@@ -4,7 +4,7 @@
 
 `node --test tests/rapport-regressions.cjs`
 
-23 Tests prüfen Speichern, Metadaten, Unterschriften, Kontotrennung,
+30 Tests prüfen Speichern, Metadaten, Unterschriften, Kontotrennung,
 Konflikterkennung, Transaktionen, Abschlussstatus, Archivieren/Wiederöffnen,
 Zeitstempel-Cursor und erste sowie folgende Monteur-Abfragen. Sie schreiben keine
 Firebase-Daten. Zusätzlich: `node --check rapport-drive.js`.
@@ -52,9 +52,31 @@ Der alte gemeinsame Browserspeicher bleibt erhalten. Eindeutig zugeordnete Daten
 werden in den Benutzerspeicher übernommen. Unbekannte Altbestände kann der Admin
 über „Alten lokalen Speicher sichern“ herunterladen.
 
-GitHub Pages enthält noch die bisherige Version: GitHub-Schreibzugriff über die
-Integration scheitert mit HTTP 403, lokal fehlt Git-Authentifizierung. Zur
-Veröffentlichung gehören index.html, service-worker.js, rapport-workflow.js,
-rapport-drive.js und vendor/. Firebase nutzt weiterhin kein neues Hosting.
+GitHub-Schreibzugriff über die lokale GitHub-CLI funktioniert. Änderungen liegen
+im Branch codex/rapport-setup. GitHub Pages enthält bis zur Übernahme nach main
+weiterhin die bisherige Version. Firebase nutzt weiterhin kein neues Hosting.
 Die neue App lokal über HTTP öffnen, beispielsweise http://localhost:8765/;
 ein file://-Aufruf genügt nicht für Anmeldung und Service Worker.
+
+## Weitere Verbesserungen
+
+- Lokale Entwürfe pro angemeldetem Konto und Rapport; Sicherung nach 700 ms
+  Eingabepause, beim Seitenverlassen und vor einem Rapportwechsel. Wiederherstellen
+  setzt keine Cloud-Schreiboperation ab. Abweichende Serverrevisionen blockieren
+  Wiederherstellung; Export bleibt möglich. Browser-Test: Eingabe, Neuladen,
+  Wiederherstellen, Speichern, SYNC erfolgreich.
+- Getrennte Anzeige für ungespeichert, nur lokal, synchronisiert, archiviert und
+  übergeben. Drive-Zeitstempel nur nach zwei erfolgreichen privaten Uploads;
+  nach neuem Speichern wird das Backup als älterer Stand bezeichnet.
+- Admin-Bereiche laden bei Bedarf. Erneutes Öffnen verwendet die gelesenen Daten;
+  „Ansicht aktualisieren“ liest sie erneut. Kein periodisches Cloud-Polling.
+- Eigentümerwechsel und Übergabemeldung sind eine Transaktion. Beim nächsten SYNC
+  sperrt der bisherige Besitzer seine lokale Kopie. Nicht synchronisierte Arbeit
+  bleibt erhalten und exportierbar. Offline kann eine Übergabe erst nach dem
+  nächsten SYNC erkannt werden. Rückzuweisung entfernt die Übergabemeldung.
+- Drive-Verbindungsfehler zeigen den betroffenen API-Schritt. Innerhalb derselben
+  Anmeldung wird das kurzlebige OAuth-Token höchstens 45 Minuten im Speicher
+  wiederverwendet. Kein Token in localStorage. Echter Drive-Test in Chrome/Safari
+  steht noch aus; alternativ PDF und .rapport manuell im privaten Drive ablegen.
+- Abrechnung am 21.09.2026 per Cloud Billing API als deaktiviert bestätigt. Keine
+  kostenpflichtigen Dienste für diese Änderungen eingerichtet.

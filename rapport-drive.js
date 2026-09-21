@@ -8,7 +8,9 @@
     return scripts.get(src);
   }
   async function api(token,path,options={}){
-    const r=await fetch(ROOT+path,{...options,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...options.headers}});
+    let r;
+    try{r=await fetch(ROOT+path,{...options,cache:'no-store',headers:{Authorization:'Bearer '+token,...(options.body?{'Content-Type':'application/json'}:{}),...options.headers}});}
+    catch(e){throw new Error('Verbindung zu Google Drive fehlgeschlagen ('+path.split('?')[0]+'). Bitte Internetverbindung prüfen oder Chrome/Safari verwenden.');}
     if(!r.ok){let details;try{details=await r.json()}catch(_){}throw new Error(details?.error?.message||'Drive-Anfrage fehlgeschlagen ('+r.status+').');}
     return r.json();
   }
@@ -83,7 +85,10 @@
       stage='Rapport-Datei hochladen';uploaded.push(await upload(token,folder,stem+'.rapport',new Blob([JSON.stringify(state,null,2)],{type:'application/json'})));
       stage='PDF hochladen';uploaded.push(await upload(token,folder,stem+'.pdf',pdf));
       stage='Dateifreigaben prüfen';for(const file of uploaded){const info=await api(token,'/files/'+file.id+'?fields=shared,owners(emailAddress),permissions(role)');if(info.shared||info.owners?.[0]?.emailAddress?.toLowerCase()!==OWNER||info.permissions?.some(p=>p.role!=='owner'))throw new Error('Dateifreigaben bitte in Drive prüfen.');}
-      status.replaceChildren(document.createTextNode('PDF und Rapport-Datei privat gesichert. '));
+      let receiptSaved=true;
+      try{localStorage.setItem('equansDriveBackupV1_'+context.uid+'_'+context.id,JSON.stringify({at:new Date().toISOString(),savedAt:context.state.__savedAt,files:uploaded.map(x=>x.id)}));}catch(_){receiptSaved=false;}
+      window.updateRapportStorageStatus?.();
+      status.replaceChildren(document.createTextNode('PDF und Rapport-Datei privat gesichert. '+(receiptSaved?'':'Lokale Backup-Anzeige konnte nicht gespeichert werden. ')));
       if(folder.webViewLink){const a=document.createElement('a');a.href=folder.webViewLink;a.target='_blank';a.rel='noopener';a.textContent='Backup-Ordner öffnen';status.appendChild(a);}
     }catch(e){status.textContent=(uploaded.length?'Nur teilweise gesichert ('+uploaded.length+' Datei). ':'')+stage+': '+(e.message||e);}
     finally{locked.forEach(x=>x.el.inert=x.inert);button.disabled=false;}

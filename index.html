@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#244656"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <title>EQUANS Rapport</title>
-<script src="rapport-workflow.js"></script>
+<script src="rapport-workflow.js"></script><script defer src="rapport-drafts.js"></script>
 <script defer src="rapport-drive.js"></script>
 <style>
 *{box-sizing:border-box} html,body{margin:0;background:#f2f4f5;font-family:Arial,sans-serif;color:#111}
@@ -1910,6 +1910,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 }
 </style>
 
+<style>@media print{#draftRecovery,#rapportStorageStatus{display:none!important}}</style>
 </head><body spellcheck="false">
 <div class="pdf-toolbar" id="pdfToolbar">
 <div class="head-main">
@@ -2051,7 +2052,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="register-actions"><button id="registerCancelBtn" type="button">Abbrechen</button><button id="registerSaveBtn" class="register-save" type="button">Registrieren</button></div>
 </div></div>
 <div id="adminOverlay" aria-hidden="true"><div class="admin-card">
-<div class="admin-top"><div><h2>Administration</h2><div style="font-size:11px;color:#65756d">Firebase V1 – zentrale Verwaltung</div></div><button id="adminCloseBtn" class="admin-close" type="button">×</button></div>
+<div class="admin-top"><div><h2>Administration</h2><div style="font-size:11px;color:#65756d">Firebase V1 – zentrale Verwaltung</div></div><button id="adminRefreshBtn" type="button">Ansicht aktualisieren</button><button id="adminCloseBtn" class="admin-close" type="button">×</button></div>
 
 <div class="admin-tabs">
 <button class="admin-tab active" data-admin-tab="rapporte" type="button">Rapporte</button>
@@ -2126,7 +2127,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="admin-panel" data-admin-panel="dateien">
 <div class="admin-section admin-backup-section"><h3>Backup / Dateien</h3>
 <button id="downloadPdfBtn" type="button">PDF-Datei herunterladen</button>
-<button id="driveBackupBtn" type="button">Geöffneten Rapport als PDF + Datei privat auf Drive sichern</button>
+<p>Bei Drive-Verbindungsproblemen: PDF und Rapport-Datei herunterladen und in deinem privaten Drive ablegen. <a href="https://drive.google.com/" target="_blank" rel="noopener">Google Drive öffnen</a></p><button id="driveBackupBtn" type="button">Geöffneten Rapport als PDF + Datei privat auf Drive sichern</button>
 <div id="driveBackupStatus" role="status"></div><div class="admin-backup-actions">
 <button type="button" onclick="exportRapportFile()">▧ Rapport exportieren</button>
 <button type="button" onclick="document.getElementById('rapportImportInput').click()">▱ Rapport einlesen</button>
@@ -2455,12 +2456,12 @@ const ORDER_DB_KEY='equansRapportOrdersV13';
 let activeLocalUid='';
 let formDirty=false;
 window.masterStorageKey=()=> 'equansMasterDataV1_'+(activeLocalUid||'signed-out');
-function confirmDiscard(){return !formDirty||confirm('Ungespeicherte Änderungen verwerfen?');}
+function confirmDiscard(){window.flushRapportDraft?.();return !formDirty||confirm('Ungespeicherte Änderungen verwerfen?');}
 window.addEventListener('beforeunload',e=>{if(formDirty){e.preventDefault();e.returnValue='';}});
-document.addEventListener('input',e=>{if(e.target.closest('.sheet'))formDirty=true;});
+document.addEventListener('input',e=>{if(e.target.closest('.sheet')){formDirty=true;window.queueRapportDraft?.();}});
 document.addEventListener('change',e=>{
   if(!e.target.closest('.sheet'))return;
-  formDirty=true;
+  formDirty=true;window.queueRapportDraft?.();
   const row=e.target.closest('.checkrow');
   if(row&&row.textContent.includes('Arbeit fertig:')&&e.target.checked){
     const boxes=[...row.querySelectorAll('input[type="checkbox"]')],i=boxes.indexOf(e.target);
@@ -2469,14 +2470,14 @@ document.addEventListener('change',e=>{
 });
 function preserveRapportMetadata(previous,captured){
   const result={...captured};
-  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource','__archived']){
+  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource','__archived','__accessRevoked']){
     if(previous&&key in previous)result[key]=previous[key];
   }
   return result;
 }
 function activateLocalAccount(uid){
   if(activeLocalUid===uid)return;
-  activeLocalUid=uid||'';
+  window.flushRapportDraft?.();activeLocalUid=uid||'';
   if(uid){
     const key=ORDER_DB_KEY+'_'+uid;
     if(localStorage.getItem(key)===null){
@@ -2579,7 +2580,7 @@ function refreshOrderSelect(prefer=''){
   const sel=document.getElementById('orderSelect'); if(!sel)return;
   const db=getDB(), chosen=prefer||sel.value;
   sel.innerHTML='<option value="">Auftrag auswählen …</option>';
-  Object.entries(db).filter(([,data])=>!RapportWorkflow.isArchived(data)).sort((a,b)=>(b[1].__savedAt||'').localeCompare(a[1].__savedAt||'')).forEach(([key,data])=>{
+  Object.entries(db).filter(([,data])=>!RapportWorkflow.isArchived(data)&&!data.__accessRevoked).sort((a,b)=>(b[1].__savedAt||'').localeCompare(a[1].__savedAt||'')).forEach(([key,data])=>{
     const o=document.createElement('option');o.value=key;const ref=(data.ref?.value||data.__reference||'').trim();const created=data.__createdAt||data.__savedAt||'';let dateLabel='';if(created){const cd=new Date(created);if(!isNaN(cd))dateLabel=String(cd.getDate()).padStart(2,'0')+'.'+String(cd.getMonth()+1).padStart(2,'0')+'.'+cd.getFullYear();}o.textContent=ref ? (ref+(dateLabel?' — '+dateLabel:'')) : ('Ohne Referenz'+(dateLabel?' — '+dateLabel:''));sel.appendChild(o);
   });
   if(chosen&&db[chosen])sel.value=chosen;
@@ -2600,6 +2601,7 @@ function ensureRapportId(){
   syncBeiblattHeaders?.(); return id;
 }
 function updateHeaderInfo(){
+  window.updateRapportStorageStatus?.();
   const rid=document.getElementById('headerRapportId');
   const dat=document.getElementById('headerDate');
   if(rid) rid.textContent=referenceValue()||'Ohne Referenz';
@@ -2611,6 +2613,7 @@ function updateHeaderInfo(){
 }
 function saveOrder(){
   const id=ensureRapportId(), ref=referenceValue(), db=getDB();
+  if(db[id]?.__accessRevoked)throw new Error('Rapport wurde übergeben. Lokale Änderungen können noch als Datei exportiert werden.');
   if(RapportWorkflow.isArchived(db[id]))throw new Error('Archivierter Rapport: zuerst als Admin wieder öffnen.');
   currentCreatedAt=currentCreatedAt||db[id]?.__createdAt||new Date().toISOString();
   if(db[id]&&currentOrderKey!==id&&!confirm('Rapport „'+id+'“ ist bereits gespeichert. Aktualisieren?'))return;
@@ -2625,6 +2628,7 @@ function loadSelectedOrder(silent=false){
   applyForm(data);currentOrderKey=key;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();clearSignature?.();location.hash='#rapportPage';syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();setStatus('Geladen ✓');
 }
 function newOrder(){
+  window.flushRapportDraft?.();
   if(!confirm('Neuen Auftrag erstellen? Die aktuell eingegebenen, noch nicht gespeicherten Änderungen werden geleert.'))return;
   if(initialTemplate)applyForm(initialTemplate);currentOrderKey='';currentCreatedAt=new Date().toISOString();document.getElementById('orderSelect').value='';clearSignature?.();
   ensureRapportId();syncBeiblattHeaders?.();updateHeaderInfo();location.hash='#rapportPage';setStatus('Neuer Auftrag ✓');
@@ -2864,11 +2868,11 @@ window.addEventListener('beforeprint', cleanEmptySignatureImages);
   window.transferSignature=function(){
     const data=canvas.toDataURL('image/png');
     const img=currentSignatureImage();
-    if(img){img.src=data;formDirty=true;}
+    if(img){img.src=data;formDirty=true;window.queueRapportDraft?.();}
   };
   window.deleteTransferredSignature=function(){
     const img=currentSignatureImage();
-    if(img){img.removeAttribute('src');formDirty=true;}
+    if(img){img.removeAttribute('src');formDirty=true;window.queueRapportDraft?.();}
   };
 })();
 
@@ -3507,6 +3511,7 @@ function applyServerToLocal(row,localDB,meta){
   const st=JSON.parse(x.rapportStateJson);
   // Old cloud records omitted signatures. Never erase a locally retained signature.
   if(!Object.prototype.hasOwnProperty.call(st,'__signatures')&&local?.__signatures)st.__signatures=local.__signatures;
+  st.__accessRevoked=false;
   st.__archived=RapportWorkflow.isArchived(x);
   st.__rapportId=id;
   st.__serverRevision=serverRev;
@@ -3527,6 +3532,13 @@ async function syncAll(){
   let meta=getSyncMeta(), localDB=window.getDB?.()||{};
   let master={version:0,auftraege:[]},serverRows=[],downloaded=0,uploaded=0,conflicts=[],stage="Start";
   try{
+    stage="Übergaben prüfen";
+    const syncRef=doc(db,"monteure",cloudUser.uid,"sync","data");
+    const ss=await getDoc(syncRef),syncData=ss.exists()?ss.data():{};
+    for(const id of Object.keys(syncData.revokedRapports||{})){
+      if(localDB[id])localDB[id].__accessRevoked=true;
+    }
+    window.putDB?.(localDB);
     stage="MasterData Firebase → lokal laden";
     master=await readMaster();
     setCloudHeader("Aufträge lokal ✓ · SYNC läuft …");
@@ -3547,6 +3559,7 @@ async function syncAll(){
     for(const [id,ch] of Object.entries({...meta.changes})){
       checkSession();
       const local=(window.getDB?.()||{})[id]; if(!local)continue;
+      if(local.__accessRevoked){conflicts.push({id,base:ch.baseRevision,serverRev:"übergeben – nur lokaler Export möglich"});continue;}
       if(RapportWorkflow.isArchived(local)){conflicts.push({id,base:ch.baseRevision,serverRev:"archiviert"});continue;}
       const ownerUid=local.__ownerUid||cloudUser.uid;
       const r=doc(db,"monteure",ownerUid,"rapporte",id);
@@ -3581,8 +3594,7 @@ async function syncAll(){
 
     if(conflicts.length===0){
       stage="eigene sync/data Version aktualisieren";
-      const syncRef=doc(db,"monteure",cloudUser.uid,"sync","data");
-      const ss=await getDoc(syncRef),oldV=ss.exists()?Number(ss.data().version||0):0;
+      const oldV=Number(syncData.version||0);
       await setDoc(syncRef,{version:oldV+1,updatedAt:serverTimestamp()},{merge:true});
       const m=getSyncMeta();m.version=oldV+1;
       m.downloadCursor=RapportWorkflow.nextCursor(m.downloadCursor,serverRows);putSyncMeta(m);
@@ -3600,7 +3612,7 @@ async function syncAll(){
       window.setStatus?.("SYNC teilweise erfolgt – Konflikte nicht überschrieben");
       showSyncError("Konflikt erkannt. Lokale Änderungen bleiben erhalten. "+conflicts.map(c=>c.id+": lokal Basis "+c.base+" / Firebase "+c.serverRev).join(" | "));
     }else{
-      setCloudHeader("SYNC ✓ "+downloaded+"↓ "+uploaded+"↑");
+      setCloudHeader("Synchronisiert ✓ "+downloaded+"↓ "+uploaded+"↑");
       window.setStatus?.("SYNC erfolgreich ✓");
     }
   }catch(e){
@@ -3609,7 +3621,7 @@ async function syncAll(){
     showSyncError(stage+": "+(e.message||e));
     console.error("EQUANS SYNC Fehler bei:",stage,e);
   }finally{
-    if(syncBtn)syncBtn.disabled=false;
+    if(syncBtn)syncBtn.disabled=false;window.updateRapportStorageStatus?.();
   }
 }
 function localSaveWithChangeLog(){
@@ -3622,7 +3634,8 @@ function localSaveWithChangeLog(){
     window.putDB?.(ldb); markDirty(id);
   }
   window.setStatus?.("Lokal gespeichert ✓");
-  setCloudHeader("Änderungen lokal");
+  setCloudHeader("Nur lokal gespeichert – SYNC ausstehend");
+  window.rapportDraftSaved?.();window.updateRapportStorageStatus?.();
 }
 window.rapportLocalSaved=id=>markDirty(id);
 window.rapportLocalRemoved=id=>{const meta=getSyncMeta();delete meta.changes[id];putSyncMeta(meta);};
@@ -3654,21 +3667,24 @@ registerSaveBtn?.addEventListener("click",async()=>{
   }catch(e){registrationInProgress=false;if(st)st.textContent="Fehler: "+(e.code||e.message);try{if(auth.currentUser)await signOut(auth)}catch(_){}}
 });
 
+let driveCredential=null;
+window.rapportPendingChanges=()=>getSyncMeta().changes;
 window.rapportDriveToken=async()=>{
   if(!adminOnly())throw new Error('Nur Admin darf Drive-Backups erstellen.');
+  if(driveCredential?.uid===cloudUser.uid&&driveCredential.expires>Date.now())return driveCredential.token;
   const driveProvider=new GoogleAuthProvider();driveProvider.addScope('https://www.googleapis.com/auth/drive.file');
   driveProvider.setCustomParameters({login_hint:'latthiwan.danuwat@gmail.com',prompt:'consent'});
   const result=await reauthenticateWithPopup(auth.currentUser,driveProvider);
   const token=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
   if(!token)throw new Error('Keine Drive-Freigabe erhalten.');
-  return token;
+  driveCredential={uid:cloudUser.uid,token,expires:Date.now()+45*60*1000};return token;
 };
 window.rapportDriveContext=()=>{
   if(!adminOnly())throw new Error('Drive-Backup ist nur für den Admin verfügbar.');
   if(formDirty)throw new Error('Bitte zuerst lokal speichern.');
   const state=window.getDB?.()?.[currentOrderKey];
   if(!state)throw new Error('Bitte zuerst einen gespeicherten Rapport öffnen.');
-  return {state:structuredClone(state),id:currentOrderKey,reference:referenceValue(),orderNumber:orderNumberFromState(state)};
+  return {uid:cloudUser.uid,state:structuredClone(state),id:currentOrderKey,reference:referenceValue(),orderNumber:orderNumberFromState(state)};
 };
 function completionFieldKeys(){
   const all=window.fields(),out=[];
@@ -3876,16 +3892,30 @@ async function loadAdminSync(){
     const tr=document.createElement("tr");tr.innerHTML=`<td>${escapeHtml(u.displayName||u.username||u.uid)}</td><td>${escapeHtml(u.role||"–")}</td><td>${v}</td><td>${escapeHtml(last)}</td><td>${count}</td>`;body.appendChild(tr)
   }
 }
+let adminCacheUid='',adminLoaded=new Set();
+async function loadAdminPanel(force=false){
+  if(!adminOnly())return;
+  if(adminCacheUid!==cloudUser.uid){adminCacheUid=cloudUser.uid;adminLoaded.clear();}
+  const panel=document.querySelector('.admin-tab.active')?.dataset.adminTab||'rapporte';
+  async function need(key,fn){if(force||!adminLoaded.has(key)){await fn();adminLoaded.add(key);}}
+  if(panel==='dateien')return;
+  await need('users',loadAdminUsers);
+  if(panel==='rapporte'||panel==='sync'||panel==='auftraege')await need('orders',loadAdminOrders);
+  if(panel==='auftraege')await need('master',loadAdminMaster);
+  if(panel==='sync')await need('sync',loadAdminSync);
+}
 async function openAdmin(){
   if(!adminOnly())return;
   adminOverlay?.classList.add("show");adminOverlay?.setAttribute("aria-hidden","false");
-  await loadAdminUsers();await loadAdminOrders();await Promise.all([loadAdminMaster(),loadAdminSync()])
+  await loadAdminPanel();
 }
 adminBtn?.addEventListener("click",()=>openAdmin().catch(e=>showSyncError("Admin-Daten konnten nicht geladen werden: "+(e.message||e))));
 document.getElementById("adminCloseBtn")?.addEventListener("click",()=>{adminOverlay?.classList.remove("show");adminOverlay?.setAttribute("aria-hidden","true")});
+document.getElementById('adminRefreshBtn')?.addEventListener('click',()=>loadAdminPanel(true).catch(e=>showSyncError(e.message)));
 document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
-  document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===b.dataset.adminTab))
+  document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===b.dataset.adminTab));
+  loadAdminPanel().catch(e=>showSyncError(e.message));
 }));
 ["adminMonteurSearch","adminReferenceSearch","adminOrderSearch"].forEach(id=>document.getElementById(id)?.addEventListener("input",()=>{refreshAdminReferences();renderAdminRapports()}));
 document.getElementById("adminArchiveFilter")?.addEventListener("change",renderAdminRapports);
@@ -3919,19 +3949,29 @@ async function adminAssignOrder(transfer){
   const targetUid=document.getElementById("adminAssignTarget")?.value||"",st=document.getElementById("adminRapportStatus");
   const row=adminOrderRows.find(r=>r.id===adminSelectedRptId);
   if(!row||!targetUid){if(st)st.textContent="Zuerst Rapport mit «Wählen» markieren und Ziel-Monteur auswählen.";return}
-  const r=doc(db,"monteure",row.ownerUid,"rapporte",row.id),access=new Set(row.accessUids||[]);access.add(targetUid);
-  if(transfer){
-    if(targetUid===row.ownerUid){if(st)st.textContent="Dieser Monteur ist bereits Eigentümer.";return;}
-    const newRef=doc(db,"monteure",targetUid,"rapporte",row.id);
-    await runTransaction(db,async tx=>{
-      const oldSnap=await tx.get(r),existing=await tx.get(newRef);
-      if(!oldSnap.exists()||existing.exists())throw new Error("Übergabe abgebrochen: Quelle fehlt oder Ziel existiert bereits. Übersicht neu öffnen.");
-      const data=oldSnap.data();data.ownerUid=targetUid;
+  if(transfer&&targetUid===row.ownerUid){if(st)st.textContent="Dieser Monteur ist bereits Eigentümer.";return;}
+  const r=doc(db,"monteure",row.ownerUid,"rapporte",row.id);
+  const targetSync=doc(db,"monteure",targetUid,"sync","data");
+  await runTransaction(db,async tx=>{
+    const oldSnap=await tx.get(r),targetMeta=await tx.get(targetSync);
+    if(!oldSnap.exists())throw new Error("Quelle fehlt. Übersicht neu öffnen.");
+    const data=oldSnap.data();
+    const revocations={...(targetMeta.exists()?targetMeta.data().revokedRapports||{}:{})};delete revocations[row.id];
+    if(transfer){
+      const newRef=doc(db,"monteure",targetUid,"rapporte",row.id),oldSync=doc(db,"monteure",row.ownerUid,"sync","data");
+      const existing=await tx.get(newRef),oldMeta=await tx.get(oldSync);
+      if(existing.exists())throw new Error("Übergabe abgebrochen: Ziel existiert bereits.");
+      data.ownerUid=targetUid;
       data.accessUids=[...new Set([...(data.accessUids||[]),targetUid])].filter(x=>x!==row.ownerUid);
       data.revision=Number(data.revision||0)+1;
       tx.set(newRef,{...data,updatedAt:serverTimestamp()});tx.delete(r);
-    })
-  }else await setDoc(r,{accessUids:[...access],updatedAt:serverTimestamp()},{merge:true});
+      tx.set(oldSync,{revokedRapports:{...(oldMeta.exists()?oldMeta.data().revokedRapports||{}:{}),[row.id]:true}},{merge:true});
+    }else{
+      tx.set(r,{accessUids:[...new Set([...(data.accessUids||[]),targetUid])],updatedAt:serverTimestamp()},{merge:true});
+    }
+    // Replace map deliberately: a reassignment must remove an earlier revocation.
+    tx.set(targetSync,{...(targetMeta.exists()?targetMeta.data():{}),revokedRapports:revocations});
+  });
   if(st)st.textContent=transfer?"Rapport erfolgreich übergeben ✓":"Monteur zusätzlich freigegeben ✓";
   adminSelectedRptId="";await loadAdminOrders();await loadAdminSync()
 }
@@ -4231,7 +4271,7 @@ window.changeLocalUser=async function(){if(cloudUser){if(!confirmDiscard())retur
 
 onAuthStateChanged(auth,async user=>{
   if(registrationInProgress)return;
-  cloudUser=null;cloudProfile=null;
+  cloudUser=null;cloudProfile=null;adminLoaded.clear();
   if(!user){activateLocalAccount('');if(headerUser)headerUser.textContent="–";if(adminBtn)adminBtn.style.display="none";setCloudHeader("Nicht angemeldet");showLogin("Bitte anmelden.");return}
   try{
     cloudProfile=await verifyProfile(user);activateLocalAccount(user.uid);cloudUser=user;refreshMasterOrderSuggestions();
@@ -4243,7 +4283,7 @@ onAuthStateChanged(auth,async user=>{
     window.loadSelectedOrder=localLoad;window.load=localLoad;
     window.newOrder=localNew;window.deleteSelectedOrder=localDeleteOnly;
     window.refreshOrderSelect=originalRefreshOrderSelect;
-    originalRefreshOrderSelect?.();
+    originalRefreshOrderSelect?.();window.showRapportDraft?.();
   }catch(e){if(loginStatus)loginStatus.textContent=e.message||String(e);await signOut(auth)}
 });
 window.openLocalUserDialog=function(){showLogin()};
