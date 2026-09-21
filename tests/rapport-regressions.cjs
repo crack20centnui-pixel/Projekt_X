@@ -8,7 +8,7 @@ const path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 function section(start,end){const a=html.indexOf(start);assert.ok(a>=0,start);const b=html.indexOf(end,a+start.length);assert.ok(b>a,end);return html.slice(a,b);}
 function context(extra={}){
- const c={Date,JSON,Object,Number,TextEncoder,console,alert:()=>{},confirm:()=>true,...extra};c.window=c;vm.createContext(c);return c;
+ const c={RapportWorkflow:require('../rapport-workflow.js'),Date,JSON,Object,Number,TextEncoder,console,alert:()=>{},confirm:()=>true,...extra};c.window=c;vm.createContext(c);return c;
 }
 function load(c,start,end){vm.runInContext(section(start,end),c);}
 function storage(){const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v)};}
@@ -82,7 +82,7 @@ test('All inline JavaScript and service worker parse',()=>{
 });
 test('Finished checkbox maps to cloud status without changing legacy field keys',()=>{
  const checks=[{checked:false},{checked:false},{checked:true},{checked:false}];
- const c=context({currentCreatedAt:'2026-09-21',fields:()=>[],document:{querySelector:()=>({querySelectorAll:()=>checks}),querySelectorAll:()=>[],getElementById:()=>null}});
+ const c=context({currentCreatedAt:'2026-09-21',fields:()=>[],document:{querySelectorAll:q=>q.includes('.checkrow')?[{textContent:'Arbeit fertig:',querySelectorAll:()=>checks}]:[],getElementById:()=>null}});
  load(c,'function captureForm(){','function applyForm');assert.equal(c.captureForm().__status,'fertig');checks[3].checked=true;assert.equal(c.captureForm().__status,'in_bearbeitung');
 });
 test('Admin open refuses to overwrite pending local changes',()=>{
@@ -92,4 +92,22 @@ test('Admin open refuses to overwrite pending local changes',()=>{
 test('Self-transfer cannot delete the original report',async()=>{
  const c=context({adminOnly:()=>true,adminSelectedRptId:'R',adminOrderRows:[{id:'R',ownerUid:'A',accessUids:['A']}],document:{getElementById:id=>id==='adminAssignTarget'?{value:'A'}:{}},db:{},doc:()=>({}),runTransaction:()=>{throw Error('must not write')}});
  load(c,'async function adminAssignOrder(','document.getElementById("adminAssignAddBtn")');await assert.doesNotReject(()=>c.adminAssignOrder(true));
+});
+test('Reopening preserves identifiers and work while clearing completion and signatures only in new state',()=>{
+ const wf=require('../rapport-workflow.js');const saved={ref:{value:'Einsatz A'},auftrag:{value:'Projekt'},rapportnr:{value:'R'},field_20:{checked:true},arbeiten:{value:'7 Tage'},__signatures:{kunde:'old-signature'}};
+ const record={rapportStateJson:JSON.stringify(saved)};const next=wf.archiveState(record,false,['field_20']);
+ assert.equal(next.ref.value,'Einsatz A');assert.equal(next.rapportnr.value,'R');assert.equal(next.arbeiten.value,'7 Tage');assert.equal(next.field_20.checked,false);assert.equal(next.__signatures.kunde,'');assert.equal(JSON.parse(record.rapportStateJson).__signatures.kunde,'old-signature');
+});
+test('Archiving preserves signed completed state',()=>{const wf=require('../rapport-workflow.js');const result=wf.archiveState({rapportStateJson:JSON.stringify({__signatures:{kunde:'signed'},field_1:{checked:true}})},true,['field_1']);assert.equal(result.__archived,true);assert.equal(result.__signatures.kunde,'signed');assert.equal(result.field_1.checked,true);});
+test('Sync cursor compares server nanoseconds and never moves backwards',()=>{
+ const wf=require('../rapport-workflow.js');assert.deepEqual(wf.nextCursor({seconds:4,nanoseconds:8},[{data:{updatedAt:{seconds:4,nanoseconds:7}}},{data:{updatedAt:{seconds:4,nanoseconds:9}}}]),{seconds:4,nanoseconds:9});
+});
+test('Archived local data cannot be saved',()=>{const c=saveContext();const old=c.getDB();old.R.__archived=true;c.putDB(old);c.localSaveWithChangeLog();assert.match(c.error,/Archivierter/);assert.equal(c.marked,undefined);});
+test('First Monteur sync requests active assigned rapports only',async()=>{
+ let queryArgs;const c=context({cloudUser:{uid:'M'},cloudProfile:{role:'monteur'},db:{},where:(...x)=>x,collectionGroup:()=>({}),query:(...x)=>(queryArgs=x),getSyncMeta:()=>({}),getDocs:async()=>({forEach:()=>{}})});
+ load(c,'async function accessibleServerRapports(','function applyServerToLocal');await c.accessibleServerRapports({incremental:true});assert.deepEqual(Array.from(queryArgs[1]),['accessUids','array-contains','M']);assert.equal(queryArgs[2][0],'status');
+});
+test('Later sync uses inclusive server timestamp so equal-timestamp updates are not missed',async()=>{
+ let queryArgs;const c=context({cloudUser:{uid:'M'},cloudProfile:{role:'monteur'},db:{},Timestamp:class{constructor(seconds,nanoseconds){this.seconds=seconds;this.nanoseconds=nanoseconds;}},where:(...x)=>x,collectionGroup:()=>({}),query:(...x)=>(queryArgs=x),getSyncMeta:()=>({downloadCursor:{seconds:12,nanoseconds:34}}),getDocs:async()=>({forEach:()=>{}})});
+ load(c,'async function accessibleServerRapports(','function applyServerToLocal');await c.accessibleServerRapports({incremental:true});assert.equal(queryArgs[2][0],'updatedAt');assert.equal(queryArgs[2][1],'>=');assert.equal(queryArgs[2][2].nanoseconds,34);
 });
