@@ -100,5 +100,11 @@ zweiter SYNC mit Download. Mit Mustermax ebenfalls Anmeldung, getrennte Rapportl
 Upload und Abschlussstatus geprüft. Ein ungespeicherter Entwurf wurde in einem
 neu geöffneten Online-Fenster wiederhergestellt, gespeichert und synchronisiert.
 Keine Browserfehler im geprüften Fenster. Zwei gekennzeichnete Testrapporte bleiben
-für die anschliessende Admin-Prüfung erhalten. Admin-/Drive-Onlineprüfung stehen
-noch aus.
+für die Admin-Prüfung erhalten. Online als Admin geprüft: Backup-Hinweis,
+Archivierung des fertigen Mustermax-Testrapports (Revision 4), Wiederöffnung
+(Revision 5), gesicherte Stände 3 und 4, Übergabe Peter → Mustermax → Peter
+(Revisionen 2 und 3). Die sechs vorher vorhandenen Rapporte wurden nicht verändert.
+Drive-Onlineprüfung: Google-Anmeldung und Kontoprüfung erfolgreich, danach
+Netzwerkfehler beim Endpunkt /files im eingebauten Browser. Kein erfolgreiches
+Backup bestätigt. PDF-Download meldet „PDF erstellt“, Rapport-Datei lässt sich
+exportieren; keine Browserfehler. Drive-Test in Chrome/Safari bleibt erforderlich.
