@@ -10,7 +10,9 @@
     if(!activeLocalUid){indicator.textContent='';return;}
     const state=getDB()[currentOrderKey];
     document.querySelectorAll('.sheet').forEach(el=>el.inert=!!state?.__accessRevoked||RapportWorkflow.isArchived(state));
-    let text=state?.__accessRevoked?'Übergeben – lokale Kopie gesperrt':formDirty?'Ungespeicherte Änderungen':!state?'Neuer Rapport':RapportWorkflow.isArchived(state)?'Archiviert':window.rapportPendingChanges?.()?.[currentOrderKey]||!state.__serverRevision?'Nur lokal gespeichert – SYNC ausstehend':'Synchronisiert';
+    const pending=!!(window.rapportPendingChanges?.()?.[currentOrderKey]||!state?.__serverRevision);
+    indicator.dataset.state=state?.__accessRevoked||RapportWorkflow.isArchived(state)?'locked':formDirty?'dirty':!state?'new':pending?'pending':'synced';
+    let text=state?.__accessRevoked?'Übergeben – lokale Kopie gesperrt':formDirty?'Änderungen noch nicht gespeichert · Bitte Speichern':!state?'Neuer Rapport · Noch nicht gespeichert':RapportWorkflow.isArchived(state)?'Archiviert':pending?'Nur auf diesem Gerät gespeichert · Bitte SYNC drücken':'Synchronisiert · In Firebase gespeichert';
     let currentBackup=false;
     try{const receipt=JSON.parse(localStorage.getItem('equansDriveBackupV1_'+activeLocalUid+'_'+currentOrderKey)||'null');
       currentBackup=!!state?.__savedAt&&receipt?.savedAt===state.__savedAt&&!formDirty&&Array.isArray(receipt.files)&&receipt.files.length===2;
@@ -18,7 +20,7 @@
     }catch(_){}
     const needsBackup=window.rapportIsAdmin?.()&&!state?.__accessRevoked&&(state?.__status==='fertig'||RapportWorkflow.isArchived(state))&&!currentBackup;
     if(needsBackup)text+=' · Hinweis: Auf diesem Gerät ist kein aktuelles Drive-Backup für diesen Abschluss bestätigt. Bitte unter Admin → Backup / Dateien prüfen. Manuell oder auf anderen Geräten erstellte Backups werden hier nicht erkannt.';
-    indicator.style.background=needsBackup?'#fff4cf':'#eef5f1';
+    indicator.style.background=needsBackup||formDirty||pending?'#fff8e8':'#eef5f1';
     indicator.setAttribute('role','status');
     indicator.textContent=text;
   };
