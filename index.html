@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="de"><head>
-<meta content="width=920, initial-scale=1, minimum-scale=0.25, maximum-scale=5, user-scalable=yes" name="viewport"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta charset="utf-8"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#244656"/>
@@ -1600,7 +1600,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 }
 </style>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 
 <style id="v13-design-alpen-final">
 /* 🔴🔴🔴 NICHT ÄNDERN: FUNKTIONIERENDE V10/V12-LOGIK 🔴🔴🔴
@@ -1946,7 +1946,7 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <button class="pdf-main" onclick="printSelectedPages()" type="button">PDF erstellen</button>
 </div>
 </details>
-<button class="delete-order action-delete" onclick="deleteSelectedOrder()" type="button">Auftrag löschen</button>
+<button class="delete-order action-delete" onclick="deleteSelectedOrder()" type="button">Lokal entfernen</button>
 <span class="save-status" id="saveStatus"></span>
 <input accept=".rapport,application/json" id="rapportImportInput" onchange="importRapportFile(event)" type="file"/>
 <input accept=".equans,.json,application/json" id="masterImportInput" onchange="importMasterBackup(event)" style="display:none" type="file"/>
@@ -2113,16 +2113,17 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <div class="admin-table-wrap"><table id="adminSyncTable" class="admin-data-table"><thead><tr><th>Mitarbeiter</th><th>Rolle</th><th>Sync-Version</th><th>Letzter Sync</th><th>Rapporte</th></tr></thead><tbody></tbody></table></div>
 <div class="admin-note">Die Sync-Version ist pro Benutzer. Die Revision eines einzelnen RPT wird separat in der Rapportübersicht angezeigt.</div>
 </div>
-<div class="admin-section"><h3>Konflikte / Hinweise</h3><div id="adminConflictInfo" class="admin-note">Keine zentral gespeicherten Konflikte gefunden. Lokale Sync-Konflikte werden beim betroffenen Benutzer nicht überschrieben.</div></div>
+<div class="admin-section"><h3>Konflikte / Hinweise</h3><div id="adminConflictInfo" class="admin-note">Hier erfolgt keine zentrale Konfliktprüfung. Konflikte werden beim manuellen SYNC auf dem jeweiligen Gerät angezeigt; betroffene Änderungen bleiben lokal erhalten.</div></div>
 </div>
 
 <div class="admin-panel" data-admin-panel="dateien">
 <div class="admin-section admin-backup-section"><h3>Backup / Dateien</h3><div class="admin-backup-actions">
 <button type="button" onclick="exportRapportFile()">▧ Rapport exportieren</button>
 <button type="button" onclick="document.getElementById('rapportImportInput').click()">▱ Rapport einlesen</button>
-<button type="button" onclick="exportMasterBackup()">▣ Master erstellen</button>
-<button type="button" onclick="document.getElementById('masterImportInput').click()">▱ Master laden</button>
-</div><div class="admin-backup-note">Bestehende Backup-Funktionen wurden nicht verändert.</div></div>
+<button type="button" onclick="exportMasterBackup()">▣ Lokales Backup erstellen</button>
+<button type="button" onclick="document.getElementById('masterImportInput').click()">▱ Lokales Backup laden</button>
+<button id="legacyBackupBtn" type="button">Alten lokalen Speicher sichern</button>
+</div><div class="admin-backup-note">Dieses Backup enthält nur die auf diesem Gerät für den angemeldeten Benutzer gespeicherten Rapporte. Es ist kein vollständiges Firebase-Backup. Ältere, noch keinem Benutzer zugeordnete lokale Daten bleiben unverändert erhalten und können mit „Alten lokalen Speicher sichern“ heruntergeladen werden.</div></div>
 </div>
 
 </div></div>
@@ -2441,6 +2442,46 @@ body:has(#legendePage:target) #signatureBlock{display:none!important}
 <script>
 // 🔴🔴🔴 NICHT ÄNDERN – FUNKTIONIERENDER RAPPORT-/LOCAL-STAND. NUR ERWEITERN, NICHT ERSETZEN. 🔴🔴🔴
 const ORDER_DB_KEY='equansRapportOrdersV13';
+let activeLocalUid='';
+let formDirty=false;
+window.masterStorageKey=()=> 'equansMasterDataV1_'+(activeLocalUid||'signed-out');
+function confirmDiscard(){return !formDirty||confirm('Ungespeicherte Änderungen verwerfen?');}
+window.addEventListener('beforeunload',e=>{if(formDirty){e.preventDefault();e.returnValue='';}});
+document.addEventListener('input',e=>{if(e.target.closest('.sheet'))formDirty=true;});
+document.addEventListener('change',e=>{
+  if(!e.target.closest('.sheet'))return;
+  formDirty=true;
+  const row=e.target.closest('.checkrow');
+  if(row&&row.textContent.includes('Arbeit fertig:')&&e.target.checked){
+    const boxes=[...row.querySelectorAll('input[type="checkbox"]')],i=boxes.indexOf(e.target);
+    if(i>=0&&i<4)boxes[i%2===0?i+1:i-1].checked=false;
+  }
+});
+function preserveRapportMetadata(previous,captured){
+  const result={...captured};
+  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource']){
+    if(previous&&key in previous)result[key]=previous[key];
+  }
+  return result;
+}
+function activateLocalAccount(uid){
+  if(activeLocalUid===uid)return;
+  activeLocalUid=uid||'';
+  if(uid){
+    const key=ORDER_DB_KEY+'_'+uid;
+    if(localStorage.getItem(key)===null){
+      const legacy=JSON.parse(localStorage.getItem(ORDER_DB_KEY)||'{}');
+      const owned=Object.fromEntries(Object.entries(legacy).filter(([,v])=>v.__ownerUid===uid||(v.__accessUids||[]).includes(uid)));
+      localStorage.setItem(key,JSON.stringify(owned));
+    }
+  }
+  if(initialTemplate)applyForm(initialTemplate);
+  const suggestions=document.getElementById('equansMasterOrderSuggestions');if(suggestions)suggestions.innerHTML='';
+  const mobileSuggestions=document.getElementById('equansMasterOrderMobileSuggestions');if(mobileSuggestions){mobileSuggestions.innerHTML='';mobileSuggestions.style.display='none';}
+  currentOrderKey='';currentCreatedAt=new Date().toISOString();formDirty=false;
+  clearSignature?.();ensureRapportId();refreshOrderSelect();updateHeaderInfo();
+}
+
 let initialTemplate=null;
 let currentOrderKey='';
 let currentCreatedAt='';
@@ -2488,13 +2529,17 @@ function captureForm(){
   const d={};
   fields().forEach((x,i)=>{const k=fieldKey(x,i);d[k]=(x.type==='checkbox')?{checked:x.checked}:{value:x.value};});
   d.__materialUnits=[...document.querySelectorAll('.material-unit')].map(x=>x.value);
-  d.__signatures={aussteller:document.getElementById('sigAussteller')?.src||'',kunde:document.getElementById('sigKunde')?.src||'',regieAussteller:document.getElementById('regie_sigAussteller')?.src||'',regieKunde:document.getElementById('regie_sigKunde')?.src||''};
+  d.__signatures={aussteller:document.getElementById('sigAussteller')?.getAttribute('src')||'',kunde:document.getElementById('sigKunde')?.getAttribute('src')||'',regieAussteller:document.getElementById('regie_sigAussteller')?.getAttribute('src')||'',regieKunde:document.getElementById('regie_sigKunde')?.getAttribute('src')||''};
+  const completion=document.querySelector('#rapportPage .checkrow');
+  const checks=completion?[...completion.querySelectorAll('input[type="checkbox"]')]:[];
+  d.__status=checks[2]?.checked&&!checks[3]?.checked?'fertig':'in_bearbeitung';
   d.__savedAt=new Date().toISOString();
   d.__createdAt=currentCreatedAt||new Date().toISOString();
   return d;
 }
 function applyForm(d){
   fields().forEach((x,i)=>{const k=fieldKey(x,i);if(!(k in d))return;if(x.type==='checkbox')x.checked=!!d[k].checked;else x.value=d[k].value??'';});
+  formDirty=false;
   const materialUnits=[...document.querySelectorAll('.material-unit')];
   materialUnits.forEach((x,i)=>x.value=(d.__materialUnits&&d.__materialUnits[i])||'');
   // Kompatibilität zu älteren gespeicherten Versionen mit einem kombinierten Ort/Datum-Feld.
@@ -2509,8 +2554,15 @@ function applyForm(d){
   const ra=document.getElementById('regie_sigAussteller'),rk=document.getElementById('regie_sigKunde');
   if(ra)ra.src=d.__signatures?.regieAussteller||''; if(rk)rk.src=d.__signatures?.regieKunde||'';
 }
-function getDB(){try{return JSON.parse(localStorage.getItem(ORDER_DB_KEY)||'{}')}catch(e){return {}}}
-function putDB(db){localStorage.setItem(ORDER_DB_KEY,JSON.stringify(db))}
+function getDB(){
+  if(!activeLocalUid)return {};
+  const raw=localStorage.getItem(ORDER_DB_KEY+'_'+activeLocalUid);
+  try{return JSON.parse(raw||'{}')}catch(e){throw new Error('Lokaler Speicher beschädigt. Nicht überschreiben; zuerst sichern.');}
+}
+function putDB(db){
+  if(!activeLocalUid)throw new Error('Bitte zuerst anmelden.');
+  localStorage.setItem(ORDER_DB_KEY+'_'+activeLocalUid,JSON.stringify(db));
+}
 function referenceValue(){return (document.querySelector('input[name="ref"]')?.value||'').trim()}
 function setStatus(t){const e=document.getElementById('saveStatus');if(e){e.textContent=t;setTimeout(()=>{if(e.textContent===t)e.textContent=''},2500)}}
 function refreshOrderSelect(prefer=''){
@@ -2551,10 +2603,11 @@ function saveOrder(){
   currentCreatedAt=currentCreatedAt||db[id]?.__createdAt||new Date().toISOString();
   if(db[id]&&currentOrderKey!==id&&!confirm('Rapport „'+id+'“ ist bereits gespeichert. Aktualisieren?'))return;
   if(currentOrderKey&&currentOrderKey!==id&&db[currentOrderKey])delete db[currentOrderKey];
-  const data=captureForm();data.__rapportId=id;data.__reference=ref;data.__version=(db[id]?.__version||0)+1;db[id]=data;
-  putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();setStatus('Gespeichert ✓');
+  const data=preserveRapportMetadata(db[id],captureForm());data.__rapportId=id;data.__reference=ref;data.__version=(db[id]?.__version||0)+1;db[id]=data;
+  putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();formDirty=false;setStatus('Gespeichert ✓');return true;
 }
 function loadSelectedOrder(silent=false){
+  if(!confirmDiscard()){document.getElementById('orderSelect').value=currentOrderKey;return;}
   const sel=document.getElementById('orderSelect'),key=sel?.value;if(!key){if(!silent)alert('Bitte zuerst einen Auftrag auswählen.');return;}
   const db=getDB(),data=db[key];if(!data){refreshOrderSelect();alert('Auftrag nicht gefunden.');return;}
   applyForm(data);currentOrderKey=key;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();clearSignature?.();location.hash='#rapportPage';syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();setStatus('Geladen ✓');
@@ -2569,21 +2622,23 @@ function deleteSelectedOrder(){
   const key=sel?.value||currentOrderKey;
   if(!key){alert('Bitte zuerst einen gespeicherten Auftrag auswählen.');return;}
   const label=(sel&&sel.value&&sel.options[sel.selectedIndex])?sel.options[sel.selectedIndex].text:key;
-  if(!confirm('ACHTUNG – Auftrag wirklich löschen?\n\n'+label+'\n\nDer gespeicherte Auftrag wird endgültig gelöscht.\nDieser Vorgang kann nicht rückgängig gemacht werden.'))return;
+  if(!confirm('Lokale Kopie wirklich entfernen?\n\n'+label+'\n\nNur die lokale Kopie wird entfernt. Nicht synchronisierte Änderungen gehen verloren.\nEin Cloud-Rapport bleibt erhalten und wird beim nächsten SYNC erneut geladen.'))return;
   const db=getDB();delete db[key];putDB(db);
-  if(currentOrderKey===key)currentOrderKey='';
+  window.rapportLocalRemoved?.(key);
+  if(currentOrderKey===key){if(initialTemplate)applyForm(initialTemplate);currentOrderKey='';ensureRapportId();updateHeaderInfo();}
   refreshOrderSelect(); if(sel)sel.value='';
   setStatus('Gelöscht');
 }
 function exportRapportFile(){
   const id=ensureRapportId();
   currentCreatedAt=currentCreatedAt||getDB()[id]?.__createdAt||new Date().toISOString();
-  const data=captureForm();data.__rapportId=id;data.__reference=referenceValue();data.__version=(getDB()[id]?.__version||0)+1;data.__fileType='EQUANS_RAPPORT';data.__formatVersion=1;
+  const data=preserveRapportMetadata(getDB()[id],captureForm());data.__rapportId=id;data.__reference=referenceValue();data.__version=(getDB()[id]?.__version||0)+1;data.__fileType='EQUANS_RAPPORT';data.__formatVersion=1;
   const db=getDB();db[id]=data;putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=id+'.rapport';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('Rapport-Datei erstellt ✓');
+  a.href=url;a.download=id+'.rapport';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);window.rapportLocalSaved?.(id);formDirty=false;setStatus('Rapport-Datei erstellt ✓');
 }
 function importRapportFile(ev){
+  if(!confirmDiscard()){ev.target.value='';return;}
   const input=ev.target,file=input.files?.[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=()=>{try{
@@ -2595,7 +2650,7 @@ function importRapportFile(ev){
       const msg='Rapport „'+id+'“ ist bereits vorhanden.'+(newV&&oldV?'\nVorhandene Version: '+oldV+'\nEingelesene Version: '+newV:'')+'\n\nDiesen Auftrag aktualisieren?';
       if(!confirm(msg)){input.value='';return;}
     }
-    db[id]=data;putDB(db);applyForm(data);addLocalUserToPersonal();currentOrderKey=id;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();refreshOrderSelect(id);syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();location.hash='#rapportPage';setStatus('Eingelesen ✓');
+    db[id]=data;putDB(db);window.rapportLocalSaved?.(id);applyForm(data);addLocalUserToPersonal();currentOrderKey=id;currentCreatedAt=data.__createdAt||data.__savedAt||new Date().toISOString();refreshOrderSelect(id);syncBeiblattHeaders?.();updateHeaderInfo();cleanEmptySignatureImages?.();location.hash='#rapportPage';setStatus('Eingelesen ✓');
   }catch(e){alert('Diese Datei konnte nicht eingelesen werden.\n'+e.message);}finally{input.value='';}};
   reader.readAsText(file);
 }
@@ -2604,7 +2659,7 @@ function exportMasterBackup(){
   const id=rapportIdValue();
   if(id){
     currentCreatedAt=currentCreatedAt||getDB()[id]?.__createdAt||new Date().toISOString();
-    const db=getDB(), data=captureForm();
+    const db=getDB(), data=preserveRapportMetadata(getDB()[id],captureForm());
     data.__rapportId=id;data.__reference=referenceValue();data.__version=(db[id]?.__version||0)+1;db[id]=data;putDB(db);currentOrderKey=id;
   }
   const now=new Date();
@@ -2614,7 +2669,7 @@ function exportMasterBackup(){
   };
   const blob=new Blob([JSON.stringify(master,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='EQUANS_Master.equans';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  refreshOrderSelect(id||'');updateHeaderInfo();setStatus('Master gesichert ✓');
+  refreshOrderSelect(id||'');updateHeaderInfo();if(id)window.rapportLocalSaved?.(id);formDirty=false;setStatus('Lokales Backup gesichert ✓');
 }
 function importMasterBackup(ev){
   const input=ev.target,file=input.files?.[0];if(!file)return;
@@ -2645,6 +2700,7 @@ function importMasterBackup(ev){
       if(iv>lv || (iv===lv && it>lt))local[id]=data;
     });
     putDB(local);
+    Object.keys(incoming).forEach(id=>window.rapportLocalSaved?.(id));
     if(who){localStorage.setItem(LOCAL_USER_KEY,who);updateLocalUserHeader();}
     refreshOrderSelect(currentOrderKey);setStatus('Master eingelesen ✓');
     alert('Master-Backup wurde eingelesen.\n\nNeue Aufträge: '+add+'\nAktualisierte Aufträge: '+update+'\nNicht überschrieben: '+keep);
@@ -2797,11 +2853,11 @@ window.addEventListener('beforeprint', cleanEmptySignatureImages);
   window.transferSignature=function(){
     const data=canvas.toDataURL('image/png');
     const img=currentSignatureImage();
-    if(img) img.src=data;
+    if(img){img.src=data;formDirty=true;}
   };
   window.deleteTransferredSignature=function(){
     const img=currentSignatureImage();
-    if(img){img.removeAttribute('src'); img.src='';}
+    if(img){img.removeAttribute('src');formDirty=true;}
   };
 })();
 
@@ -3228,54 +3284,6 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
-<!-- GOOGLE LOGIN TEST ONLY -->
-<style id="google-login-test-style">
-#googleLoginTest{position:fixed;right:14px;bottom:14px;z-index:99998;background:#fff;border:1px solid #cbd5df;border-radius:10px;padding:10px;box-shadow:0 4px 18px #0002;font:12px Arial,sans-serif}
-#googleLoginUser{margin-top:6px;font-weight:700}
-#googleLoginLogout{display:none;margin-top:6px}
-@media print{#googleLoginTest{display:none!important}}
-</style>
-<div id="googleLoginTest" class="no-print">
-  <div id="googleSignIn"></div>
-  <div id="googleLoginUser"></div>
-  <button id="googleLoginLogout" type="button">Abmelden</button>
-</div>
-<script id="google-login-test-js">
-(function(){
- const CLIENT_ID='916807708145-svmug44l4usafautgf70vfoapisuno33.apps.googleusercontent.com';
- function decodeJwt(t){
-   try{
-     let p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-     p += '='.repeat((4-p.length%4)%4);
-     return JSON.parse(decodeURIComponent(atob(p).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-   }catch(e){ return null; }
- }
- function setUser(p){
-   const b=document.getElementById('googleSignIn'), u=document.getElementById('googleLoginUser'), o=document.getElementById('googleLoginLogout');
-   if(p){ b.style.display='none'; u.textContent='Angemeldet: '+(p.name||p.email||'Google Benutzer'); o.style.display='inline-block'; }
-   else{ b.style.display='block'; u.textContent=''; o.style.display='none'; }
- }
- window.addEventListener('load', function(){
-   if(!(window.google && google.accounts && google.accounts.id)){
-     document.getElementById('googleLoginUser').textContent='Google Login konnte nicht geladen werden.';
-     return;
-   }
-   google.accounts.id.initialize({
-     client_id: CLIENT_ID,
-     callback: function(r){ const p=decodeJwt(r.credential); if(p) setUser(p); }
-   });
-   google.accounts.id.renderButton(document.getElementById('googleSignIn'), {
-     type:'standard', theme:'outline', size:'large', text:'signin_with'
-   });
-   document.getElementById('googleLoginLogout').addEventListener('click', function(){
-     google.accounts.id.disableAutoSelect();
-     setUser(null);
-   });
- });
-})();
-</script>
-
-
 <script type="module" id="equans-firebase-cloud-v2">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import {
@@ -3283,7 +3291,7 @@ import {
   createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, getDocs, collection, collectionGroup,
+  getFirestore, doc, getDoc, setDoc, getDocs, collection, collectionGroup, runTransaction,
   query, where, serverTimestamp, deleteDoc, deleteField
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
@@ -3361,8 +3369,11 @@ function markDirty(id){
   meta.changes[id]={at:new Date().toISOString(),baseRevision:Number(local.__serverRevision||0)};
   putSyncMeta(meta);
 }
-function clearDirty(id,serverRevision){
-  const meta=getSyncMeta(); delete meta.changes[id]; putSyncMeta(meta);
+function clearDirty(id,serverRevision,sentAt){
+  const meta=getSyncMeta();
+  if(!meta.changes[id]||meta.changes[id].at===sentAt)delete meta.changes[id];
+  else meta.changes[id].baseRevision=serverRevision;
+  putSyncMeta(meta);
   const ldb=window.getDB?.()||{}; if(ldb[id]){ldb[id].__serverRevision=serverRevision;ldb[id].__ownerUid=ldb[id].__ownerUid||cloudUser.uid;window.putDB?.(ldb)}
 }
 function masterOrderSource(nr,master){
@@ -3381,7 +3392,7 @@ async function verifyProfile(user){
 function refreshMasterOrderSuggestions(masterData=null){
   let master=masterData;
   if(!master){
-    try{master=JSON.parse(localStorage.getItem("equansMasterDataV1")||"null")}catch(_){master=null}
+    try{master=JSON.parse(localStorage.getItem(window.masterStorageKey())||"null")}catch(_){master=null}
   }
   const dl=document.getElementById("equansMasterOrderSuggestions");
   if(!dl)return;
@@ -3408,8 +3419,8 @@ async function readMaster(){
   // und auf neuen Handys/PCs. Beim Tippen gibt es keine Firebase-Abfrage.
   const s=await getDoc(doc(db,"admin","system","masterData","data"));
   const x=s.exists()?s.data():{version:0,auftraege:[]};
-  localStorage.setItem("equansMasterDataV1",JSON.stringify(x));
-  localStorage.setItem("equansMasterDataV1_syncedAt",new Date().toISOString());
+  localStorage.setItem(window.masterStorageKey(),JSON.stringify(x));
+  localStorage.setItem(window.masterStorageKey()+"_syncedAt",new Date().toISOString());
   refreshMasterOrderSuggestions(x);
   return x;
 }
@@ -3419,7 +3430,7 @@ async function readMaster(){
 // und neuen PCs gleich funktioniert. Beim Tippen KEINE Firebase-Abfrage.
 function localMasterOrderNumbers(){
   let master=null;
-  try{master=JSON.parse(localStorage.getItem("equansMasterDataV1")||"null")}catch(_){master=null}
+  try{master=JSON.parse(localStorage.getItem(window.masterStorageKey())||"null")}catch(_){master=null}
   const list=Array.isArray(master?.auftraege)?master.auftraege:[];
   const out=[],seen=new Set();
   for(const x of list){
@@ -3477,6 +3488,8 @@ function applyServerToLocal(row,localDB,meta){
   }
   if(!x.rapportStateJson)return {conflict:false,id,skipped:true};
   const st=JSON.parse(x.rapportStateJson);
+  // Old cloud records omitted signatures. Never erase a locally retained signature.
+  if(!Object.prototype.hasOwnProperty.call(st,'__signatures')&&local?.__signatures)st.__signatures=local.__signatures;
   st.__rapportId=id;
   st.__serverRevision=serverRev;
   st.__ownerUid=x.ownerUid||row.ownerUid;
@@ -3487,9 +3500,13 @@ function applyServerToLocal(row,localDB,meta){
 }
 async function syncAll(){
   if(!cloudUser){showLogin("Bitte zuerst anmelden.");return}
+  if(syncBtn?.disabled)return;
+  if(formDirty){alert("Bitte den geöffneten Rapport zuerst lokal speichern oder Änderungen verwerfen.");return;}
   if(syncBtn)syncBtn.disabled=true;
+  const syncUid=cloudUser.uid;
+  const checkSession=()=>{if(cloudUser?.uid!==syncUid)throw new Error('Benutzer während SYNC gewechselt. Bitte erneut synchronisieren.');};
   setCloudHeader("SYNC läuft …");
-  const meta=getSyncMeta(), localDB=window.getDB?.()||{};
+  let meta=getSyncMeta(), localDB=window.getDB?.()||{};
   let master={version:0,auftraege:[]},serverRows=[],downloaded=0,uploaded=0,conflicts=[],stage="Start";
   try{
     stage="MasterData Firebase → lokal laden";
@@ -3499,6 +3516,8 @@ async function syncAll(){
     stage="zugängliche Rapporte lesen";
     serverRows=await accessibleServerRapports();
 
+    checkSession();
+    meta=getSyncMeta();localDB=window.getDB?.()||{};
     stage="Firebase → lokal prüfen";
     for(const row of serverRows){
       const r=applyServerToLocal(row,localDB,meta);
@@ -3508,41 +3527,36 @@ async function syncAll(){
 
     stage="lokale Änderungen hochladen";
     for(const [id,ch] of Object.entries({...meta.changes})){
+      checkSession();
       const local=(window.getDB?.()||{})[id]; if(!local)continue;
       const ownerUid=local.__ownerUid||cloudUser.uid;
       const r=doc(db,"monteure",ownerUid,"rapporte",id);
 
-      stage="RPT "+id+" Serverstand lesen";
-      const server=await getDoc(r);
-      const state={...local}; delete state.__signatures;
-      const nr=orderNumberFromState(state);
-
-      if(!server.exists()){
-        if(ownerUid!==cloudUser.uid && cloudProfile?.role!=="admin"){
-          conflicts.push({id,base:ch.baseRevision,serverRev:"fehlt"});continue
+      stage="RPT "+id+" sicher synchronisieren";
+      const state={...local},nr=orderNumberFromState(state);
+      const json=JSON.stringify(state);
+      if(new TextEncoder().encode(json).length>900000)throw new Error("Rapport inklusive Unterschriften ist zu gross für Cloud-Speicherung. Lokales Backup erstellen.");
+      const result=await runTransaction(db,async tx=>{
+        const server=await tx.get(r),base=Number(ch.baseRevision||0);
+        if(!server.exists()){
+          if(base>0||(ownerUid!==cloudUser.uid&&cloudProfile?.role!=="admin"))return {conflict:true,id,base,serverRev:"fehlt / verschoben"};
+          tx.set(r,{rptId:id,ownerUid,createdBy:cloudUser.uid,accessUids:[ownerUid],revision:1,
+            status:state.__status||"in_bearbeitung",orderNumber:nr,orderSource:masterOrderSource(nr,master),
+            reference:state.__reference||"",rapportStateJson:json,updatedBy:cloudUser.uid,updatedByName:displayName(),
+            createdAt:serverTimestamp(),updatedAt:serverTimestamp(),deleted:false});
+          return {revision:1};
         }
-        stage="RPT "+id+" neu schreiben";
-        await setDoc(r,{
-          rptId:id,ownerUid:ownerUid,createdBy:cloudUser.uid,
-          accessUids:[ownerUid],revision:1,status:"in_bearbeitung",
-          orderNumber:nr,orderSource:masterOrderSource(nr,master),
-          reference:state.__reference||"",rapportStateJson:JSON.stringify(state),
-          updatedBy:cloudUser.uid,updatedByName:displayName(),
-          createdAt:serverTimestamp(),updatedAt:serverTimestamp(),deleted:false
-        });
-        clearDirty(id,1); uploaded++;
-      }else{
-        const x=server.data(),serverRev=Number(x.revision||0),base=Number(ch.baseRevision||0);
-        if(serverRev!==base){conflicts.push({id,base,serverRev});continue}
-        stage="RPT "+id+" Revision "+serverRev+" → "+(serverRev+1)+" schreiben";
-        await setDoc(r,{
-          rapportStateJson:JSON.stringify(state),revision:serverRev+1,
-          orderNumber:nr,orderSource:masterOrderSource(nr,master),
-          reference:state.__reference||"",status:x.status||"in_bearbeitung",
-          updatedBy:cloudUser.uid,updatedByName:displayName(),updatedAt:serverTimestamp()
-        },{merge:true});
-        clearDirty(id,serverRev+1); uploaded++;
-      }
+        const x=server.data(),serverRev=Number(x.revision||0);
+        if(serverRev!==base)return {conflict:true,id,base,serverRev};
+        tx.set(r,{rapportStateJson:json,revision:serverRev+1,orderNumber:nr,orderSource:masterOrderSource(nr,master),
+          reference:state.__reference||"",status:state.__status||x.status||"in_bearbeitung",
+          updatedBy:cloudUser.uid,updatedByName:displayName(),updatedAt:serverTimestamp()},{merge:true});
+        return {revision:serverRev+1};
+      });
+      if(result.conflict){if(!conflicts.some(c=>c.id===id))conflicts.push(result);continue;}
+      checkSession();
+      clearDirty(id,result.revision,ch.at);uploaded++;
+
     }
 
     if(conflicts.length===0){
@@ -3553,10 +3567,16 @@ async function syncAll(){
       const m=getSyncMeta();m.version=oldV+1;putSyncMeta(m);
     }
 
+    checkSession();
     originalRefreshOrderSelect?.();
+    // Refresh the open form only if it has not been edited while SYNC was running.
+    if(!formDirty&&currentOrderKey&&!getSyncMeta().changes[currentOrderKey]){
+      const latest=window.getDB?.()?.[currentOrderKey];
+      if(latest){applyForm(latest);syncBeiblattHeaders?.();updateHeaderInfo();}
+    }
     if(conflicts.length){
       setCloudHeader("SYNC Konflikt: "+conflicts.length);
-      window.setStatus?.("SYNC Konflikt – nichts überschrieben");
+      window.setStatus?.("SYNC teilweise erfolgt – Konflikte nicht überschrieben");
       showSyncError("Konflikt erkannt. Lokale Änderungen bleiben erhalten. "+conflicts.map(c=>c.id+": lokal Basis "+c.base+" / Firebase "+c.serverRev).join(" | "));
     }else{
       setCloudHeader("SYNC ✓ "+downloaded+"↓ "+uploaded+"↑");
@@ -3572,7 +3592,8 @@ async function syncAll(){
   }
 }
 function localSaveWithChangeLog(){
-  originalSaveOrder?.();
+  try{if(originalSaveOrder?.()!==true)return;}
+  catch(e){showSyncError('Lokal speichern fehlgeschlagen: '+(e.message||e));return;}
   const id=window.ensureRapportId?.();
   const ldb=window.getDB?.()||{};
   if(ldb[id]){
@@ -3582,6 +3603,8 @@ function localSaveWithChangeLog(){
   window.setStatus?.("Lokal gespeichert ✓");
   setCloudHeader("Änderungen lokal");
 }
+window.rapportLocalSaved=id=>markDirty(id);
+window.rapportLocalRemoved=id=>{const meta=getSyncMeta();delete meta.changes[id];putSyncMeta(meta);};
 function localDeleteOnly(){originalDeleteSelectedOrder?.()}
 function localNew(){originalNewOrder?.()}
 function localLoad(silent=false){originalLoadSelectedOrder?.(silent)}
@@ -3611,6 +3634,15 @@ registerSaveBtn?.addEventListener("click",async()=>{
 });
 
 function adminOnly(){return !!cloudUser&&cloudProfile?.role==="admin"}
+document.getElementById('legacyBackupBtn')?.addEventListener('click',()=>{
+  if(!adminOnly())return;
+  const raw=localStorage.getItem(ORDER_DB_KEY);
+  if(!raw){alert('Auf diesem Gerät ist kein älterer lokaler Speicher vorhanden.');return;}
+  const archive={__fileType:'EQUANS_MASTER',__formatVersion:1,__exportedAt:new Date().toISOString(),userName:'',orders:JSON.parse(raw)};
+  const blob=new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='EQUANS_Lokaler_Altbestand.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
 let adminSelectedRptId="";
 
 function adminUserName(uid){
@@ -3705,7 +3737,13 @@ function selectAdminRpt(id){
 }
 function openAdminRptById(id){
   const x=adminOrderRows.find(r=>r.id===id);if(!x||!x.rapportStateJson)return;
+  if(!confirmDiscard())return;
+  if(getSyncMeta().changes[id]){alert('Dieser Rapport enthält lokale Änderungen. Bitte zuerst synchronisieren oder ein lokales Backup erstellen.');return;}
   const state=JSON.parse(x.rapportStateJson);state.__ownerUid=x.ownerUid;state.__serverRevision=Number(x.revision||0);
+  state.__accessUids=x.accessUids||[];
+  const previous=window.getDB?.()?.[id];
+  if(!Object.prototype.hasOwnProperty.call(state,'__signatures')&&previous?.__signatures)state.__signatures=previous.__signatures;
+  formDirty=false;
   const ldb=window.getDB?.()||{};ldb[x.id]=state;window.putDB?.(ldb);originalRefreshOrderSelect?.(x.id);
   const sel=document.getElementById("orderSelect");if(sel)sel.value=x.id;
   adminOverlay?.classList.remove("show");localLoad(true)
@@ -3751,7 +3789,7 @@ async function openAdmin(){
   adminOverlay?.classList.add("show");adminOverlay?.setAttribute("aria-hidden","false");
   await loadAdminUsers();await loadAdminOrders();await Promise.all([loadAdminMaster(),loadAdminSync()])
 }
-adminBtn?.addEventListener("click",openAdmin);
+adminBtn?.addEventListener("click",()=>openAdmin().catch(e=>showSyncError("Admin-Daten konnten nicht geladen werden: "+(e.message||e))));
 document.getElementById("adminCloseBtn")?.addEventListener("click",()=>{adminOverlay?.classList.remove("show");adminOverlay?.setAttribute("aria-hidden","true")});
 document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
@@ -3790,15 +3828,22 @@ async function adminAssignOrder(transfer){
   if(!row||!targetUid){if(st)st.textContent="Zuerst Rapport mit «Wählen» markieren und Ziel-Monteur auswählen.";return}
   const r=doc(db,"monteure",row.ownerUid,"rapporte",row.id),access=new Set(row.accessUids||[]);access.add(targetUid);
   if(transfer){
-    const oldSnap=await getDoc(r),data=oldSnap.data(),newRef=doc(db,"monteure",targetUid,"rapporte",row.id);
-    data.ownerUid=targetUid;data.accessUids=[...access].filter(x=>x!==row.ownerUid);if(!data.accessUids.includes(targetUid))data.accessUids.unshift(targetUid);
-    await setDoc(newRef,{...data,updatedAt:serverTimestamp()});await deleteDoc(r)
+    if(targetUid===row.ownerUid){if(st)st.textContent="Dieser Monteur ist bereits Eigentümer.";return;}
+    const newRef=doc(db,"monteure",targetUid,"rapporte",row.id);
+    await runTransaction(db,async tx=>{
+      const oldSnap=await tx.get(r),existing=await tx.get(newRef);
+      if(!oldSnap.exists()||existing.exists())throw new Error("Übergabe abgebrochen: Quelle fehlt oder Ziel existiert bereits. Übersicht neu öffnen.");
+      const data=oldSnap.data();data.ownerUid=targetUid;
+      data.accessUids=[...new Set([...(data.accessUids||[]),targetUid])].filter(x=>x!==row.ownerUid);
+      data.revision=Number(data.revision||0)+1;
+      tx.set(newRef,{...data,updatedAt:serverTimestamp()});tx.delete(r);
+    })
   }else await setDoc(r,{accessUids:[...access],updatedAt:serverTimestamp()},{merge:true});
   if(st)st.textContent=transfer?"Rapport erfolgreich übergeben ✓":"Monteur zusätzlich freigegeben ✓";
   adminSelectedRptId="";await loadAdminOrders();await loadAdminSync()
 }
-document.getElementById("adminAssignAddBtn")?.addEventListener("click",()=>adminAssignOrder(false));
-document.getElementById("adminAssignTransferBtn")?.addEventListener("click",()=>adminAssignOrder(true));
+document.getElementById("adminAssignAddBtn")?.addEventListener("click",()=>adminAssignOrder(false).catch(e=>showSyncError(e.message||e)));
+document.getElementById("adminAssignTransferBtn")?.addEventListener("click",()=>adminAssignOrder(true).catch(e=>showSyncError(e.message||e)));
 
 
 // =========================================================
@@ -4089,14 +4134,14 @@ diagnoseCopyBtn?.addEventListener("click",async()=>{try{await navigator.clipboar
 emailBtn?.addEventListener("click",async()=>{try{if(loginStatus)loginStatus.textContent="Anmeldung wird geprüft …";const email=loginEmailValue(userInput?.value),password=passwordInput?.value||"";if(!email||!password)throw new Error("Benutzername und Passwort eingeben.");await signInWithEmailAndPassword(auth,email,password)}catch(e){if(loginStatus)loginStatus.textContent="Login-Fehler: "+(e.code||e.message)}});
 googleBtn?.addEventListener("click",async()=>{try{if(loginStatus)loginStatus.textContent="Google-Anmeldung wird geöffnet …";await signInWithPopup(auth,provider)}catch(e){if(loginStatus)loginStatus.textContent="Login-Fehler: "+(e.code||e.message)}});
 passwordInput?.addEventListener("keydown",e=>{if(e.key==="Enter")emailBtn?.click()});
-window.changeLocalUser=async function(){if(cloudUser){if(confirm("Benutzer "+displayName()+" abmelden?"))await signOut(auth)}else showLogin()};
+window.changeLocalUser=async function(){if(cloudUser){if(!confirmDiscard())return;if(syncBtn?.disabled){alert("Bitte laufenden SYNC abwarten.");return;}if(confirm("Benutzer "+displayName()+" abmelden?"))await signOut(auth)}else showLogin()};
 
 onAuthStateChanged(auth,async user=>{
   if(registrationInProgress)return;
   cloudUser=null;cloudProfile=null;
-  if(!user){if(headerUser)headerUser.textContent="–";if(adminBtn)adminBtn.style.display="none";setCloudHeader("Nicht angemeldet");showLogin("Bitte anmelden.");return}
+  if(!user){activateLocalAccount('');if(headerUser)headerUser.textContent="–";if(adminBtn)adminBtn.style.display="none";setCloudHeader("Nicht angemeldet");showLogin("Bitte anmelden.");return}
   try{
-    cloudProfile=await verifyProfile(user);cloudUser=user;
+    cloudProfile=await verifyProfile(user);activateLocalAccount(user.uid);cloudUser=user;refreshMasterOrderSuggestions();
     if(headerUser)headerUser.textContent=displayName();
     if(adminBtn)adminBtn.style.display=cloudProfile.role==="admin"?"inline-block":"none";
     hideLogin();setCloudHeader("Lokal bereit – SYNC manuell");
@@ -4332,3 +4377,23 @@ window.saveLocalUser=function(){};
 </script>
 
 </body></html>
+<style id="rapport-mobile-fix">
+@media screen and (max-width:700px){
+  #pdfToolbar.pdf-toolbar{width:calc(100vw - 12px)!important;min-width:0!important;max-width:100%!important}
+  #pdfToolbar .head-main:after{display:none!important}
+  #pdfToolbar .brand-block{min-width:0!important;gap:10px!important}
+  #pdfToolbar .brand-mark,#pdfToolbar .brand-title{font-size:24px!important}
+  #pdfToolbar .meta-value{white-space:normal!important;overflow-wrap:anywhere}
+  #pdfToolbar .head-main{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+  #pdfToolbar .meta-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #pdfToolbar .head-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+  #pdfToolbar .head-actions>*{max-width:100%!important;min-width:0!important}
+  #pdfToolbar .tabs{display:flex!important;overflow-x:auto!important;max-width:100%!important;white-space:nowrap}
+  #pdfToolbar .tabs a{flex-shrink:0!important}
+  #loginOverlay,.register-overlay{padding:12px!important;box-sizing:border-box}
+  #loginOverlay .login-card{width:100%!important;max-width:390px!important;padding:18px!important}
+  .admin-card{max-width:calc(100vw - 18px)!important}
+  #adminUsersTable{min-width:550px}
+  .admin-section{overflow-x:auto}
+}
+</style>
