@@ -96,6 +96,9 @@ V2 besitzt eigenen Worker-Bereich und Cache. Firebase wird weiterhin gemeinsam g
 Online mit Testkonto Peter geprüft: Anmeldung, erste Synchronisierung ohne Daten,
 klar gekennzeichneter Testrapport „TEST V2 – Peter – 21.09.2026“, lokales Speichern,
 Upload (1 Dokument), Neuladen, erneutes Öffnen mit vollständiger Arbeitsbeschreibung,
-zweiter SYNC mit Download. Die Online-Entwurfsprüfung wurde durch den nativen
-Bestätigungsdialog unterbrochen und gilt noch nicht als abgeschlossen.
-Mustermax-/Admin-/Drive-Onlineprüfung stehen noch aus.
+zweiter SYNC mit Download. Mit Mustermax ebenfalls Anmeldung, getrennte Rapportliste, Speichern,
+Upload und Abschlussstatus geprüft. Ein ungespeicherter Entwurf wurde in einem
+neu geöffneten Online-Fenster wiederhergestellt, gespeichert und synchronisiert.
+Keine Browserfehler im geprüften Fenster. Zwei gekennzeichnete Testrapporte bleiben
+für die anschliessende Admin-Prüfung erhalten. Admin-/Drive-Onlineprüfung stehen
+noch aus.
