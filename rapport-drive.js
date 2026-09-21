@@ -55,7 +55,13 @@
           text.style.cssText='box-sizing:border-box;display:flex;align-items:center;overflow:hidden;max-width:100%;padding:1px 2px;height:'+rect.height+'px;font-family:'+style.fontFamily+';font-size:'+style.fontSize+';font-weight:'+style.fontWeight+';line-height:normal;color:'+style.color+';text-align:'+style.textAlign;
           if(checkbox)text.style.cssText+=';width:'+rect.width+'px;border:1px solid #444;justify-content:center;padding:0';
           if(input.tagName==='TEXTAREA')text.style.cssText+=';display:block;white-space:pre-wrap;overflow-wrap:anywhere';
-          if(input.classList.contains('eldas-material-search'))text.style.cssText+=';font-size:9px;line-height:10px;padding:0 2px;white-space:pre-wrap;overflow-wrap:anywhere';
+          if(input.classList.contains('eldas-material-search')){
+            const measuring=clone.createElement('canvas').getContext('2d'),base=parseFloat(style.fontSize)||10;
+            measuring.font=style.fontWeight+' '+base+'px '+style.fontFamily;
+            const fullWidth=measuring.measureText(input.value||'').width;
+            const size=Math.min(base,fullWidth?base*Math.max(1,rect.width-5)/fullWidth:base);
+            text.style.fontSize=size+'px';text.style.whiteSpace='nowrap';
+          }
           input.replaceWith(text);
         }
       }});
