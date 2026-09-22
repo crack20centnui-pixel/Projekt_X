@@ -41,7 +41,7 @@ test('Explicit signature deletion syncs and does not resurrect image',()=>{
  const c=mergeContext(),db={R:{__signatures:{kunde:'signature'}}};c.applyServerToLocal(server({__signatures:{kunde:''}}),db,{changes:{}});assert.equal(db.R.__signatures.kunde,'');
 });
 test('Conflicting and pending local data are not overwritten',()=>{
- const c=mergeContext(),db={R:{ref:{value:'local'}}};assert.equal(c.applyServerToLocal(server({ref:{value:'cloud'}},4),db,{changes:{R:{baseRevision:3}}}).conflict,true);
+ const c=mergeContext(),db={R:{ref:{value:'local'}}};assert.equal(c.applyServerToLocal(server({ref:{value:'cloud'}},4),db,{changes:{R:{baseRevision:3}}}).skipped,true);
  assert.equal(db.R.ref.value,'local');assert.equal(c.applyServerToLocal(server({},3),db,{changes:{R:{baseRevision:3}}}).skipped,true);
 });
 test('Account migration isolates known owners and preserves unassigned legacy data',()=>{
@@ -129,7 +129,7 @@ test('Backup panel opens without reading users or rapports',async()=>{
  const c=context({adminOnly:()=>true,cloudUser:{uid:'A'},document:{querySelector:()=>({dataset:{adminTab:'dateien'}})},loadAdminUsers:()=>{throw Error('unnecessary read')},loadAdminOrders:()=>{throw Error('unnecessary read')}});
  load(c,"let adminCacheUid=",'async function openAdmin');await c.loadAdminPanel();
 });
-test('External workflow scripts parse',()=>{for(const file of ['rapport-drive.js','rapport-drafts.js','rapport-workflow.js']){const result=spawnSync(process.execPath,['--check',path.join(__dirname,'..',file)],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);}});
+test('External workflow scripts parse',()=>{for(const file of ['rapport-drive.js','rapport-drafts.js','rapport-workflow.js','rapport-sync-review.js']){const result=spawnSync(process.execPath,['--check',path.join(__dirname,'..',file)],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);}});
 test('Drive rejects wrong account before creating or uploading files',async()=>{
  const source=fs.readFileSync(path.join(__dirname,'../rapport-drive.js'),'utf8');const a=source.indexOf('  async function privateFolder('),b=source.indexOf('  async function upload(',a);const calls=[];
  const c=context({OWNER:'latthiwan.danuwat@gmail.com',api:async(_,url)=>{calls.push(url);return {user:{emailAddress:'wrong@example.com'}};}});vm.runInContext(source.slice(a,b),c);
@@ -153,4 +153,92 @@ test('Recovery retains different values signatures units and completion state',(
  const equal=draftCompare(),base={ref:{value:'A'},__signatures:{kunde:'signed'},__materialUnits:['m'],__status:'fertig'};
  for(const change of [{ref:{value:'B'}},{__signatures:{kunde:''}},{__materialUnits:['Stk.']},{__status:'in_bearbeitung'}])assert.equal(equal({...base,...change},base),false);
  assert.equal(equal(base,undefined),false);
+});
+
+const mergeWorkflow=require('../rapport-workflow.js');
+test('Three-way merge keeps independent fields and recognizes identical edits',()=>{
+ const base={material:{value:'old'},arbeiten:{value:'old'}},local={...base,material:{value:'new'}},remote={...base,arbeiten:{value:'new'}};
+ const out=mergeWorkflow.mergeStates(base,local,remote);assert.equal(out.conflicts.length,0);assert.equal(out.state.material.value,'new');assert.equal(out.state.arbeiten.value,'new');
+ assert.equal(mergeWorkflow.mergeStates(base,local,local).conflicts.length,0);
+});
+test('Same row concurrent insertions are not mixed; different rows merge',()=>{
+ const base={name1:{value:''},qty1:{value:''},name2:{value:''},__materialUnits:['','']};
+ const groups=[{id:'row1',label:'Material 1',keys:['name1','qty1','__unit_0']},{id:'row2',keys:['name2','__unit_1']}];
+ const local={...base,name1:{value:'Kabel'},__materialUnits:['m','']},remote={...base,qty1:{value:'3'},__materialUnits:['Stk.','']};
+ assert.equal(mergeWorkflow.mergeStates(base,local,remote,groups).conflicts[0].id,'row1');
+ const remote2={...base,name2:{value:'Dose'},__materialUnits:['','Stk.']};const out=mergeWorkflow.mergeStates(base,local,remote2,groups);
+ assert.equal(out.conflicts.length,0);assert.deepEqual(out.state.__materialUnits,['m','Stk.']);
+});
+test('Conflicting field needs a choice and preserves independent merged fields',()=>{
+ const base={ref:{value:'A'},arbeiten:{value:'old'}},local={ref:{value:'B'},arbeiten:{value:'new'}},remote={ref:{value:'C'},arbeiten:{value:'old'}};
+ const result=mergeWorkflow.mergeStates(base,local,remote);assert.equal(result.conflicts.length,1);
+ const resolved=mergeWorkflow.mergeStates(base,local,remote,[],{ref:'remote'});assert.equal(resolved.conflicts.length,0);assert.equal(resolved.state.ref.value,'C');assert.equal(resolved.state.arbeiten.value,'new');
+});
+test('Missing baseline does not guess; identical legacy content is safe',()=>{
+ const a={ref:{value:'A'},__serverRevision:0},b={ref:{value:'A'},__serverRevision:1};assert.equal(mergeWorkflow.mergeStates(null,a,b).conflicts.length,0);
+ assert.equal(mergeWorkflow.mergeStates(null,{ref:{value:'different'}},b).reason,'missing-base');
+});
+test('Concurrent edits never automatically mix signed or finished reports',()=>{
+ const base={a:'old',b:'old',__signatures:{kunde:'signature'}},local={...base,a:'new'},remote={...base,b:'new'};
+ assert.equal(mergeWorkflow.mergeStates(base,local,remote).reason,'signed');
+ const selected=mergeWorkflow.mergeStates(base,local,remote,[],{__whole:'remote'});assert.deepEqual(selected.state,remote);
+ assert.equal(mergeWorkflow.mergeStates(base,base,remote).conflicts.length,0);
+});
+function simulatedDevice(cloud){
+ const c=syncContext();let local={},meta={changes:{}};
+ c.getDB=()=>structuredClone(local);c.putDB=x=>local=structuredClone(x);c.getSyncMeta=()=>structuredClone(meta);c.putSyncMeta=x=>meta=structuredClone(x);
+ c.localStorage=storage();c.rapportMergeGroups=()=>[];
+ c.accessibleServerRapports=async()=>cloud.record?[{snap:{id:'R'},ownerUid:'A',data:structuredClone(cloud.record)}]:[];
+ c.runTransaction=async(_,fn)=>fn({get:async()=>({exists:()=>!!cloud.record,data:()=>structuredClone(cloud.record)}),set:(_,data)=>{cloud.record={...cloud.record,...structuredClone(data)};cloud.writes++;}});
+ load(c,'function markDirty(','window.rapportRememberBase=');
+ c.save=changes=>{const db=c.getDB();db.R={...db.R,...changes,__savedAt:new Date().toISOString()};c.putDB(db);c.markDirty('R');};
+ return c;
+}
+function testCloud(){return {writes:0,record:{rptId:'R',ownerUid:'A',accessUids:['A'],revision:1,status:'in_bearbeitung',rapportStateJson:JSON.stringify({ref:{value:'Test'},arbeiten:{value:''},material:{value:''},stunden:{value:''},__status:'in_bearbeitung'})}};}
+test('Three devices retain material work and hours across sequential stale syncs',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud),b=simulatedDevice(cloud),c=simulatedDevice(cloud);
+ await a.syncAll();await b.syncAll();await c.syncAll();
+ for(let i=0;i<100;i++)a.save({material:{value:'Kabel '+i}});
+ assert.equal(a.getSyncMeta().changes.R.baseRevision,1);
+ b.save({arbeiten:{value:'Montiert'}});c.save({stunden:{value:'8.5'}});
+ await a.syncAll();await b.syncAll();await c.syncAll();
+ const st=JSON.parse(cloud.record.rapportStateJson);assert.equal(st.material.value,'Kabel 99');assert.equal(st.arbeiten.value,'Montiert');assert.equal(st.stunden.value,'8.5');assert.equal(cloud.writes,3);
+ for(const device of [a,b,c]){await device.syncAll();assert.equal(device.getDB().R.__serverRevision,4);assert.equal(Object.keys(device.getSyncMeta().changes).length,0);assert.equal(device.error,undefined);}
+});
+test('Lost acknowledgement and legacy base zero do not repeat a write for identical content',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud);await a.syncAll();a.save({arbeiten:{value:'Done'}});await a.syncAll();
+ const db=a.getDB();db.R.__serverRevision=0;a.putDB(db);a.putSyncMeta({changes:{R:{at:'lost',baseRevision:0}}});
+ await a.syncAll();assert.equal(cloud.writes,1);assert.equal(a.getDB().R.__serverRevision,2);assert.equal(Object.keys(a.getSyncMeta().changes).length,0);
+});
+test('Same-field conflict is retained and has comparison snapshots',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud),b=simulatedDevice(cloud);await a.syncAll();await b.syncAll();a.save({arbeiten:{value:'A'}});b.save({arbeiten:{value:'B'}});await a.syncAll();await b.syncAll();
+ assert.equal(cloud.writes,1);assert.equal(b.getDB().R.arbeiten.value,'B');assert.equal(b.getSyncMeta().conflicts.R.remote.arbeiten.value,'A');assert.ok(b.getSyncMeta().changes.R);
+});
+test('Save during upload rebases independent edits without dropping remote fields',()=>{
+ const sent={a:'local',b:'base',c:'base'},current={...sent,c:'later'},server={...sent,b:'remote'};
+ let meta={changes:{R:{token:'2',baseRevision:1}},bases:{R:{revision:1,state:{a:'base',b:'base',c:'base'}}}},db={R:current};
+ const c=context({cloudUser:{uid:'A'},getSyncMeta:()=>structuredClone(meta),putSyncMeta:x=>meta=x,getDB:()=>structuredClone(db),putDB:x=>db=x});load(c,'function clearDirty(','function masterOrderSource');
+ assert.equal(c.clearDirty('R',3,'1',sent,server),true);assert.equal(db.R.c,'later');assert.equal(db.R.b,'remote');assert.equal(meta.changes.R.baseRevision,3);
+});
+test('Overlapping edit during upload stays pending with original merge base',()=>{
+ const sent={a:'base'},current={a:'later'},server={a:'remote'};
+ let meta={changes:{R:{token:'2',baseRevision:1}},bases:{R:{revision:1,state:sent}}},db={R:current};
+ const c=context({cloudUser:{uid:'A'},getSyncMeta:()=>structuredClone(meta),putSyncMeta:x=>meta=x,getDB:()=>structuredClone(db),putDB:x=>db=x});load(c,'function clearDirty(','function masterOrderSource');
+ assert.equal(c.clearDirty('R',3,'1',sent,server),false);assert.equal(db.R.a,'later');assert.equal(meta.changes.R.baseRevision,1);
+});
+test('Reviewed conflict preserves both snapshots and syncs the selected field safely',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud),b=simulatedDevice(cloud);await a.syncAll();await b.syncAll();a.save({arbeiten:{value:'A'}});b.save({arbeiten:{value:'B'},stunden:{value:'8'}});await a.syncAll();await b.syncAll();
+ load(b,'window.rapportSyncConflicts=','window.rapportPendingChanges=');b.rapportResolveSyncConflict('R',{arbeiten:'remote'});
+ assert.equal(b.getDB().R.arbeiten.value,'A');assert.equal(b.getDB().R.stunden.value,'8');assert.equal(Object.keys(b.getSyncMeta().conflicts).length,0);
+ await b.syncAll();assert.equal(JSON.parse(cloud.record.rapportStateJson).stunden.value,'8');assert.equal(JSON.parse(cloud.record.rapportStateJson).arbeiten.value,'A');
+});
+test('A failed recovery backup stops resolution before changing local data',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud),b=simulatedDevice(cloud);await a.syncAll();await b.syncAll();a.save({arbeiten:{value:'A'}});b.save({arbeiten:{value:'B'}});await a.syncAll();await b.syncAll();
+ load(b,'window.rapportSyncConflicts=','window.rapportPendingChanges=');b.localStorage.setItem=()=>{throw Error('quota');};
+ assert.throws(()=>b.rapportResolveSyncConflict('R',{arbeiten:'remote'}),/quota/);assert.equal(b.getDB().R.arbeiten.value,'B');assert.ok(b.getSyncMeta().conflicts.R);
+});
+test('New server edit after review creates another conflict instead of being overwritten',async()=>{
+ const cloud=testCloud(),a=simulatedDevice(cloud),b=simulatedDevice(cloud);await a.syncAll();await b.syncAll();a.save({arbeiten:{value:'A'}});b.save({arbeiten:{value:'B'}});await a.syncAll();await b.syncAll();
+ load(b,'window.rapportSyncConflicts=','window.rapportPendingChanges=');b.rapportResolveSyncConflict('R',{arbeiten:'local'});
+ a.save({arbeiten:{value:'A2'}});await a.syncAll();await b.syncAll();assert.equal(JSON.parse(cloud.record.rapportStateJson).arbeiten.value,'A2');assert.ok(b.getSyncMeta().conflicts.R);
 });
