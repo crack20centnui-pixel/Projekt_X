@@ -140,3 +140,17 @@ test('Drive rejects shared backup folder',async()=>{
  const c=context({OWNER:'latthiwan.danuwat@gmail.com',api:async(_,url)=>url.startsWith('/about')?{user:{emailAddress:'latthiwan.danuwat@gmail.com'}}:url.startsWith('/files?')?{files:[{id:'folder'}]}:{id:'folder',shared:true}});vm.runInContext(source.slice(a,b),c);
  await assert.rejects(()=>c.privateFolder('fake'),/nicht ausschliesslich privat/);
 });
+
+function draftCompare(){
+ const source=fs.readFileSync(path.join(__dirname,'../rapport-drafts.js'),'utf8');
+ const start=source.indexOf('  function draftMatchesSaved('),end=source.indexOf('  function renderDrafts()',start);
+ const c=context();vm.runInContext(source.slice(start,end),c);return c.draftMatchesSaved;
+}
+test('Recovery hides identical saved content despite different sync metadata',()=>{
+ const equal=draftCompare();assert.equal(equal({ref:{value:'A'},__savedAt:'old',__serverRevision:1},{__serverRevision:2,__savedAt:'new',ref:{value:'A'}}),true);
+});
+test('Recovery retains different values signatures units and completion state',()=>{
+ const equal=draftCompare(),base={ref:{value:'A'},__signatures:{kunde:'signed'},__materialUnits:['m'],__status:'fertig'};
+ for(const change of [{ref:{value:'B'}},{__signatures:{kunde:''}},{__materialUnits:['Stk.']},{__status:'in_bearbeitung'}])assert.equal(equal({...base,...change},base),false);
+ assert.equal(equal(base,undefined),false);
+});
