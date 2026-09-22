@@ -1,0 +1,408 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================
+    // HILFSFUNKTIONEN
+    // =====================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      );
+    }
+
+    function activeUser() {
+      return signedIn()
+        && userDoc().data.active == true;
+    }
+
+    function isAdmin() {
+      return activeUser()
+        && userDoc().data.role == "admin";
+    }
+
+
+    // =====================================================
+    // USERS
+    // =====================================================
+
+    match /users/{uid} {
+
+      // Eigener Benutzer darf eigenes Profil lesen.
+      // Admin darf alle Benutzer lesen.
+      allow read:
+        if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == uid
+        );
+
+      // Bestehende Registrierung bleibt möglich.
+      allow create:
+        if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['displayName', 'username', 'role', 'active', 'createdAt'])
+        && request.resource.data.role == "monteur"
+        && request.resource.data.active == false
+        && request.resource.data.displayName is string
+        && request.resource.data.username is string
+        && request.resource.data.createdAt == request.time;
+
+      // Benutzerverwaltung nur Admin.
+      allow update, delete:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // CONFIG
+    // =====================================================
+
+    match /config/{document=**} {
+
+      // Aktive Benutzer dürfen System-Konfiguration lesen.
+      allow read:
+        if activeUser();
+
+      // Nur Admin darf ändern.
+      allow write:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // MASTER-AUFTRAGSLISTE
+    // =====================================================
+
+    // Tatsächlicher Pfad:
+    // admin/system/masterData/data
+
+    match /admin/system/masterData/data {
+
+      // Monteure benötigen die Liste beim SYNC.
+      allow read:
+        if activeUser();
+
+      // Nur Admin darf Master-Aufträge verändern.
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // ADMIN-BEREICH
+    // =====================================================
+
+    // Alles andere unter /admin bleibt Admin-only.
+    match /admin/{document=**} {
+
+      allow read, write:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // MONTEUR META
+    // =====================================================
+
+    match /monteure/{uid}/meta/{document} {
+
+      // Eigener Monteur darf eigenes Profil lesen.
+      // Admin darf alles lesen.
+      allow read:
+        if isAdmin()
+        || (
+          activeUser()
+          && request.auth.uid == uid
+        );
+
+      // Profilverwaltung nur Admin.
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // MONTEUR SYNC
+    // =====================================================
+
+    match /monteure/{uid}/sync/{document} {
+
+      // Jeder Monteur nur sein eigener Sync-Bereich.
+      allow read, write:
+        if isAdmin()
+        || (
+          activeUser()
+          && request.auth.uid == uid
+        );
+    }
+
+
+    // =====================================================
+    // SYNC TESTS
+    // =====================================================
+
+    // Wird momentan von unserer Test-HTML verwendet.
+    // Später kann dieser Bereich entfernt werden.
+
+    match /monteure/{uid}/syncTests/{document} {
+
+      allow read, write:
+        if isAdmin()
+        || (
+          activeUser()
+          && request.auth.uid == uid
+        );
+    }
+
+
+    // =====================================================
+    // RAPPORT
+    // =====================================================
+
+    // Beispiel:
+    //
+    // monteure/
+    //   PETER_UID/
+    //     rapporte/
+    //       RPT-2026-000001
+    //
+    // Das RPT existiert nur EINMAL.
+    //
+    // accessUids:
+    // [
+    //   "PETER_UID",
+    //   "MAX_UID"
+    // ]
+
+    match /monteure/{ownerUid}/rapporte/{rptId} {
+
+
+      // ---------------------------------------------------
+      // RAPPORT LESEN
+      // ---------------------------------------------------
+
+      // Admin:
+      //   darf alle Rapporte lesen.
+      //
+      // Owner:
+      //   darf eigenen Rapport lesen.
+      //
+      // Freigegebener Monteur:
+      //   darf genau diesen Rapport lesen.
+
+      allow read:
+        if isAdmin()
+        || (
+          activeUser()
+          && (
+            request.auth.uid == ownerUid
+            ||
+            request.auth.uid in resource.data.accessUids
+          )
+        );
+
+
+      // ---------------------------------------------------
+      // RAPPORT ERSTELLEN
+      // ---------------------------------------------------
+
+      // Admin darf erstellen.
+      //
+      // Monteur darf einen Rapport nur in seinem
+      // eigenen UID-Bereich erstellen.
+
+      allow create:
+        if isAdmin()
+        || (
+          activeUser()
+
+          && request.auth.uid == ownerUid
+
+          // Besitzer muss stimmen
+          && request.resource.data.ownerUid
+             == request.auth.uid
+
+          // Ersteller muss stimmen
+          && request.resource.data.createdBy
+             == request.auth.uid
+
+          // Dokument-ID und RPT-ID müssen identisch sein
+          && request.resource.data.rptId
+             == rptId
+
+          // Nur aktive Rapporte; Archivierung ist Admin-Aufgabe.
+          && request.resource.data.get('archived', false) == false
+          && request.resource.data.status in ['in_bearbeitung', 'fertig']
+
+          // Neuer Rapport beginnt Revision 1
+          && request.resource.data.revision
+             == 1
+
+          // Besitzer muss Zugriff auf eigenen Rapport haben
+          && request.auth.uid
+             in request.resource.data.accessUids
+        );
+
+
+      // ---------------------------------------------------
+      // RAPPORT BEARBEITEN
+      // ---------------------------------------------------
+
+      // Admin darf alles.
+      //
+      // Owner oder freigegebener Monteur darf
+      // Rapport-Inhalt bearbeiten.
+      //
+      // Sicherheitsfelder bleiben unverändert.
+
+      allow update:
+        if isAdmin()
+        || (
+          activeUser()
+
+          && (
+            request.auth.uid == ownerUid
+            ||
+            request.auth.uid in resource.data.accessUids
+          )
+
+          // Archivierte Rapporte können nur Admins wieder öffnen.
+          && resource.data.get('archived', false) == false
+          && request.resource.data.get('archived', false) == false
+          && request.resource.data.status in ['in_bearbeitung', 'fertig']
+
+          // RPT-ID darf nicht geändert werden
+          && request.resource.data.rptId
+             == resource.data.rptId
+
+          // Ersteller darf nicht geändert werden
+          && request.resource.data.createdBy
+             == resource.data.createdBy
+
+          // Besitzer darf nicht durch Monteur geändert werden
+          && request.resource.data.ownerUid
+             == resource.data.ownerUid
+
+          // Freigaben dürfen nur Admin ändern
+          && request.resource.data.accessUids
+             == resource.data.accessUids
+
+          // Jede erfolgreiche Änderung:
+          // Revision exakt +1
+          && request.resource.data.revision
+             == resource.data.revision + 1
+        );
+
+
+      // ---------------------------------------------------
+      // RAPPORT LÖSCHEN
+      // ---------------------------------------------------
+
+      // Monteure dürfen niemals physisch löschen.
+      //
+      // Für normale Löschvorgänge verwenden wir später
+      // Soft-Delete.
+      //
+      // Hard-Delete nur Admin.
+
+      allow delete:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // RAPPORT COLLECTION-GROUP READ
+    // =====================================================
+
+    // Dieser zusätzliche Block ist für:
+    //
+    // collectionGroup("rapporte")
+    //
+    // Dadurch können Rapporte über alle Monteur-Unterordner
+    // hinweg gesucht werden.
+    //
+    // WICHTIG:
+    // Dieser Block erlaubt NUR LESEN.
+    //
+    // CREATE / UPDATE / DELETE werden weiterhin ausschließlich
+    // durch den speziellen Rapport-Block oben geregelt.
+
+    match /{path=**}/rapporte/{rptId} {
+
+      // Admin:
+      //   darf alle Rapporte über collectionGroup finden.
+      //
+      // Monteur:
+      //   darf nur Rapporte finden, bei denen seine UID
+      //   in accessUids eingetragen ist.
+      //
+      // Dadurch kann beispielsweise ein Rapport von Peter
+      // auch von Max gefunden werden, wenn der Admin Max
+      // Zugriff gegeben hat.
+
+      allow read:
+        if isAdmin()
+        || (
+          activeUser()
+          && request.auth.uid in resource.data.accessUids
+        );
+    }
+
+
+    // =====================================================
+    // ALTE ORDERS
+    // =====================================================
+
+    // Alte Daten bleiben erhalten.
+    // Nur Admin hat Zugriff.
+
+    match /orders/{document=**} {
+
+      allow read, write:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // ALTES AUFTRAG TEST
+    // =====================================================
+
+    match /auftragTest/{document=**} {
+
+      allow read, write:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // ALTES SYSTEM TEST
+    // =====================================================
+
+    match /systemTest/{document=**} {
+
+      allow read, write:
+        if isAdmin();
+    }
+
+
+    // =====================================================
+    // FALLBACK
+    // =====================================================
+
+    // Alles, was wir nicht ausdrücklich erlaubt haben,
+    // wird gesperrt.
+
+    match /{document=**} {
+
+      allow read, write:
+        if false;
+    }
+  }
+}
