@@ -8,6 +8,7 @@
 <title>EQUANS Rapport</title>
 <script src="rapport-workflow.js"></script><script defer src="rapport-drafts.js"></script>
 <script defer src="rapport-drive.js"></script>
+<script defer src="rapport-sync-review.js"></script>
 <style>
 *{box-sizing:border-box} html,body{margin:0;background:#f2f4f5;font-family:Arial,sans-serif;color:#111}
 .toolbar{background:#244656;padding:9px;display:flex;gap:7px;justify-content:center;position:sticky;top:0;z-index:5}
@@ -2544,7 +2545,7 @@ document.addEventListener('change',e=>{
 });
 function preserveRapportMetadata(previous,captured){
   const result={...captured};
-  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource','__archived','__accessRevoked']){
+  for(const key of ['__ownerUid','__serverRevision','__accessUids','__orderSource','__archived','__accessRevoked','__syncedAt']){
     if(previous&&key in previous)result[key]=previous[key];
   }
   return result;
@@ -2693,6 +2694,7 @@ function saveOrder(){
   currentCreatedAt=currentCreatedAt||db[id]?.__createdAt||new Date().toISOString();
   if(db[id]&&currentOrderKey!==id&&!confirm('Rapport „'+id+'“ ist bereits gespeichert. Aktualisieren?'))return;
   if(currentOrderKey&&currentOrderKey!==id&&db[currentOrderKey])delete db[currentOrderKey];
+  window.rapportRememberBase?.(id,db[id]);
   const data=preserveRapportMetadata(db[id],captureForm());data.__rapportId=id;data.__reference=ref;data.__version=(db[id]?.__version||0)+1;db[id]=data;
   putDB(db);currentOrderKey=id;refreshOrderSelect(id);updateHeaderInfo();formDirty=false;setStatus('Gespeichert ✓');return true;
 }
@@ -3433,15 +3435,31 @@ function markDirty(id){
   if(!cloudUser||!id)return;
   const meta=getSyncMeta(), local=window.getDB?.()?.[id];
   if(!local)return;
-  meta.changes[id]={at:new Date().toISOString(),baseRevision:Number(local.__serverRevision||0)};
+  meta.changeCounter=(meta.changeCounter||0)+1;
+  meta.changes[id]={at:new Date().toISOString(),token:String(meta.changeCounter),baseRevision:Number(meta.changes[id]?.baseRevision??local.__serverRevision??0)};
   putSyncMeta(meta);
 }
-function clearDirty(id,serverRevision,sentAt){
-  const meta=getSyncMeta();
-  if(!meta.changes[id]||meta.changes[id].at===sentAt)delete meta.changes[id];
-  else meta.changes[id].baseRevision=serverRevision;
-  putSyncMeta(meta);
-  const ldb=window.getDB?.()||{}; if(ldb[id]){ldb[id].__serverRevision=serverRevision;ldb[id].__ownerUid=ldb[id].__ownerUid||cloudUser.uid;window.putDB?.(ldb)}
+window.rapportRememberBase=(id,state)=>{
+  if(!state||!cloudUser||!Number(state.__serverRevision))return;
+  const meta=getSyncMeta();if(meta.changes[id]||meta.bases?.[id])return;
+  (meta.bases??={})[id]={revision:Number(state.__serverRevision),state:RapportWorkflow.content(state)};putSyncMeta(meta);
+};
+function clearDirty(id,serverRevision,sentAt,sentState,serverState){
+  const meta=getSyncMeta(),ldb=window.getDB?.()||{},latest=ldb[id];
+  const pending=meta.changes[id],newer=!!pending&&(pending.token||pending.at)!==sentAt;
+  if(serverState&&latest){
+    let merged=serverState;
+    if(newer){const next=RapportWorkflow.mergeStates(sentState,latest,serverState,window.rapportMergeGroups?.()||[]);if(next.conflicts.length)return false;merged=next.state;}
+    ldb[id]={...latest,...merged,__serverRevision:serverRevision,__syncedAt:new Date().toISOString()};
+    // Remove fields explicitly deleted by the merged content, while retaining metadata.
+    for(const k of Object.keys(RapportWorkflow.content(latest)))if(!Object.hasOwn(merged,k))delete ldb[id][k];
+    ldb[id].__reference=ldb[id].ref?.value||latest.__reference||'';
+    (meta.bases??={})[id]={revision:serverRevision,state:RapportWorkflow.content(serverState)};
+    if(meta.conflicts)delete meta.conflicts[id];
+  }else if(latest){latest.__serverRevision=serverRevision;latest.__ownerUid=latest.__ownerUid||cloudUser.uid;}
+  if(!newer)delete meta.changes[id];else meta.changes[id].baseRevision=serverRevision;
+  // If storage fails before acknowledgement, retrying the same content is safe.
+  window.putDB?.(ldb);putSyncMeta(meta);return true;
 }
 function masterOrderSource(nr,master){
   if(!nr)return "none";
@@ -3554,11 +3572,8 @@ function applyServerToLocal(row,localDB,meta){
   const x=row.data,id=x.rptId||row.snap.id;
   const local=localDB[id],dirty=!!meta.changes[id];
   const serverRev=Number(x.revision||0);
-  if(dirty){
-    const base=Number(meta.changes[id]?.baseRevision??local?.__serverRevision??0);
-    if(base!==serverRev)return {conflict:true,id,base,serverRev};
-    return {conflict:false,id,skipped:true};
-  }
+  // Only the transaction below decides whether pending edits can be merged.
+  if(dirty)return {conflict:false,id,skipped:true};
   if(!x.rapportStateJson)return {conflict:false,id,skipped:true};
   const st=JSON.parse(x.rapportStateJson);
   // Old cloud records omitted signatures. Never erase a locally retained signature.
@@ -3570,6 +3585,9 @@ function applyServerToLocal(row,localDB,meta){
   st.__ownerUid=x.ownerUid||row.ownerUid;
   st.__accessUids=Array.isArray(x.accessUids)?x.accessUids:[];
   st.__orderSource=x.orderSource||"none";
+  st.__syncedAt=new Date().toISOString();
+  if(meta.conflicts)delete meta.conflicts[id];
+  (meta.bases??={})[id]={revision:serverRev,state:RapportWorkflow.content(st)};
   localDB[id]=st;
   return {conflict:false,id,downloaded:true};
 }
@@ -3582,11 +3600,12 @@ async function syncAll(){
   const checkSession=()=>{if(cloudUser?.uid!==syncUid)throw new Error('Benutzer während SYNC gewechselt. Bitte erneut synchronisieren.');};
   setCloudHeader("SYNC läuft …");
   let meta=getSyncMeta(), localDB=window.getDB?.()||{};
-  let master={version:0,auftraege:[]},serverRows=[],downloaded=0,uploaded=0,conflicts=[],stage="Start";
+  let master={version:0,auftraege:[]},serverRows=[],downloaded=0,uploaded=0,conflicts=[],deferredDownload=false,stage="Start";
   try{
     stage="Übergaben prüfen";
     const syncRef=doc(db,"monteure",cloudUser.uid,"sync","data");
     const ss=await getDoc(syncRef),syncData=ss.exists()?ss.data():{};
+    checkSession();localDB=window.getDB?.()||{};
     for(const id of Object.keys(syncData.revokedRapports||{})){
       if(localDB[id])localDB[id].__accessRevoked=true;
     }
@@ -3602,10 +3621,11 @@ async function syncAll(){
     meta=getSyncMeta();localDB=window.getDB?.()||{};
     stage="Firebase → lokal prüfen";
     for(const row of serverRows){
+      if(formDirty&&currentOrderKey===(row.data.rptId||row.snap.id)){deferredDownload=true;continue;}
       const r=applyServerToLocal(row,localDB,meta);
       if(r.conflict)conflicts.push(r); else if(r.downloaded)downloaded++;
     }
-    window.putDB?.(localDB);
+    window.putDB?.(localDB);putSyncMeta(meta);
 
     stage="lokale Änderungen hochladen";
     for(const [id,ch] of Object.entries({...meta.changes})){
@@ -3617,30 +3637,49 @@ async function syncAll(){
       const r=doc(db,"monteure",ownerUid,"rapporte",id);
 
       stage="RPT "+id+" sicher synchronisieren";
-      const state={...local},nr=orderNumberFromState(state);
-      const json=JSON.stringify(state);
-      if(new TextEncoder().encode(json).length>900000)throw new Error("Rapport inklusive Unterschriften ist zu gross für Cloud-Speicherung. Lokales Backup erstellen.");
+      const state={...local},groups=window.rapportMergeGroups?.()||[];
       const result=await runTransaction(db,async tx=>{
         const server=await tx.get(r),base=Number(ch.baseRevision||0);
+        const payload=st=>{const json=JSON.stringify(st);if(new TextEncoder().encode(json).length>900000)throw new Error('Rapport inklusive Unterschriften ist zu gross. Lokales Backup erstellen.');return json;};
         if(!server.exists()){
           if(base>0||(ownerUid!==cloudUser.uid&&cloudProfile?.role!=="admin"))return {conflict:true,id,base,serverRev:"fehlt / verschoben"};
+          const nr=orderNumberFromState(state);
           tx.set(r,{rptId:id,ownerUid,createdBy:cloudUser.uid,accessUids:[ownerUid],revision:1,
             archived:false,status:state.__status||"in_bearbeitung",orderNumber:nr,orderSource:masterOrderSource(nr,master),
-            reference:state.__reference||"",rapportStateJson:json,updatedBy:cloudUser.uid,updatedByName:displayName(),
+            reference:state.__reference||"",rapportStateJson:payload(state),updatedBy:cloudUser.uid,updatedByName:displayName(),
             createdAt:serverTimestamp(),updatedAt:serverTimestamp(),deleted:false});
-          return {revision:1};
+          return {revision:1,state:RapportWorkflow.content(state),written:true};
         }
         const x=server.data(),serverRev=Number(x.revision||0);
-        if(RapportWorkflow.isArchived(x))return {conflict:true,id,base,serverRev:"archiviert"};
-        if(serverRev!==base)return {conflict:true,id,base,serverRev};
-        tx.set(r,{rapportStateJson:json,revision:serverRev+1,orderNumber:nr,orderSource:masterOrderSource(nr,master),
-          reference:state.__reference||"",status:state.__status||x.status||"in_bearbeitung",
+        if(RapportWorkflow.isArchived(x)||x.deleted)return {conflict:true,id,base,serverRev:"archiviert / entfernt"};
+        // Respect the server's access assignment even when an old local copy exists.
+        if(cloudProfile?.role!=="admin"&&Array.isArray(x.accessUids)&&!x.accessUids.includes(cloudUser.uid))return {conflict:true,id,base,serverRev:"übergeben – nur lokaler Export möglich"};
+        const remote=x.rapportStateJson?JSON.parse(x.rapportStateJson):null;
+        let merged={state:RapportWorkflow.content(state),conflicts:[]};
+        if(remote){
+          const snapshot=getSyncMeta().bases?.[id];
+          const baseline=snapshot?.revision===base?snapshot.state:null;
+          // On the same revision, the transaction's snapshot itself is the base.
+          merged=RapportWorkflow.mergeStates(serverRev===base?remote:baseline,state,remote,groups);
+        }else if(serverRev!==base)return {conflict:true,id,base,serverRev};
+        if(merged.conflicts.length)return {conflict:true,id,base,serverRev,remote,local:RapportWorkflow.content(state),baseline:getSyncMeta().bases?.[id]?.revision===base?getSyncMeta().bases[id].state:null,reason:merged.reason,fields:merged.conflicts,at:new Date().toISOString(),serverSavedAt:remote?.__savedAt||null};
+        if(remote&&RapportWorkflow.equal(RapportWorkflow.content(remote),merged.state))return {revision:serverRev,state:merged.state,written:false};
+        const next={...state,...merged.state};for(const k of Object.keys(RapportWorkflow.content(state)))if(!Object.hasOwn(merged.state,k))delete next[k];
+        next.__reference=next.ref?.value||'';const nr=orderNumberFromState(next);
+        tx.set(r,{rapportStateJson:payload(next),revision:serverRev+1,orderNumber:nr,orderSource:masterOrderSource(nr,master),
+          reference:next.__reference,status:next.__status||x.status||"in_bearbeitung",
           updatedBy:cloudUser.uid,updatedByName:displayName(),updatedAt:serverTimestamp()},{merge:true});
-        return {revision:serverRev+1};
+        return {revision:serverRev+1,state:merged.state,written:true};
       });
-      if(result.conflict){if(!conflicts.some(c=>c.id===id))conflicts.push(result);continue;}
       checkSession();
-      clearDirty(id,result.revision,ch.at);uploaded++;
+      if(result.conflict){
+        conflicts.push(result);
+        if(result.remote){const m=getSyncMeta();(m.conflicts??={})[id]=result;putSyncMeta(m);}continue;
+      }
+      const accepted=clearDirty(id,result.revision,ch.token||ch.at,RapportWorkflow.content(state),result.state);
+      if(!accepted)conflicts.push({id,serverRev:'Während SYNC erneut geändert – bitte nochmals synchronisieren'});
+      if(result.written)uploaded++;
+
 
     }
 
@@ -3649,7 +3688,7 @@ async function syncAll(){
       const oldV=Number(syncData.version||0);
       await setDoc(syncRef,{version:oldV+1,updatedAt:serverTimestamp()},{merge:true});
       const m=getSyncMeta();m.version=oldV+1;
-      m.downloadCursor=RapportWorkflow.nextCursor(m.downloadCursor,serverRows);putSyncMeta(m);
+      if(!deferredDownload)m.downloadCursor=RapportWorkflow.nextCursor(m.downloadCursor,serverRows);putSyncMeta(m);
     }
 
     checkSession();
@@ -3662,7 +3701,8 @@ async function syncAll(){
     if(conflicts.length){
       setCloudHeader("SYNC Konflikt: "+conflicts.length);
       window.setStatus?.("SYNC teilweise erfolgt – Konflikte nicht überschrieben");
-      showSyncError("Konflikt erkannt. Lokale Änderungen bleiben erhalten. "+conflicts.map(c=>c.id+": lokal Basis "+c.base+" / Firebase "+c.serverRev).join(" | "));
+      if(window.openRapportSyncReview&&conflicts.some(c=>c.remote))window.openRapportSyncReview();
+      else showSyncError("Konflikt: Lokale Änderungen bleiben erhalten. "+conflicts.map(c=>c.id+": "+c.serverRev).join(" | "));
     }else{
       setCloudHeader("Synchronisiert ✓ "+downloaded+"↓ "+uploaded+"↑");
       window.setStatus?.("SYNC erfolgreich ✓");
@@ -3720,6 +3760,28 @@ registerSaveBtn?.addEventListener("click",async()=>{
 });
 
 let driveCredential=null;
+window.rapportSyncConflicts=()=>getSyncMeta().conflicts||{};
+window.rapportSyncRecoveryExport=()=>{const prefix='equansSyncRecoveryV1_'+(cloudUser?.uid||'none')+'_',out=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith(prefix))out.push(JSON.parse(localStorage.getItem(k)));}return out;};
+window.rapportResolveSyncConflict=(id,choices)=>{
+  if(formDirty)throw new Error('Bitte zuerst den geöffneten Rapport speichern.');
+  const m=getSyncMeta(),c=m.conflicts?.[id],local=window.getDB?.()||{},st=local[id];
+  if(!c||!st)throw new Error('Vergleich nicht mehr vorhanden. Bitte erneut SYNC drücken.');
+  if(st.__accessRevoked||RapportWorkflow.isArchived(st))throw new Error('Rapport ist gesperrt.');
+  if(!RapportWorkflow.equal(RapportWorkflow.content(st),c.local))throw new Error('Seit dem Vergleich lokal geändert. Bitte erneut SYNC drücken.');
+  const merged=RapportWorkflow.mergeStates(c.baseline,c.local,c.remote,window.rapportMergeGroups?.()||[],choices);
+  if(merged.conflicts.length)throw new Error('Bitte für jeden Unterschied einen Stand wählen.');
+  const backupKey='equansSyncRecoveryV1_'+cloudUser.uid+'_'+id+'_'+Date.now();
+  localStorage.setItem(backupKey,JSON.stringify({id,local:st,remote:c.remote,at:new Date().toISOString()}));
+  const next={...st,...merged.state,__serverRevision:c.serverRev,__savedAt:new Date().toISOString()};
+  for(const k of Object.keys(RapportWorkflow.content(st)))if(!Object.hasOwn(merged.state,k))delete next[k];
+  next.__reference=next.ref?.value||'';local[id]=next;
+  (m.bases??={})[id]={revision:c.serverRev,state:RapportWorkflow.content(c.remote)};
+  m.changeCounter=(m.changeCounter||0)+1;m.changes[id]={baseRevision:c.serverRev,at:new Date().toISOString(),token:String(m.changeCounter)};
+  // Keep the conflict until the reviewed local copy has been saved successfully.
+  window.putDB(local);delete m.conflicts[id];putSyncMeta(m);
+  if(currentOrderKey===id){applyForm(next);syncBeiblattHeaders?.();updateHeaderInfo();}
+  originalRefreshOrderSelect?.();window.updateRapportStorageStatus?.();
+};
 window.rapportPendingChanges=()=>getSyncMeta().changes;
 window.rapportIsAdmin=()=>cloudProfile?.role==="admin";
 window.rapportDriveToken=async()=>{
@@ -3769,7 +3831,7 @@ async function changeArchiveState(archived){
   });
   await loadAdminOrders();
   const updated=adminOrderRows.find(x=>x.id===row.id),local=window.getDB();
-  if(updated){applyServerToLocal({data:updated,snap:{id:row.id},ownerUid:updated.ownerUid},local,getSyncMeta());window.putDB(local);originalRefreshOrderSelect?.();}
+  if(updated){const meta=getSyncMeta();applyServerToLocal({data:updated,snap:{id:row.id},ownerUid:updated.ownerUid},local,meta);window.putDB(local);putSyncMeta(meta);originalRefreshOrderSelect?.();}
   document.getElementById('adminRapportStatus').textContent=archived?'Archiviert – Stand gesichert.':'Wieder geöffnet – alte Unterschriften im gesicherten Stand erhalten. Jetzt Monteur zuweisen.';
   if(currentOrderKey===row.id&&updated){applyForm(local[row.id]);updateHeaderInfo();}
 }
@@ -3903,7 +3965,8 @@ function openAdminRptById(id){
   const previous=window.getDB?.()?.[id];
   if(!Object.prototype.hasOwnProperty.call(state,'__signatures')&&previous?.__signatures)state.__signatures=previous.__signatures;
   formDirty=false;
-  const ldb=window.getDB?.()||{};ldb[x.id]=state;window.putDB?.(ldb);originalRefreshOrderSelect?.(x.id);
+  const ldb=window.getDB?.()||{};ldb[x.id]=state;window.putDB?.(ldb);
+  const meta=getSyncMeta();(meta.bases??={})[x.id]={revision:state.__serverRevision,state:RapportWorkflow.content(state)};putSyncMeta(meta);originalRefreshOrderSelect?.(x.id);
   const sel=document.getElementById("orderSelect");if(sel)sel.value=x.id;
   adminOverlay?.classList.remove("show");
   applyForm(state);window.__setRapportOrderContext(x.id,state.__createdAt||state.__savedAt);syncBeiblattHeaders();updateHeaderInfo();location.hash='#rapportPage';
