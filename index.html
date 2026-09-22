@@ -4807,4 +4807,111 @@ if(mountain)toolbar.style.setProperty('background-image','linear-gradient(90deg,
 }
 @media screen and (max-width:520px){#messHelpTop{padding:15px 18px}#messHelpTitle{font-size:18px}.mh-subtitle{padding:15px 18px 0}.mh-legend{padding:10px 18px 18px;gap:12px}#messHelpBody .mh-diagram{padding:14px 4px 0}#messHelpBody ol{margin:0 18px 18px}#messHelpBody .mh-warn{padding:14px 18px}}
 </style>
+<style id="adaptive-views-local">
+#testPdf{display:none!important}
+@media screen {
+ #viewModeButton{position:fixed;right:18px;top:12px;z-index:200;background:white;border:1px solid #ccdbe1;border-radius:8px;padding:10px 14px;color:#173343;font:600 13px Arial;cursor:pointer}
+ #viewMenu{width:min(400px,calc(100vw - 28px));max-height:85dvh;overflow:auto;border:1px solid #dce5e9;border-radius:16px;padding:22px;color:#173343;box-shadow:0 20px 60px #12344740}
+ #viewMenu::backdrop{background:#12344770}#viewMenu h2{margin:0 0 16px;font-size:20px}#viewMenu button,#viewMenu a{display:block;width:100%;margin:6px 0;padding:12px;text-align:left;border:1px solid #dce5e9;border-radius:8px;background:white;color:#173343;font:14px Arial;text-decoration:none;cursor:pointer}#viewMenu button[aria-pressed=true]{border-color:#078454;background:#e8f5ee;font-weight:bold}#viewMenu .view-close{width:auto;float:right;margin:0;padding:6px 10px}#viewMenu p{font-size:12px;color:#58717f}
+ #adaptiveNav,#adaptiveHome,.adaptive-section-button{display:none}
+ body[data-view=phone],body[data-view=tablet]{padding:0 0 calc(84px + env(safe-area-inset-bottom))!important;background:#edf2f5!important;overflow-x:hidden}
+ body[data-view=phone]{--view-width:520px}body[data-view=tablet]{--view-width:1100px}
+ body[data-view=phone] #appSidebar,body[data-view=tablet] #appSidebar{position:relative!important;inset:auto!important;width:100%!important;max-width:var(--view-width)!important;margin:auto!important;padding:18px 20px!important;min-height:0!important;height:auto!important;box-sizing:border-box;background:#123447!important}
+ body:is([data-view=phone],[data-view=tablet]) #appSidebar .tabs,body:is([data-view=phone],[data-view=tablet]) #appSidebar .nav-caption{display:none!important}
+ body:is([data-view=phone],[data-view=tablet]) #appSidebar .brand-mark{font-size:22px!important}body:is([data-view=phone],[data-view=tablet]) #appSidebar .brand-block{margin:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #appSidebar .user-meta{position:static!important;max-width:none!important;border:0!important;margin:8px 0 0!important;padding:0!important;font-size:12px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar.pdf-toolbar{width:calc(100% - 24px)!important;max-width:var(--view-width)!important;margin:12px auto!important;padding:16px!important;min-width:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .layout-top{flex-wrap:wrap!important;gap:8px!important;padding:0 0 12px!important;margin:0!important;min-height:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .layout-top .order-row{flex-wrap:wrap!important;min-width:0!important;width:100%!important;gap:8px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .order-chooser{min-width:0!important;flex:1!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar #orderSelect{min-width:0!important;width:100%!important;max-width:none!important;font-size:14px!important;height:42px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .head-main{min-height:0!important;display:flex!important;gap:14px!important;padding:16px 0!important;flex-direction:column!important;align-items:stretch!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar #headerRapportId{font-size:25px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .action-controls{display:flex!important;flex-wrap:wrap!important;width:100%!important;gap:8px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .action-controls button,body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .action-controls summary{min-height:44px!important;height:auto!important;padding:10px 14px!important;font-size:13px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .toolbar-save{flex:1!important;order:0!important;margin:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar #moreActions{margin:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #rapportStorageStatus,body:is([data-view=phone],[data-view=tablet]) #draftRecovery{width:calc(100% - 24px)!important;max-width:var(--view-width)!important;margin:10px auto!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet{width:calc(100% - 24px)!important;min-width:0!important;max-width:var(--view-width)!important;height:auto!important;min-height:0!important;padding:16px!important;margin:12px auto!important;font-size:13px!important;border:1px solid #dce5e9!important;border-radius:14px!important;box-sizing:border-box!important;overflow:visible!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet :is(.top,.linegrid){grid-template-columns:110px minmax(0,1fr)!important;grid-auto-rows:auto!important;gap:7px!important;height:auto!important;margin:12px 0!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet :is(.top,.linegrid)>*{grid-column:auto!important;grid-row:auto!important;min-width:0!important;min-height:34px!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .top :is(.logo,.rtitle){display:none!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .lbl{background:transparent!important;border:0!important;display:flex;align-items:center;font-size:12px!important;padding:4px!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .in{border:1px solid #d3dfe5!important;border-radius:6px!important;background:#fafcfd!important;min-width:0!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .in input:not([type=checkbox]):not([type=hidden]),body:is([data-view=phone],[data-view=tablet]) .sheet .ai input{height:36px!important;min-width:0!important;padding:7px!important;font-size:14px!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .addresses{grid-template-columns:1fr!important;gap:12px!important;margin:12px 0!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .addr{grid-template-rows:32px repeat(5,36px)!important;border-radius:8px;overflow:hidden}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .workbox{height:160px!important;border:1px solid #d3dfe5!important;border-radius:8px!important;background:#fafcfd!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .workbox textarea{font-size:15px!important;padding:12px!important;line-height:1.5!important}
+ body:is([data-view=phone],[data-view=tablet]) .adaptive-section-button{display:flex;width:100%;align-items:center;justify-content:space-between;margin:14px 0 8px;padding:14px;border:1px solid #dce5e9;border-radius:9px;background:#f2f6f8;color:#173343;text-align:left;font:600 14px Arial;cursor:pointer}
+ body:is([data-view=phone],[data-view=tablet]) .adaptive-section-button:after{content:'⌄'}body:is([data-view=phone],[data-view=tablet]) .adaptive-section-button[aria-expanded=false]:after{content:'›'}
+ body:is([data-view=phone],[data-view=tablet]) .adaptive-original-heading,body:is([data-view=phone],[data-view=tablet]) .adaptive-collapsed{display:none!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet table{display:block!important;overflow-x:auto!important;width:100%!important;min-width:0!important;max-width:100%!important;-webkit-overflow-scrolling:touch}
+ body:is([data-view=phone],[data-view=tablet]) .sheet table:not(.material-compact-columns)>:is(thead,tbody){min-width:650px}
+ body:is([data-view=phone],[data-view=tablet]) .sheet table:not(.material-compact-columns) input{min-width:45px}
+ body:is([data-view=phone],[data-view=tablet]) .material-compact-columns{display:table!important}
+ body:is([data-view=phone],[data-view=tablet]) #signatureBlock{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ body:is([data-view=phone],[data-view=tablet]) #signatureBlock .signature-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+ body:is([data-view=phone],[data-view=tablet]) #signatureBlock button{flex:1!important}
+ body:is([data-view=phone],[data-view=tablet]) #adaptiveNav{display:flex;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--view-width);z-index:300;background:#fff;border-top:1px solid #dce5e9;box-shadow:0 -3px 18px #1234470a;padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around}
+ #adaptiveNav button,#adaptiveNav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:46px;justify-content:center;text-decoration:none;border:0;background:transparent;color:#5c7380;font:12px Arial;cursor:pointer}#adaptiveNav b{font-size:20px}#adaptiveNav [aria-current=page]{color:#078454;font-weight:bold}
+ body[data-view=phone] #viewModeButton{display:none!important}
+ body[data-view=tablet] #viewModeButton{position:absolute}
+ body[data-adaptive-home=true]:is([data-view=phone],[data-view=tablet]) .sheet{display:none!important}
+ body[data-adaptive-home=true]:is([data-view=phone],[data-view=tablet]) #pdfToolbar .head-main,body[data-adaptive-home=true]:is([data-view=phone],[data-view=tablet]) #pdfToolbar #saveStatus{display:none!important}
+ body[data-adaptive-home=true]:is([data-view=phone],[data-view=tablet]) #adaptiveHome{display:block;width:calc(100% - 24px);max-width:var(--view-width);margin:16px auto}
+ #adaptiveHome h1{font-size:24px;color:#173343}#adaptiveHome p{color:#5c7380;font-size:14px}.adaptive-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.adaptive-tiles a{background:white;padding:24px 16px;border:1px solid #dce5e9;border-radius:12px;text-decoration:none;color:#173343;font:bold 16px Arial}.adaptive-tiles a:first-child{background:#087c56;color:white}
+ body[data-view=tablet] .sheet .top{grid-template-columns:110px minmax(0,1fr) 100px minmax(0,1fr)!important}
+ body[data-view=tablet] .sheet .addresses{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ body[data-view=tablet] .sheet .linegrid{grid-template-columns:130px minmax(0,1fr)!important}
+ body[data-view=desktop] #viewModeButton{top:8px}
+}
+@media screen{
+ body:is([data-view=phone],[data-view=tablet]) .sheet .adaptive-collapsed,body:is([data-view=phone],[data-view=tablet]) .sheet .adaptive-internal-reference{display:none!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .head-actions.toolbar-v3{margin:0!important;padding:0!important;min-height:0!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .toolbar-save{background:#087c56!important;border-color:#087c56!important;color:white!important}
+ body:is([data-view=phone],[data-view=tablet]) .sheet .top input[name=datum]{font-size:14px!important}
+ body:is([data-view=phone],[data-view=tablet]) #appSidebar .brand-title,body:is([data-view=phone],[data-view=tablet]) #appSidebar .brand-sub{display:none!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .meta-label{font-size:10px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .layout-sync{margin:0!important;padding:6px 8px!important}
+ body:is([data-view=phone],[data-view=tablet]) #pdfToolbar .layout-top .order-chooser{max-width:none!important}
+}
+@media print{#viewModeButton,#viewMenu,#adaptiveNav,#adaptiveHome,.adaptive-section-button{display:none!important}}
+</style>
+<script id="adaptive-views-local-js">
+(()=>{
+ const key='rapport-view-mode-v1', labels={auto:'Automatisch',phone:'Handy',tablet:'Tablet',desktop:'Desktop'};
+ let mode='auto';try{mode=localStorage.getItem(key)||'auto';}catch{}if(!labels[mode])mode='auto';
+ const button=document.createElement('button');button.id='viewModeButton';button.type='button';document.body.append(button);
+ const dialog=document.createElement('dialog');dialog.id='viewMenu';dialog.setAttribute('aria-label','Mehr und Ansicht');
+ dialog.innerHTML='<button class="view-close" type="button" aria-label="Schliessen">×</button><h2>Ansicht</h2><div class="view-choices"></div><p>Die Auswahl gilt für dieses Gerät. Deine Eingaben bleiben erhalten.</p><h2>Rapportblätter</h2><div class="view-pages"></div>';
+ for(const [value,label] of Object.entries(labels)){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.mode=value;b.onclick=()=>{mode=value;try{localStorage.setItem(key,mode);}catch{}apply();dialog.close();};dialog.querySelector('.view-choices').append(b);}
+ const links=[...document.querySelectorAll('#appSidebar .tabs a')];
+ for(const link of links){const a=document.createElement('a');a.href=link.hash;a.textContent=link.textContent;a.onclick=()=>{document.body.dataset.adaptiveHome='false';dialog.close();};dialog.querySelector('.view-pages').append(a);}
+ dialog.querySelector('.view-close').onclick=()=>dialog.close();document.body.append(dialog);button.onclick=()=>dialog.showModal();
+ const more=document.querySelector('#moreActions .more-popover');if(more){const b=document.createElement('button');b.type='button';b.textContent='Ansicht wählen';b.onclick=()=>dialog.showModal();more.prepend(b);}
+ const nav=document.createElement('nav');nav.id='adaptiveNav';nav.setAttribute('aria-label','Hauptnavigation');nav.innerHTML='<button type="button" data-home><b aria-hidden="true">⌂</b>Home</button><button type="button" data-orders><b aria-hidden="true">▤</b>Aufträge</button><a href="#rapportPage"><b aria-hidden="true">▧</b>Rapport</a><button type="button" data-more><b aria-hidden="true">•••</b>Mehr</button>';document.body.append(nav);
+ nav.querySelector('[data-more]').onclick=()=>dialog.showModal();nav.querySelector('[data-home]').onclick=()=>{document.body.dataset.adaptiveHome='true';updateNav();scrollTo(0,0);};
+ nav.querySelector('[data-orders]').onclick=()=>{document.body.dataset.adaptiveHome='false';document.getElementById('orderSelect')?.scrollIntoView({block:'center'});document.getElementById('orderSelect')?.focus();updateNav();};
+ nav.querySelector('a').onclick=()=>{document.body.dataset.adaptiveHome='false';updateNav();};
+ const home=document.createElement('section');home.id='adaptiveHome';home.innerHTML='<h1>Dein Rapport, überall.</h1><p>Wähle einen Bereich deines aktuellen Rapports.</p><div class="adaptive-tiles"></div>';
+ for(const link of links){const a=document.createElement('a');a.href=link.hash;a.textContent=link.textContent;a.onclick=()=>{document.body.dataset.adaptiveHome='false';updateNav();};home.querySelector('div').append(a);}document.getElementById('pdfToolbar').after(home);
+ // Add buttons only: never clone or reorder persisted form fields.
+ for(const id of ['rapportPage','regiePage']){
+  const page=document.getElementById(id);if(!page)continue;
+  const groups=[];
+  for(const heading of [...page.children].filter(el=>el.classList.contains('section'))){const nodes=[];let n=heading.nextElementSibling;while(n&&!n.classList.contains('section')){nodes.push(n);n=n.nextElementSibling;}if(nodes.length)groups.push({heading,nodes,title:heading.textContent.trim()});}
+  const extra=page.querySelector(':scope > .linegrid');if(extra)groups.unshift({heading:null,nodes:[extra],title:'Weitere Grunddaten'});
+  const top=page.querySelector(':scope > .top');const internal=top?.querySelector('input[type=hidden]');if(internal){internal.parentElement.classList.add('adaptive-internal-reference');internal.parentElement.previousElementSibling?.classList.add('adaptive-internal-reference');}
+  const addresses=page.querySelector(':scope > .addresses');if(addresses)groups.unshift({heading:null,nodes:[addresses],title:'Adressen'});
+  for(const group of groups){const b=document.createElement('button');b.type='button';b.className='adaptive-section-button';b.textContent=group.title;let expanded=/Arbeiten/.test(group.title);b.setAttribute('aria-expanded',String(expanded));
+   (group.heading||group.nodes[0]).before(b);group.heading?.classList.add('adaptive-original-heading');
+   const toggle=()=>{b.setAttribute('aria-expanded',String(expanded));group.nodes.forEach(n=>n.classList.toggle('adaptive-collapsed',!expanded));requestAnimationFrame(()=>window.fitMaterialNames?.());};b.onclick=()=>{expanded=!expanded;toggle();};toggle();
+  }
+ }
+ function updateNav(){for(const el of nav.querySelectorAll('a,button'))el.removeAttribute('aria-current');if(document.body.dataset.adaptiveHome==='true')nav.querySelector('[data-home]').setAttribute('aria-current','page');else if(!location.hash||location.hash==='#rapportPage')nav.querySelector('a').setAttribute('aria-current','page');}
+ function apply(){const actual=mode==='auto'?(innerWidth<650?'phone':innerWidth<1100?'tablet':'desktop'):mode;document.body.dataset.view=actual;button.textContent='Ansicht: '+labels[mode]+' ▾';for(const b of dialog.querySelectorAll('[data-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mode===mode));updateNav();requestAnimationFrame(()=>window.fitMaterialNames?.());}
+ window.addEventListener('resize',apply);window.addEventListener('hashchange',()=>{document.body.dataset.adaptiveHome='false';updateNav();});apply();
+})();
+</script>
 </body></html>
