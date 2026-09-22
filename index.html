@@ -4914,4 +4914,13 @@ if(mountain)toolbar.style.setProperty('background-image','linear-gradient(90deg,
  window.addEventListener('resize',apply);window.addEventListener('hashchange',()=>{document.body.dataset.adaptiveHome='false';updateNav();});apply();
 })();
 </script>
+<style id="actions-menu-layer-fix">
+@media screen {
+ #pdfToolbar .layout-top{position:relative!important;z-index:500!important;overflow:visible!important}
+ #pdfToolbar .head-main{position:relative!important;z-index:1!important;isolation:isolate!important}
+ #pdfToolbar #moreActions .more-popover{width:280px!important;max-width:calc(100vw - 48px)!important;max-height:calc(100dvh - 160px);overflow-y:auto;background:#fff!important;opacity:1!important}
+ #pdfToolbar #moreActions .more-popover>button{width:100%!important;min-width:0!important;max-width:none!important;min-height:44px!important;height:auto!important;padding:12px!important;white-space:normal!important;line-height:1.4!important;text-align:left!important}
+}
+@media screen and (max-width:600px){#pdfToolbar #moreActions .more-popover{left:0!important;right:auto!important}}
+</style>
 </body></html>
