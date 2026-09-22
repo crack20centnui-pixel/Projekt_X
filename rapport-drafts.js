@@ -7,7 +7,7 @@
   panel.append(label,select,restore,download);document.querySelector('.sheet')?.before(panel);
   const indicator=document.createElement('div');indicator.id='rapportStorageStatus';indicator.style.cssText='padding:6px 12px;font-size:13px;background:#eef5f1';panel.before(indicator);
   window.updateRapportStorageStatus=()=>{
-    if(!activeLocalUid){indicator.textContent='';return;}
+    if(!activeLocalUid){indicator.textContent='';panel.style.display='none';return;}
     const state=getDB()[currentOrderKey];
     document.querySelectorAll('.sheet').forEach(el=>el.inert=!!state?.__accessRevoked||RapportWorkflow.isArchived(state));
     const pending=!!(window.rapportPendingChanges?.()?.[currentOrderKey]||!state?.__serverRevision);
@@ -23,16 +23,31 @@
     indicator.style.background=needsBackup||formDirty||pending?'#fff8e8':'#eef5f1';
     indicator.setAttribute('role','status');
     indicator.textContent=text;
+    renderDrafts();
   };
   const key=()=>activeLocalUid?'equansRapportDraftsV1_'+activeLocalUid:null;
   const read=()=>JSON.parse(localStorage.getItem(key())||'{}');
-  function show(){
-    window.updateRapportStorageStatus();panel.style.display='none';if(!key())return;
-    try{const drafts=read(),entries=Object.entries(drafts);select.replaceChildren();
-      for(const [id,draft] of entries){const o=document.createElement('option');o.value=id;o.textContent=(draft.state.__reference||'Ohne Referenz')+' · '+new Date(draft.at).toLocaleString('de-CH');select.append(o);}
-      label.textContent='Lokale Entwürfe (noch nicht synchronisiert): ';panel.style.display=entries.length?'block':'none';
+  // Ignore sync bookkeeping, but compare all actual report content conservatively.
+  function draftMatchesSaved(draft,saved){
+    if(!draft||!saved)return false;
+    const metadata=new Set(['__savedAt','__createdAt','__version','__serverRevision','__ownerUid','__accessUids','__orderSource','__archived','__accessRevoked','__reference','__rapportId']);
+    const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])])):value;
+    const content=state=>Object.fromEntries(Object.entries(state).filter(([k])=>!metadata.has(k)));
+    return JSON.stringify(canonical(content(draft)))===JSON.stringify(canonical(content(saved)));
+  }
+  function renderDrafts(){
+    panel.style.display='none';if(!key())return;
+    try{const drafts=read(),saved=getDB(),selected=select.value;
+      // Already saved identical drafts need no warning. Keep their backup bytes untouched.
+      const entries=Object.entries(drafts).filter(([id,draft])=>!draftMatchesSaved(draft.state,saved[id]));
+      select.replaceChildren();
+      for(const [id,draft] of entries){const o=document.createElement('option');o.value=id;o.textContent=(id===currentOrderKey?'Dieser Rapport: ':'Anderer Rapport: ')+(draft.state.__reference||'Ohne Referenz')+' · '+new Date(draft.at).toLocaleString('de-CH');select.append(o);}
+      if(entries.some(([id])=>id===selected))select.value=selected;
+      label.textContent='Lokale Wiederherstellungsstände (können älter sein). Der Sync-Status oben gilt für den geöffneten Rapport: ';
+      panel.style.display=entries.length?'block':'none';
     }catch(e){window.setStatus?.('Entwurfspeicher konnte nicht gelesen werden.');}
   }
+  function show(){window.updateRapportStorageStatus();}
   function flush(){
     clearTimeout(timer);if(!key()||!formDirty)return;
     const id=ensureRapportId(),previous=getDB()[id];
